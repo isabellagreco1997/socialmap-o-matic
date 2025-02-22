@@ -56,6 +56,14 @@ interface EdgeControlPoint {
   y: number;
 }
 
+interface EdgeData {
+  label?: string;
+  metrics?: {
+    strength?: number;
+    frequency?: number;
+  };
+}
+
 const CustomEdge = ({
   id,
   sourceX,
@@ -484,25 +492,25 @@ const Flow = () => {
           <Button
             onClick={createNewNetwork}
             variant="outline"
-            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
           >
-            <PlusIcon className="h-4 w-4" />
+            <PlusIcon className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">Create Network</span>}
           </Button>
           <Button
             variant="outline"
-            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
             onClick={() => setShowTodos(!showTodos)}
           >
-            <CheckSquare className="h-4 w-4" />
+            <CheckSquare className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
           </Button>
           <Button
             variant="outline"
-            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
             onClick={() => setShowChat(!showChat)}
           >
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
           </Button>
         </div>
