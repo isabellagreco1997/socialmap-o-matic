@@ -14,6 +14,7 @@ import {
   getBezierPath,
   useReactFlow,
   EdgeProps,
+  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
@@ -40,6 +41,11 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from '@/components/ui/checkbox';
 
+interface EdgeControlPoint {
+  x: number;
+  y: number;
+}
+
 const CustomEdge = ({
   id,
   sourceX,
@@ -56,7 +62,10 @@ const CustomEdge = ({
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
   
-  const [controlPoints, setControlPoints] = useState({
+  const [controlPoints, setControlPoints] = useState<{
+    sourceHandle: EdgeControlPoint;
+    targetHandle: EdgeControlPoint;
+  }>({
     sourceHandle: { x: 0, y: 0 },
     targetHandle: { x: 0, y: 0 },
   });
@@ -76,18 +85,17 @@ const CustomEdge = ({
     ? defaultControlPoints 
     : controlPoints;
 
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const [edgePath] = getBezierPath({
     sourceX,
     sourceY,
-    sourcePosition,
+    sourcePosition: sourcePosition || Position.Bottom,
     targetX,
     targetY,
-    targetPosition,
-    sourceControlX: sourceHandle.x,
-    sourceControlY: sourceHandle.y,
-    targetControlX: targetHandle.x,
-    targetControlY: targetHandle.y,
+    targetPosition: targetPosition || Position.Top,
   });
+
+  const labelX = (sourceX + targetX) / 2;
+  const labelY = (sourceY + targetY) / 2;
 
   const onEdgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -101,8 +109,10 @@ const CustomEdge = ({
 
   const handleSaveEdgeData = (newData: EdgeData) => {
     setEdges((eds) =>
-      eds.map((edge) =>
-        edge.id === id ? { ...edge, data: newData } : edge
+      eds.map((edge) => 
+        edge.id === id 
+          ? { ...edge, data: { ...edge.data, ...newData } }
+          : edge
       )
     );
   };
@@ -181,7 +191,7 @@ const CustomEdge = ({
           className="nodrag nopan flex flex-col border shadow-sm min-w-[100px]"
         >
           <div className="flex items-center justify-between gap-2 border-b p-1">
-            <span>{data?.label}</span>
+            <span>{data?.label || ''}</span>
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
@@ -201,10 +211,10 @@ const CustomEdge = ({
               </Button>
             </div>
           </div>
-          {data?.metrics && (
+          {data?.metrics && typeof data.metrics === 'object' && (
             <div className="text-xs text-muted-foreground px-1 py-0.5">
-              {data.metrics?.strength && <div>Strength: {data.metrics.strength}</div>}
-              {data.metrics?.frequency && <div>Frequency: {data.metrics.frequency}</div>}
+              {'strength' in data.metrics && <div>Strength: {data.metrics.strength}</div>}
+              {'frequency' in data.metrics && <div>Frequency: {data.metrics.frequency}</div>}
             </div>
           )}
         </div>
@@ -523,7 +533,6 @@ const Flow = () => {
         fitView
         className="bg-dot-pattern flex-1"
         elementsSelectable={true}
-        edgesUpdatable={true}
         selectNodesOnDrag={false}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
