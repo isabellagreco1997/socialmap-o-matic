@@ -479,29 +479,40 @@ const Flow = () => {
     });
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number, networkId: string) => {
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, index: number, networkId: string) => {
+    e.stopPropagation();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
     setDraggedNetwork(networkId);
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     e.preventDefault();
+    e.stopPropagation();
     const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
     if (dragIndex !== dropIndex) {
       handleReorderNetworks(dragIndex, dropIndex);
     }
     setDraggedNetwork(null);
-  };
+  }, []);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedNetwork(null);
-  };
+  }, []);
+
+  const handleNetworkSelect = useCallback((networkId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedNetwork) {
+      setCurrentNetworkId(networkId);
+    }
+  }, [draggedNetwork]);
 
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
@@ -563,12 +574,12 @@ const Flow = () => {
               } ${
                 draggedNetwork === network.id ? 'opacity-50' : ''
               }`}
+              onClick={(e) => handleNetworkSelect(network.id, e)}
             >
               <Button
                 variant={currentNetworkId === network.id ? "default" : "ghost"}
                 className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
-                onClick={() => setCurrentNetworkId(network.id)}
-                disabled={draggedNetwork !== null}
+                tabIndex={-1}
               >
                 {!isMenuMinimized && (
                   <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
