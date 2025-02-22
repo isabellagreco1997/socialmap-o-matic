@@ -35,7 +35,8 @@ import {
   GripVertical,
   ListChecks,
   MapPin,
-  FileText
+  FileText,
+  Calendar
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -383,12 +384,12 @@ const Flow = () => {
   }, []);
 
   const handleCompleteTodo = useCallback((networkId: string, nodeId: string, todoId: string, todoText: string) => {
-    const updatedNetworks = networks.map((network: any) => {
+    const updatedNetworks = networks.map(network => {
       if (network.id !== networkId) return network;
 
       return {
         ...network,
-        nodes: network.nodes.map((node: any) => {
+        nodes: network.nodes.map(node => {
           if (node.id !== nodeId) return node;
 
           return {
@@ -405,7 +406,7 @@ const Flow = () => {
     localStorage.setItem('networks', JSON.stringify(updatedNetworks));
     
     toast({
-      title: "Todo completed",
+      title: "Task completed",
       description: `"${todoText}" has been completed and removed`,
     });
     
@@ -686,72 +687,133 @@ const Flow = () => {
                 </Button>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant={viewType === 'tasks' ? 'default' : 'outline'}
-                  onClick={() => setViewType('tasks')}
-                  className="flex-1 flex items-center justify-center gap-2"
-                  size="sm"
-                >
-                  <ListChecks className="h-4 w-4" />
-                  Tasks
-                </Button>
-                <Button
-                  variant={viewType === 'venues' ? 'default' : 'outline'}
-                  onClick={() => setViewType('venues')}
-                  className="flex-1 flex items-center justify-center gap-2"
-                  size="sm"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Venues
-                </Button>
-                <Button
-                  variant={viewType === 'notes' ? 'default' : 'outline'}
-                  onClick={() => setViewType('notes')}
-                  className="flex-1 flex items-center justify-center gap-2"
-                  size="sm"
-                >
-                  <FileText className="h-4 w-4" />
-                  Notes
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {currentTodos.map((todo) => (
-                  <Card key={todo.id} className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox 
-                        className="mt-1"
-                        checked={false}
-                        onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id)}
-                      />
-                      <div className="flex-1 space-y-1">
-                        <div className="font-medium">
-                          {viewType === 'tasks' && 'Task: '}
-                          {viewType === 'venues' && 'Venue: '}
-                          {viewType === 'notes' && 'Note: '}
-                          {todo.text}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Added to: {todo.networkName} / {todo.nodeName}
-                        </div>
-                        {todo.dueDate && (
-                          <div className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {formatDate(todo.dueDate)}
-                          </div>
-                        )}
+              {networks.map((network: any) => (
+                <Card key={network.id} className="p-6">
+                  <h2 className="text-2xl font-semibold mb-6">{network.name}</h2>
+                  
+                  {network.nodes.map((node: any) => {
+                    if (!node.data.todos?.length) return null;
+                    
+                    return (
+                      <div key={node.id} className="mb-8 last:mb-0">
+                        <h3 className="text-lg font-medium mb-4">{node.data.name}</h3>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[50px]">Complete</TableHead>
+                              <TableHead>Task</TableHead>
+                              <TableHead className="w-[150px]">Due Date</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {node.data.todos.map((todo: TodoItem) => (
+                              <TableRow key={todo.id}>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={false}
+                                    onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  {todo.text}
+                                </TableCell>
+                                <TableCell>
+                                  {todo.dueDate ? (
+                                    <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                      <Calendar className="h-4 w-4" />
+                                      {formatDate(todo.dueDate)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">No due date</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                    );
+                  })}
+                </Card>
+              ))}
 
-              {currentTodos.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  No tasks found
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Filter by Type</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewType === 'tasks' ? 'default' : 'outline'}
+                    onClick={() => setViewType('tasks')}
+                    className="flex-1 flex items-center justify-center gap-2"
+                    size="sm"
+                  >
+                    <ListChecks className="h-4 w-4" />
+                    Tasks
+                  </Button>
+                  <Button
+                    variant={viewType === 'venues' ? 'default' : 'outline'}
+                    onClick={() => setViewType('venues')}
+                    className="flex-1 flex items-center justify-center gap-2"
+                    size="sm"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Venues
+                  </Button>
+                  <Button
+                    variant={viewType === 'notes' ? 'default' : 'outline'}
+                    onClick={() => setViewType('notes')}
+                    className="flex-1 flex items-center justify-center gap-2"
+                    size="sm"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Notes
+                  </Button>
                 </div>
-              )}
+
+                <div className="space-y-4 mt-4">
+                  {networks.flatMap((network: any) => 
+                    network.nodes.flatMap((node: any) => 
+                      (node.data.todos || []).map((todo: TodoItem) => (
+                        <Card key={todo.id} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox 
+                              className="mt-1"
+                              checked={false}
+                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                            />
+                            <div className="flex-1 space-y-1">
+                              <div className="font-medium">
+                                {viewType === 'tasks' && 'Task: '}
+                                {viewType === 'venues' && 'Venue: '}
+                                {viewType === 'notes' && 'Note: '}
+                                {todo.text}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {network.name} / {node.data.name}
+                              </div>
+                              {todo.dueDate && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  {formatDate(todo.dueDate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                    )
+                  )}
+
+                  {networks.every((network: any) => 
+                    network.nodes.every((node: any) => 
+                      !(node.data.todos || []).length
+                    )
+                  ) && (
+                    <div className="text-center text-muted-foreground py-8">
+                      No items found
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </Panel>
         )}
