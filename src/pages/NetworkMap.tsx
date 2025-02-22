@@ -9,11 +9,14 @@ import {
   useNodesState,
   useEdgesState,
   Panel,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Calendar, Network, Trash2 } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Trash2 } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -34,8 +37,70 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from '@/components/ui/checkbox';
 
+const CustomEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  label,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+}) => {
+  const { setEdges } = useReactFlow();
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  const onEdgeClick = () => {
+    setEdges((edges) => edges.filter((edge) => edge.id !== id));
+  };
+
+  return (
+    <>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+            backgroundColor: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+          className="nodrag nopan flex items-center gap-2 border shadow-sm"
+        >
+          {label}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+            onClick={onEdgeClick}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
+
 const nodeTypes = {
   social: SocialNode,
+};
+
+const edgeTypes = {
+  custom: CustomEdge,
 };
 
 interface Network {
@@ -122,11 +187,19 @@ const Flow = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge(connection, eds));
-      toast({
-        title: "Connection created",
-        description: "Nodes have been connected successfully",
-      });
+      const label = prompt("Enter a label for this connection:");
+      if (label) {
+        setEdges((eds) => addEdge({
+          ...connection,
+          type: 'custom',
+          label,
+          animated: true,
+        }, eds));
+        toast({
+          title: "Connection created",
+          description: "Nodes have been connected successfully",
+        });
+      }
     },
     [setEdges, toast]
   );
@@ -313,6 +386,7 @@ const Flow = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         className="bg-dot-pattern flex-1"
       >
