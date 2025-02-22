@@ -1,4 +1,3 @@
-
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -245,6 +244,10 @@ const Flow = () => {
   const { toast } = useToast();
 
   const isSwitchingNetwork = useRef(false);
+
+  const getCurrentNetwork = () => {
+    return networks.find(network => network.id === currentNetworkId);
+  };
 
   useEffect(() => {
     isSwitchingNetwork.current = true;
@@ -511,6 +514,12 @@ const Flow = () => {
       >
         <Background />
         <Controls />
+        
+        <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
+          <Network className="h-5 w-5 text-primary" />
+          <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
+        </Panel>
+
         <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
           <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
             <PlusIcon className="h-4 w-4" />
