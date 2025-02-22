@@ -259,26 +259,22 @@ const Flow = () => {
   }, [currentNetworkId, networks, setNodes, setEdges]);
 
   useEffect(() => {
+    if (isSwitchingNetwork.current) return;
+
+    setNetworks(prevNetworks => prevNetworks.map(network => 
+      network.id === currentNetworkId 
+        ? { ...network, nodes, edges }
+        : network
+    ));
+  }, [nodes, edges, currentNetworkId]);
+
+  useEffect(() => {
     localStorage.setItem('networks', JSON.stringify(networks));
   }, [networks]);
 
   useEffect(() => {
     localStorage.setItem('currentNetworkId', currentNetworkId);
   }, [currentNetworkId]);
-
-  useEffect(() => {
-    if (isSwitchingNetwork.current) return;
-
-    const timeoutId = setTimeout(() => {
-      setNetworks(prevNetworks => prevNetworks.map(network => 
-        network.id === currentNetworkId 
-          ? { ...network, nodes, edges }
-          : network
-      ));
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [nodes, edges, currentNetworkId]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -297,14 +293,26 @@ const Flow = () => {
   );
 
   const handleAddNode = (nodeData: { data: NodeData }) => {
+    console.log('Adding node with data:', nodeData); // Debug log
+    
     const newNode = {
       id: `node-${Date.now()}`,
-      type: 'social',  // Always use social node type for all node types
+      type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 300 },
-      data: nodeData.data,  // Pass the complete node data
+      data: {
+        ...nodeData.data,
+        todos: nodeData.data.todos || [],
+      },
     };
     
-    setNodes((nds) => [...nds, newNode]);
+    console.log('Created new node:', newNode); // Debug log
+    
+    setNodes((nds) => {
+      const updatedNodes = [...nds, newNode];
+      console.log('Updated nodes:', updatedNodes); // Debug log
+      return updatedNodes;
+    });
+    
     toast({
       title: "Node added",
       description: `Added ${nodeData.data.name} to the network`,
