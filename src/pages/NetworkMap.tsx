@@ -1,5 +1,5 @@
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -69,13 +69,21 @@ const Flow = () => {
   const [newNetworkName, setNewNetworkName] = useState('');
   const { toast } = useToast();
 
+  // Reference to track if we're currently switching networks
+  const isSwitchingNetwork = useRef(false);
+
   // Load current network data
   useEffect(() => {
+    isSwitchingNetwork.current = true;
     const currentNetwork = networks.find(network => network.id === currentNetworkId);
     if (currentNetwork) {
       setNodes(currentNetwork.nodes || []);
       setEdges(currentNetwork.edges || []);
     }
+    // Reset the flag after the state updates
+    setTimeout(() => {
+      isSwitchingNetwork.current = false;
+    }, 0);
   }, [currentNetworkId, networks, setNodes, setEdges]);
 
   // Save networks when they change
@@ -90,11 +98,17 @@ const Flow = () => {
 
   // Save current network's nodes and edges when they change
   useEffect(() => {
-    setNetworks(prevNetworks => prevNetworks.map(network => 
-      network.id === currentNetworkId 
-        ? { ...network, nodes: nodes, edges: edges }
-        : network
-    ));
+    if (isSwitchingNetwork.current) return;
+
+    const timeoutId = setTimeout(() => {
+      setNetworks(prevNetworks => prevNetworks.map(network => 
+        network.id === currentNetworkId 
+          ? { ...network, nodes, edges }
+          : network
+      ));
+    }, 100); // Debounce the update
+
+    return () => clearTimeout(timeoutId);
   }, [nodes, edges, currentNetworkId]);
 
   const onConnect = useCallback(
@@ -110,7 +124,7 @@ const Flow = () => {
 
   const handleAddNode = (nodeData: { name: string; profileUrl: string; imageUrl: string }) => {
     const newNode = {
-      id: `node-${Date.now()}`, // Use timestamp for unique IDs
+      id: `node-${Date.now()}`,
       type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 300 },
       data: nodeData,
