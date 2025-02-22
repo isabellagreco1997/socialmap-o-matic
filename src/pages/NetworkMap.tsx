@@ -31,8 +31,16 @@ import {
   Trash2, 
   Edit,
   MessageSquare,
-  Network as NetworkIcon 
+  MoreVertical
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -41,7 +49,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Card } from '@/components/ui/card';
 import { 
   Table,
@@ -243,6 +250,8 @@ const Flow = () => {
   const [showTodos, setShowTodos] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
+  const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
+  const [tempNetworkName, setTempNetworkName] = useState('');
 
   const isSwitchingNetwork = useRef(false);
 
@@ -412,6 +421,53 @@ const Flow = () => {
     });
   }, [networks, currentNetworkId, toast]);
 
+  const handleStartEditingName = () => {
+    const currentNetwork = getCurrentNetwork();
+    if (currentNetwork) {
+      setTempNetworkName(currentNetwork.name);
+      setIsEditingNetworkName(true);
+    }
+  };
+
+  const handleSaveNetworkName = () => {
+    if (tempNetworkName.trim()) {
+      setNetworks(prevNetworks =>
+        prevNetworks.map(network =>
+          network.id === currentNetworkId
+            ? { ...network, name: tempNetworkName }
+            : network
+        )
+      );
+      setIsEditingNetworkName(false);
+      toast({
+        title: "Network renamed",
+        description: `Network renamed to ${tempNetworkName}`,
+      });
+    }
+  };
+
+  const handleDeleteNetwork2 = () => {
+    const currentNetwork = getCurrentNetwork();
+    if (!currentNetwork) return;
+
+    if (networks.length <= 1) {
+      toast({
+        title: "Cannot delete network",
+        description: "You must have at least one network",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedNetworks = networks.filter(network => network.id !== currentNetworkId);
+    setNetworks(updatedNetworks);
+    setCurrentNetworkId(updatedNetworks[0].id);
+    toast({
+      title: "Network deleted",
+      description: `Deleted ${currentNetwork.name}`,
+    });
+  };
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -517,8 +573,48 @@ const Flow = () => {
         <Controls />
         
         <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
-          <NetworkIcon className="h-5 w-5 text-primary" />
-          <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
+          {isEditingNetworkName ? (
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveNetworkName();
+              }}
+              className="flex items-center gap-2"
+            >
+              <Input
+                value={tempNetworkName}
+                onChange={(e) => setTempNetworkName(e.target.value)}
+                className="h-8 text-sm"
+                autoFocus
+                onBlur={handleSaveNetworkName}
+              />
+            </form>
+          ) : (
+            <>
+              <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={handleStartEditingName}>
+                    <Edit2Icon className="mr-2 h-4 w-4" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleDeleteNetwork2}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Network
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </Panel>
 
         <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
