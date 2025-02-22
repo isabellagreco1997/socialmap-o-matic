@@ -15,9 +15,17 @@ import {
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const nodeTypes = {
   social: SocialNode,
@@ -30,16 +38,20 @@ interface Network {
   edges: any[];
 }
 
-// Separate the ReactFlow content into its own component
 const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>(() => {
     const savedNetworks = localStorage.getItem('networks');
     if (savedNetworks) {
-      return JSON.parse(savedNetworks);
+      const parsed = JSON.parse(savedNetworks);
+      // Update existing networks to use numeric naming
+      return parsed.map((network: Network, index: number) => ({
+        ...network,
+        name: `Network ${index + 1}`
+      }));
     }
     return [{
       id: '1',
-      name: 'Default Network',
+      name: 'Network 1',
       nodes: [],
       edges: []
     }];
@@ -53,6 +65,9 @@ const Flow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
+  const [newNetworkName, setNewNetworkName] = useState('');
   const { toast } = useToast();
 
   // Load current network data
@@ -107,9 +122,10 @@ const Flow = () => {
   };
 
   const createNewNetwork = () => {
+    const newNetworkNumber = networks.length + 1;
     const newNetwork: Network = {
-      id: `network-${networks.length + 1}`,
-      name: `New Network ${networks.length + 1}`,
+      id: `network-${newNetworkNumber}`,
+      name: `Network ${newNetworkNumber}`,
       nodes: [],
       edges: []
     };
@@ -118,6 +134,30 @@ const Flow = () => {
     toast({
       title: "Network created",
       description: `Created ${newNetwork.name}`,
+    });
+  };
+
+  const handleRenameClick = (network: Network) => {
+    setNetworkToRename(network);
+    setNewNetworkName(network.name);
+    setIsRenameDialogOpen(true);
+  };
+
+  const handleRename = () => {
+    if (!networkToRename) return;
+    
+    setNetworks(prevNetworks => 
+      prevNetworks.map(network => 
+        network.id === networkToRename.id 
+          ? { ...network, name: newNetworkName }
+          : network
+      )
+    );
+    
+    setIsRenameDialogOpen(false);
+    toast({
+      title: "Network renamed",
+      description: `Renamed to ${newNetworkName}`,
     });
   };
 
@@ -141,15 +181,25 @@ const Flow = () => {
         </div>
         <div className="flex-1 p-4 space-y-2">
           {networks.map((network) => (
-            <Button
-              key={network.id}
-              variant={currentNetworkId === network.id ? "default" : "ghost"}
-              className={`w-full justify-start ${isMenuMinimized ? 'px-2' : ''}`}
-              onClick={() => setCurrentNetworkId(network.id)}
-            >
-              {!isMenuMinimized && network.name}
-              {isMenuMinimized && network.name[0]}
-            </Button>
+            <div key={network.id} className="flex gap-2">
+              <Button
+                variant={currentNetworkId === network.id ? "default" : "ghost"}
+                className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
+                onClick={() => setCurrentNetworkId(network.id)}
+              >
+                {!isMenuMinimized && network.name}
+                {isMenuMinimized && network.name.split(' ')[1]}
+              </Button>
+              {!isMenuMinimized && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRenameClick(network)}
+                >
+                  <Edit2Icon className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           ))}
           <Button
             onClick={createNewNetwork}
@@ -181,16 +231,34 @@ const Flow = () => {
           </Button>
         </Panel>
       </ReactFlow>
+
       <AddNodeDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onAdd={handleAddNode}
       />
+
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Network</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Input
+              value={newNetworkName}
+              onChange={(e) => setNewNetworkName(e.target.value)}
+              placeholder="Enter new name"
+            />
+            <Button onClick={handleRename} className="w-full">
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// Wrap the Flow component with ReactFlowProvider
 const NetworkMap = () => {
   return (
     <ReactFlowProvider>
