@@ -130,7 +130,7 @@ const CustomEdge = ({
     setEdges((eds) =>
       eds.map((edge) => 
         edge.id === id 
-          ? { ...edge, data: { ...edge.data, ...newData } }
+          ? { ...edge, data: { label: newData.label } }
           : edge
       )
     );
@@ -209,8 +209,8 @@ const CustomEdge = ({
           }}
           className="nodrag nopan flex flex-row items-center border shadow-sm gap-2"
         >
-          <span>{data?.label || ''}</span>
-          <div className="flex gap-1 border-l pl-2">
+          {data?.label && <span>{data.label}</span>}
+          <div className={`flex gap-1 ${data?.label ? 'border-l pl-2' : ''}`}>
             <Button 
               variant="ghost" 
               size="icon"
