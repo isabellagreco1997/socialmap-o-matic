@@ -12,16 +12,13 @@ import {
 import { Calendar, CheckCircle2, XCircle, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TodoItem {
   id: string;
   text: string;
   completed: boolean;
   dueDate?: string;
-}
-
-interface TodosByDate {
-  [date: string]: TodoItem[];
 }
 
 const TodoDashboard = () => {
@@ -34,24 +31,31 @@ const TodoDashboard = () => {
     return new Date(date).toLocaleDateString();
   }, []);
 
-  const groupTodosByDate = useCallback((todos: TodoItem[]): TodosByDate => {
-    return todos.reduce((acc: TodosByDate, todo) => {
-      const date = todo.dueDate || 'No Date';
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(todo);
-      return acc;
-    }, {});
-  }, []);
+  const handleToggleTodo = useCallback((networkId: string, nodeId: string, todoId: string) => {
+    const updatedNetworks = networks.map((network: any) => {
+      if (network.id !== networkId) return network;
 
-  const sortDates = useCallback((dates: string[]): string[] => {
-    return dates.sort((a, b) => {
-      if (a === 'No Date') return 1;
-      if (b === 'No Date') return -1;
-      return new Date(a).getTime() - new Date(b).getTime();
+      return {
+        ...network,
+        nodes: network.nodes.map((node: any) => {
+          if (node.id !== nodeId) return node;
+
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              todos: node.data.todos.map((todo: TodoItem) =>
+                todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
+              ),
+            },
+          };
+        }),
+      };
     });
-  }, []);
+
+    localStorage.setItem('networks', JSON.stringify(updatedNetworks));
+    window.location.reload(); // Refresh to update the view
+  }, [networks]);
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -72,51 +76,43 @@ const TodoDashboard = () => {
           {network.nodes.map((node: any) => {
             if (!node.data.todos?.length) return null;
             
-            const todosByDate = groupTodosByDate(node.data.todos);
-            const dates = sortDates(Object.keys(todosByDate));
-            
             return (
               <div key={node.id} className="mb-8 last:mb-0">
                 <h3 className="text-lg font-medium mb-4">{node.data.name}</h3>
-                
-                {dates.map(date => (
-                  <div key={date} className="mb-6 last:mb-0">
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {date === 'No Date' ? 'No Due Date' : formatDate(date)}
-                    </h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[100px]">Status</TableHead>
-                          <TableHead>Task</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {todosByDate[date].map((todo: TodoItem) => (
-                          <TableRow key={todo.id}>
-                            <TableCell>
-                              {todo.completed ? (
-                                <div className="flex items-center gap-2 text-green-500">
-                                  <CheckCircle2 className="h-5 w-5" />
-                                  <span className="text-xs">Done</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-2 text-red-500">
-                                  <XCircle className="h-5 w-5" />
-                                  <span className="text-xs">Pending</span>
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell className={todo.completed ? 'line-through text-muted-foreground' : ''}>
-                              {todo.text}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ))}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">Status</TableHead>
+                      <TableHead>Task</TableHead>
+                      <TableHead className="w-[150px]">Due Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {node.data.todos.map((todo: TodoItem) => (
+                      <TableRow key={todo.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={todo.completed}
+                            onCheckedChange={() => handleToggleTodo(network.id, node.id, todo.id)}
+                          />
+                        </TableCell>
+                        <TableCell className={todo.completed ? 'line-through text-muted-foreground' : ''}>
+                          {todo.text}
+                        </TableCell>
+                        <TableCell>
+                          {todo.dueDate ? (
+                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {formatDate(todo.dueDate)}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">No due date</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             );
           })}
