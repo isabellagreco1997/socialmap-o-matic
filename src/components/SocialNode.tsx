@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar, MapPin, Building2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,31 +20,47 @@ interface TodoItem {
   dueDate?: string;
 }
 
-export interface SocialNodeData {
+type NodeType = "person" | "organization" | "event" | "venue";
+
+interface NodeData {
+  type: NodeType;
   name: string;
-  profileUrl: string;
-  imageUrl: string;
+  profileUrl?: string;
+  imageUrl?: string;
+  date?: string;
+  address?: string;
   contactDetails?: ContactDetails;
   todos?: TodoItem[];
 }
 
-const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }) => {
+const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [contactDetails, setContactDetails] = useState<ContactDetails>(data?.data?.contactDetails || {});
-  const [todos, setTodos] = useState<TodoItem[]>(data?.data?.todos || []);
+  const [contactDetails, setContactDetails] = useState<ContactDetails>(data?.contactDetails || {});
+  const [todos, setTodos] = useState<TodoItem[]>(data?.todos || []);
   const [newTodo, setNewTodo] = useState('');
   const [newTodoDate, setNewTodoDate] = useState('');
   const { setNodes, getNodes } = useReactFlow();
   const { toast } = useToast();
 
-  if (!data?.data) {
-    return null;
-  }
+  const getTypeIcon = () => {
+    switch (data.type) {
+      case 'person':
+        return <User className="h-4 w-4 text-blue-500" />;
+      case 'organization':
+        return <Building2 className="h-4 w-4 text-green-500" />;
+      case 'event':
+        return <Calendar className="h-4 w-4 text-purple-500" />;
+      case 'venue':
+        return <MapPin className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
+    }
+  };
 
   const handleContactDetailsChange = (field: keyof ContactDetails, value: string) => {
     const newDetails = { ...contactDetails, [field]: value };
     setContactDetails(newDetails);
-    updateNodeData({ ...data.data, contactDetails: newDetails });
+    updateNodeData({ ...data, contactDetails: newDetails });
   };
 
   const handleAddTodo = () => {
@@ -61,7 +77,7 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
     setTodos(updatedTodos);
     setNewTodo('');
     setNewTodoDate('');
-    updateNodeData({ ...data.data, todos: updatedTodos });
+    updateNodeData({ ...data, todos: updatedTodos });
   };
 
   const handleToggleTodo = (todoId: string) => {
@@ -69,21 +85,21 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
       todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
     );
     setTodos(updatedTodos);
-    updateNodeData({ ...data.data, todos: updatedTodos });
+    updateNodeData({ ...data, todos: updatedTodos });
   };
 
   const handleDeleteNode = () => {
     setNodes(getNodes().filter(node => node.id !== id));
     toast({
       title: "Node deleted",
-      description: `Removed ${data.data.name} from the network`,
+      description: `Removed ${data.name} from the network`,
     });
   };
 
-  const updateNodeData = (newData: SocialNodeData) => {
+  const updateNodeData = (newData: NodeData) => {
     setNodes(nodes => 
       nodes.map(node => 
-        node.id === id ? { ...node, data: { data: newData } } : node
+        node.id === id ? { ...node, data: newData } : node
       )
     );
   };
@@ -95,20 +111,37 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
       
       <div className="flex items-center gap-3">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={data.data.imageUrl} />
-          <AvatarFallback>{data.data.name[0]}</AvatarFallback>
+          <AvatarImage src={data.imageUrl} />
+          <AvatarFallback>{data.name[0]}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col flex-1">
-          <span className="font-medium">{data.data.name}</span>
-          <a
-            href={data.data.profileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
-          >
-            View Profile
-            <ExternalLink className="h-3 w-3" />
-          </a>
+          <div className="flex items-center gap-2">
+            {getTypeIcon()}
+            <span className="font-medium">{data.name}</span>
+          </div>
+          {data.profileUrl && (
+            <a
+              href={data.profileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
+            >
+              View Profile
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+          {data.date && (
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(data.date).toLocaleDateString()}
+            </span>
+          )}
+          {data.address && (
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              {data.address}
+            </span>
+          )}
         </div>
         <Button variant="destructive" size="icon" onClick={handleDeleteNode} className="h-8 w-8">
           <Trash2 className="h-4 w-4" />
