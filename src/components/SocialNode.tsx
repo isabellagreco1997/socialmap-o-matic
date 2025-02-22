@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -170,8 +170,7 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
                     {todo.text}
                   </span>
                   {todo.dueDate && (
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
+                    <span className="text-muted-foreground">
                       {new Date(todo.dueDate).toLocaleDateString()}
                     </span>
                   )}
