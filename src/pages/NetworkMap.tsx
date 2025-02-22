@@ -23,7 +23,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
@@ -74,8 +73,8 @@ const Flow = () => {
   useEffect(() => {
     const currentNetwork = networks.find(network => network.id === currentNetworkId);
     if (currentNetwork) {
-      setNodes(currentNetwork.nodes);
-      setEdges(currentNetwork.edges);
+      setNodes(currentNetwork.nodes || []);
+      setEdges(currentNetwork.edges || []);
     }
   }, [currentNetworkId, networks, setNodes, setEdges]);
 
@@ -89,10 +88,12 @@ const Flow = () => {
     localStorage.setItem('currentNetworkId', currentNetworkId);
   }, [currentNetworkId]);
 
-  // Save current network's nodes and edges
+  // Save current network's nodes and edges when they change
   useEffect(() => {
     setNetworks(prevNetworks => prevNetworks.map(network => 
-      network.id === currentNetworkId ? { ...network, nodes, edges } : network
+      network.id === currentNetworkId 
+        ? { ...network, nodes: nodes, edges: edges }
+        : network
     ));
   }, [nodes, edges, currentNetworkId]);
 
@@ -109,7 +110,7 @@ const Flow = () => {
 
   const handleAddNode = (nodeData: { name: string; profileUrl: string; imageUrl: string }) => {
     const newNode = {
-      id: `node-${nodes.length + 1}`,
+      id: `node-${Date.now()}`, // Use timestamp for unique IDs
       type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 300 },
       data: nodeData,
@@ -129,7 +130,7 @@ const Flow = () => {
       nodes: [],
       edges: []
     };
-    setNetworks([...networks, newNetwork]);
+    setNetworks(prevNetworks => [...prevNetworks, newNetwork]);
     setCurrentNetworkId(newNetwork.id);
     toast({
       title: "Network created",
