@@ -136,7 +136,7 @@ const Flow = () => {
       id: `node-${Date.now()}`,
       type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 300 },
-      data: nodeData.data,
+      data: { data: nodeData.data },
     };
     setNodes((nds) => [...nds, newNode]);
     toast({
