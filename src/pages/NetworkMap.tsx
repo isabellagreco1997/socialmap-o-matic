@@ -1,37 +1,232 @@
-
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
-  Controls,
+  ReactFlowProvider,
+  addEdge,
   Background,
+  Controls,
+  Connection,
   useNodesState,
   useEdgesState,
-  Connection,
-  Edge,
-  Node,
-  addEdge,
   Panel,
-  ReactFlowProvider,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  useReactFlow,
+  EdgeProps,
+  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import SocialNode from '@/components/SocialNode';
 import AddNodeDialog from '@/components/AddNodeDialog';
-import EdgeLabelDialog from '@/components/EdgeLabelDialog';
+import EdgeLabelDialog, { EdgeData } from '@/components/EdgeLabelDialog';
+import { Button } from '@/components/ui/button';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Trash2, Edit } from 'lucide-react';
+import SocialNode from '@/components/SocialNode';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Card } from '@/components/ui/card';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from '@/components/ui/checkbox';
 
-export type NodeData = {
-  label: string;
-  type?: string;
-  notes?: string;
-};
+interface EdgeControlPoint {
+  x: number;
+  y: number;
+}
 
-export type EdgeData = {
-  label: string;
-  metrics?: {
-    strength?: string;
-    frequency?: string;
+const CustomEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  data,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  selected,
+}: EdgeProps) => {
+  const { setEdges } = useReactFlow();
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const [controlPoints, setControlPoints] = useState<{
+    sourceHandle: EdgeControlPoint;
+    targetHandle: EdgeControlPoint;
+  }>({
+    sourceHandle: { x: 0, y: 0 },
+    targetHandle: { x: 0, y: 0 },
+  });
+
+  const defaultControlPoints = {
+    sourceHandle: {
+      x: sourceX + (targetX - sourceX) * 0.25,
+      y: sourceY + (targetY - sourceY) * 0.25,
+    },
+    targetHandle: {
+      x: sourceX + (targetX - sourceX) * 0.75,
+      y: sourceY + (targetY - sourceY) * 0.75,
+    },
   };
+
+  const { sourceHandle, targetHandle } = controlPoints.sourceHandle.x === 0 
+    ? defaultControlPoints 
+    : controlPoints;
+
+  const [edgePath] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition: sourcePosition || Position.Bottom,
+    targetX,
+    targetY,
+    targetPosition: targetPosition || Position.Top,
+  });
+
+  const labelX = (sourceX + targetX) / 2;
+  const labelY = (sourceY + targetY) / 2;
+
+  const onEdgeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEdges((edges) => edges.filter((edge) => edge.id !== id));
+  };
+
+  const onEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleSaveEdgeData = (newData: EdgeData) => {
+    setEdges((eds) =>
+      eds.map((edge) => 
+        edge.id === id 
+          ? { ...edge, data: { ...edge.data, ...newData } }
+          : edge
+      )
+    );
+  };
+
+  const onControlPointDrag = (point: 'sourceHandle' | 'targetHandle') => (e: React.MouseEvent) => {
+    const bounds = (e.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
+    if (!bounds) return;
+
+    const updateControlPoints = (e: MouseEvent) => {
+      const x = e.clientX - bounds.left;
+      const y = e.clientY - bounds.top;
+      setControlPoints(prev => ({
+        ...prev,
+        [point]: { x, y },
+      }));
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', updateControlPoints);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', updateControlPoints);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  return (
+    <>
+      <BaseEdge 
+        path={edgePath} 
+        markerEnd={markerEnd} 
+        style={{ 
+          ...style,
+          zIndex: 0,
+          pointerEvents: 'all',
+          cursor: 'pointer'
+        }} 
+      />
+      
+      {selected && (
+        <>
+          <circle
+            cx={sourceHandle.x}
+            cy={sourceHandle.y}
+            r={4}
+            fill="var(--xy-theme-selected)"
+            cursor="move"
+            className="nodrag"
+            onMouseDown={onControlPointDrag('sourceHandle')}
+          />
+          <circle
+            cx={targetHandle.x}
+            cy={targetHandle.y}
+            r={4}
+            fill="var(--xy-theme-selected)"
+            cursor="move"
+            className="nodrag"
+            onMouseDown={onControlPointDrag('targetHandle')}
+          />
+        </>
+      )}
+
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+            backgroundColor: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: 12,
+            fontWeight: 500,
+            zIndex: 1000,
+          }}
+          className="nodrag nopan flex flex-col border shadow-sm min-w-[100px]"
+        >
+          <div className="flex items-center justify-between gap-2 border-b p-1">
+            <span>{data?.label || ''}</span>
+            <div className="flex gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-4 w-4 p-0"
+                onClick={onEditClick}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={onEdgeClick}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+          {data?.metrics && typeof data.metrics === 'object' && (
+            <div className="text-xs text-muted-foreground px-1 py-0.5">
+              {'strength' in data.metrics && <div>Strength: {data.metrics.strength}</div>}
+              {'frequency' in data.metrics && <div>Frequency: {data.metrics.frequency}</div>}
+            </div>
+          )}
+        </div>
+      </EdgeLabelRenderer>
+      <EdgeLabelDialog
+        open={isEditing}
+        onOpenChange={setIsEditing}
+        onSave={handleSaveEdgeData}
+        initialData={data as EdgeData}
+      />
+    </>
+  );
 };
 
 const nodeTypes = {
@@ -39,43 +234,294 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-  default: EdgeLabelDialog,
+  custom: CustomEdge,
 };
 
+interface Network {
+  id: string;
+  name: string;
+  nodes: any[];
+  edges: any[];
+}
+
+interface TodoItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  dueDate?: string;
+}
+
 const Flow = () => {
+  const [networks, setNetworks] = useState<Network[]>(() => {
+    const savedNetworks = localStorage.getItem('networks');
+    if (savedNetworks) {
+      const parsed = JSON.parse(savedNetworks);
+      return parsed.map((network: Network, index: number) => ({
+        ...network,
+        name: `Network ${index + 1}`
+      }));
+    }
+    return [{
+      id: '1',
+      name: 'Network 1',
+      nodes: [],
+      edges: []
+    }];
+  });
+  
+  const [currentNetworkId, setCurrentNetworkId] = useState(() => {
+    return localStorage.getItem('currentNetworkId') || '1';
+  });
+
+  const [isMenuMinimized, setIsMenuMinimized] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [isAddingNode, setIsAddingNode] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
+  const [newNetworkName, setNewNetworkName] = useState('');
+  const [showTodos, setShowTodos] = useState(false);
+  const [isAddingEdge, setIsAddingEdge] = useState(false);
+  const [newEdgeConnection, setNewEdgeConnection] = useState<Connection | null>(null);
+  const { toast } = useToast();
+
+  const isSwitchingNetwork = useRef(false);
+
+  useEffect(() => {
+    isSwitchingNetwork.current = true;
+    const currentNetwork = networks.find(network => network.id === currentNetworkId);
+    if (currentNetwork) {
+      setNodes(currentNetwork.nodes || []);
+      setEdges(currentNetwork.edges || []);
+    }
+    setTimeout(() => {
+      isSwitchingNetwork.current = false;
+    }, 0);
+  }, [currentNetworkId, networks, setNodes, setEdges]);
+
+  useEffect(() => {
+    localStorage.setItem('networks', JSON.stringify(networks));
+  }, [networks]);
+
+  useEffect(() => {
+    localStorage.setItem('currentNetworkId', currentNetworkId);
+  }, [currentNetworkId]);
+
+  useEffect(() => {
+    if (isSwitchingNetwork.current) return;
+
+    const timeoutId = setTimeout(() => {
+      setNetworks(prevNetworks => prevNetworks.map(network => 
+        network.id === currentNetworkId 
+          ? { ...network, nodes, edges }
+          : network
+      ));
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [nodes, edges, currentNetworkId]);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (connection: Connection) => {
+      const edgeId = `${connection.source}-${connection.target}`;
+      setIsAddingEdge(true);
+      setNewEdgeConnection(connection);
+    },
+    [setEdges, toast]
   );
 
-  const handleAddNode = (data: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
+  const handleSaveEdgeData = (data: EdgeData) => {
+    if (newEdgeConnection) {
+      setEdges((eds) => addEdge({
+        ...newEdgeConnection,
+        type: 'custom',
+        data,
+        animated: true,
+      }, eds));
+      toast({
+        title: "Connection created",
+        description: "Nodes have been connected successfully",
+      });
+      setNewEdgeConnection(null);
+    }
+    setIsAddingEdge(false);
+  };
+
+  const handleAddNode = (nodeData: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
     const newNode = {
-      id: `${nodes.length + 1}`,
+      id: `node-${Date.now()}`,
       type: 'social',
-      position: { x: Math.random() * 500, y: Math.random() * 500 },
-      data: data.data,
+      position: { x: Math.random() * 500, y: Math.random() * 300 },
+      data: { data: nodeData.data },
     };
     setNodes((nds) => [...nds, newNode]);
+    toast({
+      title: "Node added",
+      description: `Added ${nodeData.data.name} to the network`,
+    });
   };
+
+  const createNewNetwork = () => {
+    const newNetworkNumber = networks.length + 1;
+    const newNetwork: Network = {
+      id: `network-${newNetworkNumber}`,
+      name: `Network ${newNetworkNumber}`,
+      nodes: [],
+      edges: []
+    };
+    setNetworks(prevNetworks => [...prevNetworks, newNetwork]);
+    setCurrentNetworkId(newNetwork.id);
+    toast({
+      title: "Network created",
+      description: `Created ${newNetwork.name}`,
+    });
+  };
+
+  const handleRenameClick = (network: Network) => {
+    setNetworkToRename(network);
+    setNewNetworkName(network.name);
+    setIsRenameDialogOpen(true);
+  };
+
+  const handleRename = () => {
+    if (!networkToRename) return;
+    
+    setNetworks(prevNetworks => 
+      prevNetworks.map(network => 
+        network.id === networkToRename.id 
+          ? { ...network, name: newNetworkName }
+          : network
+      )
+    );
+    
+    setIsRenameDialogOpen(false);
+    toast({
+      title: "Network renamed",
+      description: `Renamed to ${newNetworkName}`,
+    });
+  };
+
+  const formatDate = useCallback((date: string) => {
+    return new Date(date).toLocaleDateString();
+  }, []);
+
+  const handleCompleteTodo = useCallback((networkId: string, nodeId: string, todoId: string, todoText: string) => {
+    const updatedNetworks = networks.map((network: any) => {
+      if (network.id !== networkId) return network;
+
+      return {
+        ...network,
+        nodes: network.nodes.map((node: any) => {
+          if (node.id !== nodeId) return node;
+
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              todos: node.data.todos.filter((todo: TodoItem) => todo.id !== todoId),
+            },
+          };
+        }),
+      };
+    });
+
+    localStorage.setItem('networks', JSON.stringify(updatedNetworks));
+    
+    toast({
+      title: "Todo completed",
+      description: `"${todoText}" has been completed and removed`,
+    });
+    
+    setNetworks(updatedNetworks);
+  }, [networks, toast]);
+
+  const handleDeleteNetwork = useCallback((networkId: string, networkName: string) => {
+    const updatedNetworks = networks.filter(network => network.id !== networkId);
+    setNetworks(updatedNetworks);
+    localStorage.setItem('networks', JSON.stringify(updatedNetworks));
+    
+    if (networkId === currentNetworkId && updatedNetworks.length > 0) {
+      setCurrentNetworkId(updatedNetworks[0].id);
+    }
+    
+    toast({
+      title: "Network deleted",
+      description: `"${networkName}" has been removed`,
+    });
+  }, [networks, currentNetworkId, toast]);
 
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
-      <div className="w-64 p-4 border-r bg-background">
-        <h2 className="font-semibold mb-4">Science of Six</h2>
-        <Button
-          onClick={() => setIsAddingNode(true)}
-          className="w-full"
-          variant="outline"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Person
-        </Button>
+      <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
+        <div className="p-4 border-b flex items-center justify-between">
+          {!isMenuMinimized && <h2 className="font-semibold">Your Networks</h2>}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setIsMenuMinimized(!isMenuMinimized)}
+            className="ml-auto"
+          >
+            {isMenuMinimized ? (
+              <ChevronRightIcon className="h-4 w-4" />
+            ) : (
+              <ChevronLeftIcon className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        
+        <div className="p-4 border-b space-y-2">
+          <Button
+            onClick={createNewNetwork}
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+          >
+            <PlusIcon className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">Create Network</span>}
+          </Button>
+          <Button
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            onClick={() => setShowTodos(!showTodos)}
+          >
+            <CheckSquare className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
+          </Button>
+        </div>
+
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {networks.map((network) => (
+            <div key={network.id} className="flex gap-2">
+              <Button
+                variant={currentNetworkId === network.id ? "default" : "ghost"}
+                className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
+                onClick={() => setCurrentNetworkId(network.id)}
+              >
+                {!isMenuMinimized && network.name}
+                {isMenuMinimized && network.name.split(' ')[1]}
+              </Button>
+              {!isMenuMinimized && (
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRenameClick(network)}
+                  >
+                    <Edit2Icon className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteNetwork(network.id, network.name)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-      
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -86,29 +532,126 @@ const Flow = () => {
         edgeTypes={edgeTypes}
         fitView
         className="bg-dot-pattern flex-1"
+        elementsSelectable={true}
+        selectNodesOnDrag={false}
+        proOptions={{ hideAttribution: true }}
+        defaultEdgeOptions={{
+          type: 'custom',
+          zIndex: 0,
+          interactionWidth: 20,
+        }}
       >
         <Background />
         <Controls />
-        <Panel position="top-left">
-          <div className="bg-background p-2 rounded-md shadow-sm">
-            <h3 className="text-sm font-medium">Network Map</h3>
-          </div>
+        <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
+          <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
+            <PlusIcon className="h-4 w-4" />
+            Add Node
+          </Button>
         </Panel>
+
+        {showTodos && (
+          <Panel position="top-right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh] translate-y-[60px]">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">To-Do's</h2>
+                <Button variant="ghost" size="icon" onClick={() => setShowTodos(false)}>
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {networks.map((network: any) => (
+                <Card key={network.id} className="p-4">
+                  <h3 className="text-lg font-semibold mb-4">{network.name}</h3>
+                  
+                  {network.nodes.map((node: any) => {
+                    if (!node.data.todos?.length) return null;
+                    
+                    return (
+                      <div key={node.id} className="mb-6 last:mb-0">
+                        <h4 className="text-sm font-medium mb-2">{node.data.name}</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[50px]"></TableHead>
+                              <TableHead>Task</TableHead>
+                              <TableHead className="w-[100px]">Due</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {node.data.todos.map((todo: TodoItem) => (
+                              <TableRow key={todo.id}>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={false}
+                                    onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  {todo.text}
+                                </TableCell>
+                                <TableCell>
+                                  {todo.dueDate ? (
+                                    <span className="text-sm text-muted-foreground">
+                                      {formatDate(todo.dueDate)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    );
+                  })}
+                </Card>
+              ))}
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
 
       <AddNodeDialog
-        open={isAddingNode}
-        onOpenChange={setIsAddingNode}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         onAdd={handleAddNode}
       />
+
+      <EdgeLabelDialog
+        open={isAddingEdge}
+        onOpenChange={setIsAddingEdge}
+        onSave={handleSaveEdgeData}
+      />
+
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Network</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Input
+              value={newNetworkName}
+              onChange={(e) => setNewNetworkName(e.target.value)}
+              placeholder="Enter new name"
+            />
+            <Button onClick={handleRename} className="w-full">
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-const NetworkMap = () => (
-  <ReactFlowProvider>
-    <Flow />
-  </ReactFlowProvider>
-);
+const NetworkMap = () => {
+  return (
+    <ReactFlowProvider>
+      <Flow />
+    </ReactFlowProvider>
+  );
+};
 
 export default NetworkMap;
