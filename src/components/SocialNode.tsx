@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Handle, Position, useReactFlow, Node, NodeProps } from '@xyflow/react';
+import { Handle, Position, useReactFlow, NodeProps } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
@@ -30,10 +30,10 @@ export interface SocialNodeData {
   todos?: TodoItem[];
 }
 
-const SocialNode = ({ id, data }: NodeProps<SocialNodeData>) => {
+const SocialNode = ({ id, data }: NodeProps<{ data: SocialNodeData }>) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [contactDetails, setContactDetails] = useState<ContactDetails>(data.contactDetails || {});
-  const [todos, setTodos] = useState<TodoItem[]>(data.todos || []);
+  const [contactDetails, setContactDetails] = useState<ContactDetails>(data.data.contactDetails || {});
+  const [todos, setTodos] = useState<TodoItem[]>(data.data.todos || []);
   const [newTodo, setNewTodo] = useState('');
   const [newTodoDate, setNewTodoDate] = useState('');
   const { setNodes, getNodes } = useReactFlow();
@@ -42,7 +42,7 @@ const SocialNode = ({ id, data }: NodeProps<SocialNodeData>) => {
   const handleContactDetailsChange = (field: keyof ContactDetails, value: string) => {
     const newDetails = { ...contactDetails, [field]: value };
     setContactDetails(newDetails);
-    updateNodeData({ ...data, contactDetails: newDetails });
+    updateNodeData({ ...data.data, contactDetails: newDetails });
   };
 
   const handleAddTodo = () => {
@@ -59,7 +59,7 @@ const SocialNode = ({ id, data }: NodeProps<SocialNodeData>) => {
     setTodos(updatedTodos);
     setNewTodo('');
     setNewTodoDate('');
-    updateNodeData({ ...data, todos: updatedTodos });
+    updateNodeData({ ...data.data, todos: updatedTodos });
   };
 
   const handleToggleTodo = (todoId: string) => {
@@ -67,21 +67,21 @@ const SocialNode = ({ id, data }: NodeProps<SocialNodeData>) => {
       todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
     );
     setTodos(updatedTodos);
-    updateNodeData({ ...data, todos: updatedTodos });
+    updateNodeData({ ...data.data, todos: updatedTodos });
   };
 
   const handleDeleteNode = () => {
     setNodes(getNodes().filter(node => node.id !== id));
     toast({
       title: "Node deleted",
-      description: `Removed ${data.name} from the network`,
+      description: `Removed ${data.data.name} from the network`,
     });
   };
 
   const updateNodeData = (newData: SocialNodeData) => {
-    setNodes((nodes: Node[]) => 
+    setNodes(nodes => 
       nodes.map(node => 
-        node.id === id ? { ...node, data: newData } : node
+        node.id === id ? { ...node, data: { data: newData } } : node
       )
     );
   };
@@ -93,13 +93,13 @@ const SocialNode = ({ id, data }: NodeProps<SocialNodeData>) => {
       
       <div className="flex items-center gap-3">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={data.imageUrl} />
-          <AvatarFallback>{data.name[0]}</AvatarFallback>
+          <AvatarImage src={data.data.imageUrl} />
+          <AvatarFallback>{data.data.name[0]}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col flex-1">
-          <span className="font-medium">{data.name}</span>
+          <span className="font-medium">{data.data.name}</span>
           <a
-            href={data.profileUrl}
+            href={data.data.profileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
