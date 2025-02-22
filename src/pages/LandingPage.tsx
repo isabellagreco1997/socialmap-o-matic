@@ -1,17 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2 } from "lucide-react";
-
 const LandingPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       {/* Navigation */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between">
@@ -25,9 +17,8 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-20 bg-gradient-to-b from-background to-secondary/20">
         <div className="max-w-3xl space-y-8">
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">
-            Meet Anyone in the World
-          </h1>
+          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">Connect with 
+Anyone in the World</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
           </p>
@@ -249,8 +240,6 @@ const LandingPage = () => {
           </p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default LandingPage;
