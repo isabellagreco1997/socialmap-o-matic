@@ -1,4 +1,3 @@
-
 import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
@@ -18,8 +17,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
+import EdgeLabelDialog, { EdgeData } from '@/components/EdgeLabelDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Trash2 } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Trash2, Edit } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -46,13 +46,14 @@ const CustomEdge = ({
   sourceY,
   targetX,
   targetY,
-  label,
+  data,
   sourcePosition,
   targetPosition,
   style = {},
   markerEnd,
 }: EdgeProps) => {
   const { setEdges } = useReactFlow();
+  const [isEditing, setIsEditing] = useState(false);
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -64,6 +65,19 @@ const CustomEdge = ({
 
   const onEdgeClick = () => {
     setEdges((edges) => edges.filter((edge) => edge.id !== id));
+  };
+
+  const onEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleSaveEdgeData = (newData: EdgeData) => {
+    setEdges((edges) =>
+      edges.map((edge) =>
+        edge.id === id ? { ...edge, data: newData } : edge
+      )
+    );
   };
 
   return (
@@ -81,19 +95,43 @@ const CustomEdge = ({
             fontSize: 12,
             fontWeight: 500,
           }}
-          className="nodrag nopan flex items-center gap-2 border shadow-sm"
+          className="nodrag nopan flex flex-col border shadow-sm min-w-[100px]"
         >
-          {label}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-            onClick={onEdgeClick}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          <div className="flex items-center justify-between gap-2 border-b p-1">
+            <span>{data?.label}</span>
+            <div className="flex gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-4 w-4 p-0"
+                onClick={onEditClick}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={onEdgeClick}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+          {data?.metrics && (
+            <div className="text-xs text-muted-foreground px-1 py-0.5">
+              {data.metrics.strength && <div>Strength: {data.metrics.strength}</div>}
+              {data.metrics.frequency && <div>Frequency: {data.metrics.frequency}</div>}
+            </div>
+          )}
         </div>
       </EdgeLabelRenderer>
+      <EdgeLabelDialog
+        open={isEditing}
+        onOpenChange={setIsEditing}
+        onSave={handleSaveEdgeData}
+        initialData={data as EdgeData}
+      />
     </>
   );
 };
@@ -150,6 +188,8 @@ const Flow = () => {
   const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
   const [newNetworkName, setNewNetworkName] = useState('');
   const [showTodos, setShowTodos] = useState(false);
+  const [isAddingEdge, setIsAddingEdge] = useState(false);
+  const [newEdgeConnection, setNewEdgeConnection] = useState<Connection | null>(null);
   const { toast } = useToast();
 
   const isSwitchingNetwork = useRef(false);
@@ -190,22 +230,29 @@ const Flow = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      const label = prompt("Enter a label for this connection:");
-      if (label) {
-        setEdges((eds) => addEdge({
-          ...connection,
-          type: 'custom',
-          label,
-          animated: true,
-        }, eds));
-        toast({
-          title: "Connection created",
-          description: "Nodes have been connected successfully",
-        });
-      }
+      const edgeId = `${connection.source}-${connection.target}`;
+      setIsAddingEdge(true);
+      setNewEdgeConnection(connection);
     },
     [setEdges, toast]
   );
+
+  const handleSaveEdgeData = (data: EdgeData) => {
+    if (newEdgeConnection) {
+      setEdges((eds) => addEdge({
+        ...newEdgeConnection,
+        type: 'custom',
+        data,
+        animated: true,
+      }, eds));
+      toast({
+        title: "Connection created",
+        description: "Nodes have been connected successfully",
+      });
+      setNewEdgeConnection(null);
+    }
+    setIsAddingEdge(false);
+  };
 
   const handleAddNode = (nodeData: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
     const newNode = {
@@ -469,6 +516,12 @@ const Flow = () => {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onAdd={handleAddNode}
+      />
+
+      <EdgeLabelDialog
+        open={isAddingEdge}
+        onOpenChange={setIsAddingEdge}
+        onSave={handleSaveEdgeData}
       />
 
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
