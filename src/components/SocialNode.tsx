@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { Handle, Position, useReactFlow, Node } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar, MapPin, Building2, User } from 'lucide-react';
@@ -42,6 +42,15 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   const { setNodes, getNodes } = useReactFlow();
   const { toast } = useToast();
 
+  // Safeguard against undefined data
+  if (!data || !data.name) {
+    return (
+      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur">
+        <div className="text-destructive">Invalid node data</div>
+      </Card>
+    );
+  }
+
   const getTypeIcon = () => {
     switch (data.type) {
       case 'person':
@@ -53,7 +62,7 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
       case 'venue':
         return <MapPin className="h-4 w-4 text-red-500" />;
       default:
-        return null;
+        return <User className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -89,7 +98,7 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   };
 
   const handleDeleteNode = () => {
-    setNodes(getNodes().filter(node => node.id !== id));
+    setNodes(nds => nds.filter(node => node.id !== id));
     toast({
       title: "Node deleted",
       description: `Removed ${data.name} from the network`,
@@ -97,9 +106,11 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   };
 
   const updateNodeData = (newData: NodeData) => {
-    setNodes(nodes => 
-      nodes.map(node => 
-        node.id === id ? { ...node, data: newData } : node
+    setNodes((nds: Node[]) => 
+      nds.map(node => 
+        node.id === id 
+          ? { ...node, data: { ...newData } as unknown as Record<string, unknown> }
+          : node
       )
     );
   };
@@ -112,7 +123,7 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
       <div className="flex items-center gap-3">
         <Avatar className="h-12 w-12">
           <AvatarImage src={data.imageUrl} />
-          <AvatarFallback>{data.name[0]}</AvatarFallback>
+          <AvatarFallback>{data.name ? data.name[0] : '?'}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col flex-1">
           <div className="flex items-center gap-2">
