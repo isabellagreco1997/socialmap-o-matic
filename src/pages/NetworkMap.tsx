@@ -253,6 +253,7 @@ const Flow = () => {
   const { toast } = useToast();
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
   const [tempNetworkName, setTempNetworkName] = useState('');
+  const [draggedNetwork, setDraggedNetwork] = useState<string | null>(null);
 
   const isSwitchingNetwork = useRef(false);
 
@@ -478,9 +479,10 @@ const Flow = () => {
     });
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number, networkId: string) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
+    setDraggedNetwork(networkId);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -494,6 +496,11 @@ const Flow = () => {
     if (dragIndex !== dropIndex) {
       handleReorderNetworks(dragIndex, dropIndex);
     }
+    setDraggedNetwork(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedNetwork(null);
   };
 
   return (
@@ -547,15 +554,21 @@ const Flow = () => {
             <div 
               key={network.id} 
               draggable={!isMenuMinimized}
-              onDragStart={(e) => handleDragStart(e, index)}
+              onDragStart={(e) => handleDragStart(e, index, network.id)}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, index)}
-              className={`flex items-center gap-2 ${!isMenuMinimized ? 'cursor-move' : ''}`}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center gap-2 ${
+                !isMenuMinimized ? 'cursor-move' : ''
+              } ${
+                draggedNetwork === network.id ? 'opacity-50' : ''
+              }`}
             >
               <Button
                 variant={currentNetworkId === network.id ? "default" : "ghost"}
                 className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
                 onClick={() => setCurrentNetworkId(network.id)}
+                disabled={draggedNetwork !== null}
               >
                 {!isMenuMinimized && (
                   <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
