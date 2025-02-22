@@ -30,7 +30,8 @@ import {
   CheckSquare, 
   Trash2, 
   Edit,
-  MessageSquare 
+  MessageSquare,
+  Network as NetworkIcon 
 } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
@@ -516,7 +517,7 @@ const Flow = () => {
         <Controls />
         
         <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
-          <Network className="h-5 w-5 text-primary" />
+          <NetworkIcon className="h-5 w-5 text-primary" />
           <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
         </Panel>
 
