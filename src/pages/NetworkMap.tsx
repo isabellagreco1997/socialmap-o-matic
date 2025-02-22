@@ -14,22 +14,15 @@ import {
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MapIcon } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 const nodeTypes = {
   social: SocialNode,
 };
 
-interface Map {
+interface Network {
   id: string;
   name: string;
   nodes: any[];
@@ -37,53 +30,54 @@ interface Map {
 }
 
 const NetworkMap = () => {
-  const [maps, setMaps] = useState<Map[]>(() => {
-    const savedMaps = localStorage.getItem('maps');
-    if (savedMaps) {
-      return JSON.parse(savedMaps);
+  const [networks, setNetworks] = useState<Network[]>(() => {
+    const savedNetworks = localStorage.getItem('networks');
+    if (savedNetworks) {
+      return JSON.parse(savedNetworks);
     }
     return [{
       id: '1',
-      name: 'Default Map',
+      name: 'Default Network',
       nodes: [],
       edges: []
     }];
   });
   
-  const [currentMapId, setCurrentMapId] = useState(() => {
-    return localStorage.getItem('currentMapId') || '1';
+  const [currentNetworkId, setCurrentNetworkId] = useState(() => {
+    return localStorage.getItem('currentNetworkId') || '1';
   });
 
+  const [isMenuMinimized, setIsMenuMinimized] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Load current map data
+  // Load current network data
   useEffect(() => {
-    const currentMap = maps.find(map => map.id === currentMapId);
-    if (currentMap) {
-      setNodes(currentMap.nodes);
-      setEdges(currentMap.edges);
+    const currentNetwork = networks.find(network => network.id === currentNetworkId);
+    if (currentNetwork) {
+      setNodes(currentNetwork.nodes);
+      setEdges(currentNetwork.edges);
     }
-  }, [currentMapId, maps, setNodes, setEdges]);
+  }, [currentNetworkId, networks, setNodes, setEdges]);
 
-  // Save maps when they change
+  // Save networks when they change
   useEffect(() => {
-    localStorage.setItem('maps', JSON.stringify(maps));
-  }, [maps]);
+    localStorage.setItem('networks', JSON.stringify(networks));
+  }, [networks]);
 
-  // Save current map id
+  // Save current network id
   useEffect(() => {
-    localStorage.setItem('currentMapId', currentMapId);
-  }, [currentMapId]);
+    localStorage.setItem('currentNetworkId', currentNetworkId);
+  }, [currentNetworkId]);
 
-  // Save current map's nodes and edges
+  // Save current network's nodes and edges
   useEffect(() => {
-    setMaps(prevMaps => prevMaps.map(map => 
-      map.id === currentMapId ? { ...map, nodes, edges } : map
+    setNetworks(prevNetworks => prevNetworks.map(network => 
+      network.id === currentNetworkId ? { ...network, nodes, edges } : network
     ));
-  }, [nodes, edges, currentMapId]);
+  }, [nodes, edges, currentNetworkId]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -110,56 +104,61 @@ const NetworkMap = () => {
     });
   };
 
-  const createNewMap = () => {
-    const newMap: Map = {
-      id: `map-${maps.length + 1}`,
-      name: `New Map ${maps.length + 1}`,
+  const createNewNetwork = () => {
+    const newNetwork: Network = {
+      id: `network-${networks.length + 1}`,
+      name: `New Network ${networks.length + 1}`,
       nodes: [],
       edges: []
     };
-    setMaps([...maps, newMap]);
-    setCurrentMapId(newMap.id);
+    setNetworks([...networks, newNetwork]);
+    setCurrentNetworkId(newNetwork.id);
     toast({
-      title: "Map created",
-      description: `Created ${newMap.name}`,
+      title: "Network created",
+      description: `Created ${newNetwork.name}`,
     });
   };
 
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="fixed top-4 left-4 z-50">
-            <MapIcon className="h-4 w-4" />
+      <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
+        <div className="p-4 border-b flex items-center justify-between">
+          {!isMenuMinimized && <h2 className="font-semibold">Your Networks</h2>}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setIsMenuMinimized(!isMenuMinimized)}
+            className="ml-auto"
+          >
+            {isMenuMinimized ? (
+              <ChevronRightIcon className="h-4 w-4" />
+            ) : (
+              <ChevronLeftIcon className="h-4 w-4" />
+            )}
           </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[300px]">
-          <SheetHeader>
-            <SheetTitle>Your Maps</SheetTitle>
-          </SheetHeader>
-          <div className="mt-4 space-y-4">
-            {maps.map((map) => (
-              <Button
-                key={map.id}
-                variant={currentMapId === map.id ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => setCurrentMapId(map.id)}
-              >
-                <MapIcon className="mr-2 h-4 w-4" />
-                {map.name}
-              </Button>
-            ))}
+        </div>
+        <div className="flex-1 p-4 space-y-2">
+          {networks.map((network) => (
             <Button
-              onClick={createNewMap}
-              variant="outline"
-              className="w-full"
+              key={network.id}
+              variant={currentNetworkId === network.id ? "default" : "ghost"}
+              className={`w-full justify-start ${isMenuMinimized ? 'px-2' : ''}`}
+              onClick={() => setCurrentNetworkId(network.id)}
             >
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Create New Map
+              {!isMenuMinimized && network.name}
+              {isMenuMinimized && network.name[0]}
             </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+          ))}
+          <Button
+            onClick={createNewNetwork}
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+          >
+            <PlusIcon className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">Create Network</span>}
+          </Button>
+        </div>
+      </div>
 
       <ReactFlow
         nodes={nodes}
