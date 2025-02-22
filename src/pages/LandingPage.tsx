@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2 } from "lucide-react";
+
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       {/* Navigation */}
@@ -15,9 +17,16 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-20 bg-gradient-to-b from-background to-secondary/20">
-        <div className="max-w-3xl space-y-8">
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">Connect with 
+      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 py-20 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point_41981-1194.jpg?w=2000" 
+            alt="Global Network Connection"
+            className="w-full h-full object-cover opacity-20"
+          />
+        </div>
+        <div className="max-w-3xl space-y-8 relative z-10">
+          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">Connect with 
 Anyone in the World</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
