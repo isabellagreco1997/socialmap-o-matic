@@ -13,7 +13,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Calendar, Network } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Calendar, Network, Trash2 } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -219,6 +219,21 @@ const Flow = () => {
     setNetworks(updatedNetworks);
   }, [networks, toast]);
 
+  const handleDeleteNetwork = useCallback((networkId: string, networkName: string) => {
+    const updatedNetworks = networks.filter(network => network.id !== networkId);
+    setNetworks(updatedNetworks);
+    localStorage.setItem('networks', JSON.stringify(updatedNetworks));
+    
+    if (networkId === currentNetworkId && updatedNetworks.length > 0) {
+      setCurrentNetworkId(updatedNetworks[0].id);
+    }
+    
+    toast({
+      title: "Network deleted",
+      description: `"${networkName}" has been removed`,
+    });
+  }, [networks, currentNetworkId, toast]);
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -237,7 +252,29 @@ const Flow = () => {
             )}
           </Button>
         </div>
-        <div className="flex-1 p-4 space-y-2">
+        
+        <div className="p-4 border-b space-y-2">
+          <div className="flex gap-2">
+            <Button
+              onClick={createNewNetwork}
+              variant="outline"
+              className={`flex-1 ${isMenuMinimized ? 'px-2' : ''}`}
+            >
+              <PlusIcon className="h-4 w-4" />
+              {!isMenuMinimized && <span className="ml-2">Create Network</span>}
+            </Button>
+            <Button
+              variant="outline"
+              className={`flex-1 ${isMenuMinimized ? 'px-2' : ''}`}
+              onClick={() => setShowTodos(!showTodos)}
+            >
+              <CheckSquare className="h-4 w-4" />
+              {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
           {networks.map((network) => (
             <div key={network.id} className="flex gap-2">
               <Button
@@ -249,33 +286,25 @@ const Flow = () => {
                 {isMenuMinimized && network.name.split(' ')[1]}
               </Button>
               {!isMenuMinimized && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRenameClick(network)}
-                >
-                  <Edit2Icon className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRenameClick(network)}
+                  >
+                    <Edit2Icon className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteNetwork(network.id, network.name)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               )}
             </div>
           ))}
-          <Button
-            onClick={createNewNetwork}
-            variant="outline"
-            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
-          >
-            <PlusIcon className="h-4 w-4" />
-            {!isMenuMinimized && <span className="ml-2">Create Network</span>}
-          </Button>
-
-          <Button
-            variant="outline"
-            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
-            onClick={() => setShowTodos(!showTodos)}
-          >
-            <CheckSquare className="h-4 w-4" />
-            {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
-          </Button>
         </div>
       </div>
 
@@ -299,7 +328,7 @@ const Flow = () => {
         </Panel>
 
         {showTodos && (
-          <Panel position="right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh]">
+          <Panel position="top-right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh] translate-y-[60px]">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">To-Do's</h2>
