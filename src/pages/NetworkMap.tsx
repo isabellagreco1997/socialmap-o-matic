@@ -59,6 +59,7 @@ interface EdgeControlPoint {
 interface EdgeData {
   label: string;
   notes?: string;
+  [key: string]: unknown;
 }
 
 const CustomEdge = ({
@@ -99,14 +100,20 @@ const CustomEdge = ({
   };
 
   const handleSaveEdgeData = (newData: EdgeData) => {
-    setEdges((eds) =>
-      eds.map((edge) => 
-        edge.id === id 
-          ? { ...edge, data: newData }
-          : edge
-      )
+    setEdges((eds: Edge[]) =>
+      eds.map((edge) => {
+        if (edge.id === id) {
+          return {
+            ...edge,
+            data: { ...newData } as unknown as Record<string, unknown>
+          };
+        }
+        return edge;
+      })
     );
   };
+
+  const edgeData = data as EdgeData;
 
   return (
     <>
@@ -136,8 +143,8 @@ const CustomEdge = ({
           }}
           className="nodrag nopan flex flex-row items-center border shadow-sm gap-2"
         >
-          {data?.label && <span>{data.label}</span>}
-          <div className={`flex gap-1 ${data?.label ? 'border-l pl-2' : ''}`}>
+          {edgeData?.label && <span>{edgeData.label}</span>}
+          <div className={`flex gap-1 ${edgeData?.label ? 'border-l pl-2' : ''}`}>
             <Button 
               variant="ghost" 
               size="icon"
@@ -162,7 +169,7 @@ const CustomEdge = ({
         open={isEditing}
         onOpenChange={setIsEditing}
         onSave={handleSaveEdgeData}
-        initialData={data as EdgeData}
+        initialData={edgeData}
       />
     </>
   );
