@@ -1,6 +1,7 @@
 
 import { useCallback, useState } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Controls,
   Background,
   useNodesState,
@@ -10,13 +11,14 @@ import ReactFlow, {
   Node,
   addEdge,
   Panel,
+  ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { nodeTypes } from '@/components/SocialNode';
+import SocialNode from '@/components/SocialNode';
 import AddNodeDialog from '@/components/AddNodeDialog';
-import { edgeTypes } from '@/components/EdgeLabelDialog';
+import EdgeLabelDialog from '@/components/EdgeLabelDialog';
 
 export type NodeData = {
   label: string;
@@ -32,6 +34,14 @@ export type EdgeData = {
   };
 };
 
+const nodeTypes = {
+  social: SocialNode,
+};
+
+const edgeTypes = {
+  default: EdgeLabelDialog,
+};
+
 const Flow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -42,12 +52,12 @@ const Flow = () => {
     [setEdges]
   );
 
-  const handleAddNode = (nodeData: NodeData) => {
+  const handleAddNode = (data: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
     const newNode = {
       id: `${nodes.length + 1}`,
       type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 500 },
-      data: nodeData,
+      data: data.data,
     };
     setNodes((nds) => [...nds, newNode]);
   };
@@ -89,7 +99,7 @@ const Flow = () => {
       <AddNodeDialog
         open={isAddingNode}
         onOpenChange={setIsAddingNode}
-        onSave={handleAddNode}
+        onAdd={handleAddNode}
       />
     </div>
   );
