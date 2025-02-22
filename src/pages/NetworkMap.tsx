@@ -58,6 +58,7 @@ interface EdgeControlPoint {
 
 interface EdgeData {
   label: string;
+  description?: string;
   metrics?: {
     strength?: number;
     frequency?: number;
@@ -292,8 +293,6 @@ const Flow = () => {
   const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
   const [newNetworkName, setNewNetworkName] = useState('');
   const [showTodos, setShowTodos] = useState(false);
-  const [isAddingEdge, setIsAddingEdge] = useState(false);
-  const [newEdgeConnection, setNewEdgeConnection] = useState<Connection | null>(null);
   const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
 
@@ -335,29 +334,19 @@ const Flow = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      const edgeId = `${connection.source}-${connection.target}`;
-      setIsAddingEdge(true);
-      setNewEdgeConnection(connection);
-    },
-    [setEdges, toast]
-  );
-
-  const handleSaveEdgeData = (data: EdgeData) => {
-    if (newEdgeConnection) {
       setEdges((eds) => addEdge({
-        ...newEdgeConnection,
+        ...connection,
         type: 'custom',
-        data,
+        data: { label: '' },
         animated: true,
       }, eds));
       toast({
         title: "Connection created",
         description: "Nodes have been connected successfully",
       });
-      setNewEdgeConnection(null);
-    }
-    setIsAddingEdge(false);
-  };
+    },
+    [setEdges, toast]
+  );
 
   const handleAddNode = (nodeData: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
     const newNode = {
@@ -646,9 +635,9 @@ const Flow = () => {
       />
 
       <EdgeLabelDialog
-        open={isAddingEdge}
-        onOpenChange={setIsAddingEdge}
-        onSave={handleSaveEdgeData}
+        open={false}
+        onOpenChange={() => {}}
+        onSave={() => {}}
       />
 
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
