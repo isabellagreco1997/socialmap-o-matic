@@ -254,24 +254,22 @@ const Flow = () => {
         </div>
         
         <div className="p-4 border-b space-y-2">
-          <div className="flex gap-2">
-            <Button
-              onClick={createNewNetwork}
-              variant="outline"
-              className={`flex-1 ${isMenuMinimized ? 'px-2' : ''}`}
-            >
-              <PlusIcon className="h-4 w-4" />
-              {!isMenuMinimized && <span className="ml-2">Create Network</span>}
-            </Button>
-            <Button
-              variant="outline"
-              className={`flex-1 ${isMenuMinimized ? 'px-2' : ''}`}
-              onClick={() => setShowTodos(!showTodos)}
-            >
-              <CheckSquare className="h-4 w-4" />
-              {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
-            </Button>
-          </div>
+          <Button
+            onClick={createNewNetwork}
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+          >
+            <PlusIcon className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">Create Network</span>}
+          </Button>
+          <Button
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            onClick={() => setShowTodos(!showTodos)}
+          >
+            <CheckSquare className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
+          </Button>
         </div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto">
