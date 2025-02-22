@@ -14,7 +14,6 @@ import {
   getBezierPath,
   useReactFlow,
   EdgeProps,
-  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
@@ -41,11 +40,6 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from '@/components/ui/checkbox';
 
-interface EdgeControlPoint {
-  x: number;
-  y: number;
-}
-
 const CustomEdge = ({
   id,
   sourceX,
@@ -57,45 +51,17 @@ const CustomEdge = ({
   targetPosition,
   style = {},
   markerEnd,
-  selected,
 }: EdgeProps) => {
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
-  
-  const [controlPoints, setControlPoints] = useState<{
-    sourceHandle: EdgeControlPoint;
-    targetHandle: EdgeControlPoint;
-  }>({
-    sourceHandle: { x: 0, y: 0 },
-    targetHandle: { x: 0, y: 0 },
-  });
-
-  const defaultControlPoints = {
-    sourceHandle: {
-      x: sourceX + (targetX - sourceX) * 0.25,
-      y: sourceY + (targetY - sourceY) * 0.25,
-    },
-    targetHandle: {
-      x: sourceX + (targetX - sourceX) * 0.75,
-      y: sourceY + (targetY - sourceY) * 0.75,
-    },
-  };
-
-  const { sourceHandle, targetHandle } = controlPoints.sourceHandle.x === 0 
-    ? defaultControlPoints 
-    : controlPoints;
-
-  const [edgePath] = getBezierPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
-    sourcePosition: sourcePosition || Position.Bottom,
+    sourcePosition,
     targetX,
     targetY,
-    targetPosition: targetPosition || Position.Top,
+    targetPosition,
   });
-
-  const labelX = (sourceX + targetX) / 2;
-  const labelY = (sourceY + targetY) / 2;
 
   const onEdgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -108,35 +74,11 @@ const CustomEdge = ({
   };
 
   const handleSaveEdgeData = (newData: EdgeData) => {
-    setEdges((eds) =>
-      eds.map((edge) => 
-        edge.id === id 
-          ? { ...edge, data: { ...edge.data, ...newData } }
-          : edge
+    setEdges((edges) =>
+      edges.map((edge) =>
+        edge.id === id ? { ...edge, data: newData } : edge
       )
     );
-  };
-
-  const onControlPointDrag = (point: 'sourceHandle' | 'targetHandle') => (e: React.MouseEvent) => {
-    const bounds = (e.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
-    if (!bounds) return;
-
-    const updateControlPoints = (e: MouseEvent) => {
-      const x = e.clientX - bounds.left;
-      const y = e.clientY - bounds.top;
-      setControlPoints(prev => ({
-        ...prev,
-        [point]: { x, y },
-      }));
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', updateControlPoints);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-
-    window.addEventListener('mousemove', updateControlPoints);
-    window.addEventListener('mouseup', onMouseUp);
   };
 
   return (
@@ -151,30 +93,6 @@ const CustomEdge = ({
           cursor: 'pointer'
         }} 
       />
-      
-      {selected && (
-        <>
-          <circle
-            cx={sourceHandle.x}
-            cy={sourceHandle.y}
-            r={4}
-            fill="var(--xy-theme-selected)"
-            cursor="move"
-            className="nodrag"
-            onMouseDown={onControlPointDrag('sourceHandle')}
-          />
-          <circle
-            cx={targetHandle.x}
-            cy={targetHandle.y}
-            r={4}
-            fill="var(--xy-theme-selected)"
-            cursor="move"
-            className="nodrag"
-            onMouseDown={onControlPointDrag('targetHandle')}
-          />
-        </>
-      )}
-
       <EdgeLabelRenderer>
         <div
           style={{
@@ -191,7 +109,7 @@ const CustomEdge = ({
           className="nodrag nopan flex flex-col border shadow-sm min-w-[100px]"
         >
           <div className="flex items-center justify-between gap-2 border-b p-1">
-            <span>{data?.label || ''}</span>
+            <span>{data?.label}</span>
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
@@ -211,10 +129,10 @@ const CustomEdge = ({
               </Button>
             </div>
           </div>
-          {data?.metrics && typeof data.metrics === 'object' && (
+          {data?.metrics && (
             <div className="text-xs text-muted-foreground px-1 py-0.5">
-              {'strength' in data.metrics && <div>Strength: {data.metrics.strength}</div>}
-              {'frequency' in data.metrics && <div>Frequency: {data.metrics.frequency}</div>}
+              {data.metrics.strength && <div>Strength: {data.metrics.strength}</div>}
+              {data.metrics.frequency && <div>Frequency: {data.metrics.frequency}</div>}
             </div>
           )}
         </div>
@@ -536,7 +454,6 @@ const Flow = () => {
         selectNodesOnDrag={false}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
-          type: 'custom',
           zIndex: 0,
           interactionWidth: 20,
         }}
