@@ -226,6 +226,13 @@ interface TodoItem {
   dueDate?: string;
 }
 
+interface FilteredTodoItem extends TodoItem {
+  networkId: string;
+  networkName: string;
+  nodeId: string;
+  nodeName: string;
+}
+
 const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>(() => {
     const savedNetworks = localStorage.getItem('networks');
@@ -568,7 +575,7 @@ const Flow = () => {
             nodeName: node.data.name
           }))
       )
-    );
+    ) as FilteredTodoItem[];
   }, [networks, selectedNetwork, dateFilter]);
 
   return (
@@ -778,7 +785,7 @@ const Flow = () => {
                       </Select>
                     </div>
 
-                    {filteredTodos.map((todo: TodoItem) => (
+                    {filteredTodos.map((todo: FilteredTodoItem) => (
                       <Card key={todo.id} className="p-4">
                         <div className="flex items-start gap-3">
                           <Checkbox 
@@ -786,17 +793,19 @@ const Flow = () => {
                             checked={false}
                             onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id, todo.text)}
                           />
-                          <div className="flex-1 space-y-1">
-                            <div className="font-medium">{todo.text}</div>
-                            <div className="text-sm text-muted-foreground">
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="font-medium">{todo.text}</div>
+                              {todo.dueDate && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1 shrink-0">
+                                  <Calendar className="h-4 w-4" />
+                                  {formatDate(todo.dueDate)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
                               {todo.networkName} / {todo.nodeName}
                             </div>
-                            {todo.dueDate && (
-                              <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                <Calendar className="h-4 w-4" />
-                                {formatDate(todo.dueDate)}
-                              </div>
-                            )}
                           </div>
                         </div>
                       </Card>
