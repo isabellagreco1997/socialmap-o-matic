@@ -9,10 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar, CheckCircle2, XCircle, Network } from 'lucide-react';
+import { Calendar, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TodoItem {
   id: string;
@@ -22,6 +23,7 @@ interface TodoItem {
 }
 
 const TodoDashboard = () => {
+  const { toast } = useToast();
   const networks = useMemo(() => {
     const savedNetworks = localStorage.getItem('networks');
     return savedNetworks ? JSON.parse(savedNetworks) : [];
@@ -31,7 +33,7 @@ const TodoDashboard = () => {
     return new Date(date).toLocaleDateString();
   }, []);
 
-  const handleToggleTodo = useCallback((networkId: string, nodeId: string, todoId: string) => {
+  const handleCompleteTodo = useCallback((networkId: string, nodeId: string, todoId: string, todoText: string) => {
     const updatedNetworks = networks.map((network: any) => {
       if (network.id !== networkId) return network;
 
@@ -44,9 +46,8 @@ const TodoDashboard = () => {
             ...node,
             data: {
               ...node.data,
-              todos: node.data.todos.map((todo: TodoItem) =>
-                todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
-              ),
+              // Filter out the completed todo
+              todos: node.data.todos.filter((todo: TodoItem) => todo.id !== todoId),
             },
           };
         }),
@@ -54,8 +55,14 @@ const TodoDashboard = () => {
     });
 
     localStorage.setItem('networks', JSON.stringify(updatedNetworks));
-    window.location.reload(); // Refresh to update the view
-  }, [networks]);
+    
+    toast({
+      title: "Todo completed",
+      description: `"${todoText}" has been completed and removed`,
+    });
+    
+    window.location.reload();
+  }, [networks, toast]);
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -82,7 +89,7 @@ const TodoDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[50px]">Status</TableHead>
+                      <TableHead className="w-[50px]">Complete</TableHead>
                       <TableHead>Task</TableHead>
                       <TableHead className="w-[150px]">Due Date</TableHead>
                     </TableRow>
@@ -92,11 +99,11 @@ const TodoDashboard = () => {
                       <TableRow key={todo.id}>
                         <TableCell>
                           <Checkbox
-                            checked={todo.completed}
-                            onCheckedChange={() => handleToggleTodo(network.id, node.id, todo.id)}
+                            checked={false}
+                            onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
                           />
                         </TableCell>
-                        <TableCell className={todo.completed ? 'line-through text-muted-foreground' : ''}>
+                        <TableCell>
                           {todo.text}
                         </TableCell>
                         <TableCell>
