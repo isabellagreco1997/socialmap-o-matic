@@ -2,6 +2,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   addEdge,
   Background,
   Controls,
@@ -29,7 +30,8 @@ interface Network {
   edges: any[];
 }
 
-const NetworkMap = () => {
+// Separate the ReactFlow content into its own component
+const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>(() => {
     const savedNetworks = localStorage.getItem('networks');
     if (savedNetworks) {
@@ -185,6 +187,15 @@ const NetworkMap = () => {
         onAdd={handleAddNode}
       />
     </div>
+  );
+};
+
+// Wrap the Flow component with ReactFlowProvider
+const NetworkMap = () => {
+  return (
+    <ReactFlowProvider>
+      <Flow />
+    </ReactFlowProvider>
   );
 };
 
