@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { 
   Table,
@@ -9,11 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar, Network } from 'lucide-react';
+import { Calendar, Network, ListChecks, MapPin, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
+import { Toggle } from "@/components/ui/toggle";
+
+type ViewType = 'tasks' | 'venues' | 'notes';
 
 interface TodoItem {
   id: string;
@@ -24,6 +27,8 @@ interface TodoItem {
 
 const TodoDashboard = () => {
   const { toast } = useToast();
+  const [viewType, setViewType] = useState<ViewType>('tasks');
+  
   const networks = useMemo(() => {
     const savedNetworks = localStorage.getItem('networks');
     return savedNetworks ? JSON.parse(savedNetworks) : [];
@@ -46,7 +51,6 @@ const TodoDashboard = () => {
             ...node,
             data: {
               ...node.data,
-              // Filter out the completed todo
               todos: node.data.todos.filter((todo: TodoItem) => todo.id !== todoId),
             },
           };
@@ -57,7 +61,7 @@ const TodoDashboard = () => {
     localStorage.setItem('networks', JSON.stringify(updatedNetworks));
     
     toast({
-      title: "Todo completed",
+      title: "Task completed",
       description: `"${todoText}" has been completed and removed`,
     });
     
@@ -67,12 +71,39 @@ const TodoDashboard = () => {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">To-Do's</h1>
+        <h1 className="text-3xl font-bold">Tasks</h1>
         <Button asChild>
           <Link to="/" className="flex items-center gap-2">
             <Network className="h-4 w-4" />
             Back to Network
           </Link>
+        </Button>
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          variant={viewType === 'tasks' ? 'default' : 'outline'}
+          onClick={() => setViewType('tasks')}
+          className="flex items-center gap-2"
+        >
+          <ListChecks className="h-4 w-4" />
+          Upcoming Tasks
+        </Button>
+        <Button
+          variant={viewType === 'venues' ? 'default' : 'outline'}
+          onClick={() => setViewType('venues')}
+          className="flex items-center gap-2"
+        >
+          <MapPin className="h-4 w-4" />
+          Upcoming Venues
+        </Button>
+        <Button
+          variant={viewType === 'notes' ? 'default' : 'outline'}
+          onClick={() => setViewType('notes')}
+          className="flex items-center gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          Notes
         </Button>
       </div>
       
@@ -90,7 +121,11 @@ const TodoDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]">Complete</TableHead>
-                      <TableHead>Task</TableHead>
+                      <TableHead>
+                        {viewType === 'tasks' && 'Task'}
+                        {viewType === 'venues' && 'Venue'}
+                        {viewType === 'notes' && 'Note'}
+                      </TableHead>
                       <TableHead className="w-[150px]">Due Date</TableHead>
                     </TableRow>
                   </TableHeader>

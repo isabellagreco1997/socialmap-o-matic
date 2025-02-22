@@ -548,7 +548,7 @@ const Flow = () => {
             onClick={() => setShowTodos(!showTodos)}
           >
             <CheckSquare className="h-4 w-4 shrink-0" />
-            {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
+            {!isMenuMinimized && <span className="ml-2">Tasks</span>}
           </Button>
           <Button
             variant="outline"
@@ -672,7 +672,7 @@ const Flow = () => {
           <Panel position="top-right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh] translate-y-[60px]">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">To-Do's</h2>
+                <h2 className="text-2xl font-bold">Tasks</h2>
                 <Button variant="ghost" size="icon" onClick={() => setShowTodos(false)}>
                   <ChevronRightIcon className="h-4 w-4" />
                 </Button>
