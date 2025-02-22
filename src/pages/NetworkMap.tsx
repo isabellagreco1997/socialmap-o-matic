@@ -51,9 +51,31 @@ const CustomEdge = ({
   targetPosition,
   style = {},
   markerEnd,
+  selected,
 }: EdgeProps) => {
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
+  
+  const [controlPoints, setControlPoints] = useState({
+    sourceHandle: { x: 0, y: 0 },
+    targetHandle: { x: 0, y: 0 },
+  });
+
+  const defaultControlPoints = {
+    sourceHandle: {
+      x: sourceX + (targetX - sourceX) * 0.25,
+      y: sourceY + (targetY - sourceY) * 0.25,
+    },
+    targetHandle: {
+      x: sourceX + (targetX - sourceX) * 0.75,
+      y: sourceY + (targetY - sourceY) * 0.75,
+    },
+  };
+
+  const { sourceHandle, targetHandle } = controlPoints.sourceHandle.x === 0 
+    ? defaultControlPoints 
+    : controlPoints;
+
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -61,6 +83,10 @@ const CustomEdge = ({
     targetX,
     targetY,
     targetPosition,
+    sourceControlX: sourceHandle.x,
+    sourceControlY: sourceHandle.y,
+    targetControlX: targetHandle.x,
+    targetControlY: targetHandle.y,
   });
 
   const onEdgeClick = (e: React.MouseEvent) => {
@@ -74,11 +100,33 @@ const CustomEdge = ({
   };
 
   const handleSaveEdgeData = (newData: EdgeData) => {
-    setEdges((edges) =>
-      edges.map((edge) =>
+    setEdges((eds) =>
+      eds.map((edge) =>
         edge.id === id ? { ...edge, data: newData } : edge
       )
     );
+  };
+
+  const onControlPointDrag = (point: 'sourceHandle' | 'targetHandle') => (e: React.MouseEvent) => {
+    const bounds = (e.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
+    if (!bounds) return;
+
+    const updateControlPoints = (e: MouseEvent) => {
+      const x = e.clientX - bounds.left;
+      const y = e.clientY - bounds.top;
+      setControlPoints(prev => ({
+        ...prev,
+        [point]: { x, y },
+      }));
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', updateControlPoints);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', updateControlPoints);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   return (
@@ -93,6 +141,30 @@ const CustomEdge = ({
           cursor: 'pointer'
         }} 
       />
+      
+      {selected && (
+        <>
+          <circle
+            cx={sourceHandle.x}
+            cy={sourceHandle.y}
+            r={4}
+            fill="var(--xy-theme-selected)"
+            cursor="move"
+            className="nodrag"
+            onMouseDown={onControlPointDrag('sourceHandle')}
+          />
+          <circle
+            cx={targetHandle.x}
+            cy={targetHandle.y}
+            r={4}
+            fill="var(--xy-theme-selected)"
+            cursor="move"
+            className="nodrag"
+            onMouseDown={onControlPointDrag('targetHandle')}
+          />
+        </>
+      )}
+
       <EdgeLabelRenderer>
         <div
           style={{
@@ -131,8 +203,8 @@ const CustomEdge = ({
           </div>
           {data?.metrics && (
             <div className="text-xs text-muted-foreground px-1 py-0.5">
-              {data.metrics.strength && <div>Strength: {data.metrics.strength}</div>}
-              {data.metrics.frequency && <div>Frequency: {data.metrics.frequency}</div>}
+              {data.metrics?.strength && <div>Strength: {data.metrics.strength}</div>}
+              {data.metrics?.frequency && <div>Frequency: {data.metrics.frequency}</div>}
             </div>
           )}
         </div>
@@ -451,9 +523,11 @@ const Flow = () => {
         fitView
         className="bg-dot-pattern flex-1"
         elementsSelectable={true}
+        edgesUpdatable={true}
         selectNodesOnDrag={false}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
+          type: 'custom',
           zIndex: 0,
           interactionWidth: 20,
         }}
