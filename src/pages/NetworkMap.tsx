@@ -14,50 +14,76 @@ import {
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, MapIcon } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const nodeTypes = {
   social: SocialNode,
 };
 
-// LocalStorage keys
-const NODES_KEY = 'social-network-nodes';
-const EDGES_KEY = 'social-network-edges';
+interface Map {
+  id: string;
+  name: string;
+  nodes: any[];
+  edges: any[];
+}
 
 const NetworkMap = () => {
+  const [maps, setMaps] = useState<Map[]>(() => {
+    const savedMaps = localStorage.getItem('maps');
+    if (savedMaps) {
+      return JSON.parse(savedMaps);
+    }
+    return [{
+      id: '1',
+      name: 'Default Map',
+      nodes: [],
+      edges: []
+    }];
+  });
+  
+  const [currentMapId, setCurrentMapId] = useState(() => {
+    return localStorage.getItem('currentMapId') || '1';
+  });
+
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Load saved data on initial render
+  // Load current map data
   useEffect(() => {
-    const savedNodes = localStorage.getItem(NODES_KEY);
-    const savedEdges = localStorage.getItem(EDGES_KEY);
-    
-    if (savedNodes) {
-      setNodes(JSON.parse(savedNodes));
+    const currentMap = maps.find(map => map.id === currentMapId);
+    if (currentMap) {
+      setNodes(currentMap.nodes);
+      setEdges(currentMap.edges);
     }
-    if (savedEdges) {
-      setEdges(JSON.parse(savedEdges));
-    }
-  }, [setNodes, setEdges]);
+  }, [currentMapId, maps, setNodes, setEdges]);
 
-  // Save nodes when they change
+  // Save maps when they change
   useEffect(() => {
-    if (nodes.length > 0) {
-      localStorage.setItem(NODES_KEY, JSON.stringify(nodes));
-    }
-  }, [nodes]);
+    localStorage.setItem('maps', JSON.stringify(maps));
+  }, [maps]);
 
-  // Save edges when they change
+  // Save current map id
   useEffect(() => {
-    if (edges.length > 0) {
-      localStorage.setItem(EDGES_KEY, JSON.stringify(edges));
-    }
-  }, [edges]);
+    localStorage.setItem('currentMapId', currentMapId);
+  }, [currentMapId]);
+
+  // Save current map's nodes and edges
+  useEffect(() => {
+    setMaps(prevMaps => prevMaps.map(map => 
+      map.id === currentMapId ? { ...map, nodes, edges } : map
+    ));
+  }, [nodes, edges, currentMapId]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -84,8 +110,57 @@ const NetworkMap = () => {
     });
   };
 
+  const createNewMap = () => {
+    const newMap: Map = {
+      id: `map-${maps.length + 1}`,
+      name: `New Map ${maps.length + 1}`,
+      nodes: [],
+      edges: []
+    };
+    setMaps([...maps, newMap]);
+    setCurrentMapId(newMap.id);
+    toast({
+      title: "Map created",
+      description: `Created ${newMap.name}`,
+    });
+  };
+
   return (
-    <div className="w-screen h-screen bg-gray-50">
+    <div className="w-screen h-screen bg-gray-50 flex">
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="fixed top-4 left-4 z-50">
+            <MapIcon className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[300px]">
+          <SheetHeader>
+            <SheetTitle>Your Maps</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-4">
+            {maps.map((map) => (
+              <Button
+                key={map.id}
+                variant={currentMapId === map.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setCurrentMapId(map.id)}
+              >
+                <MapIcon className="mr-2 h-4 w-4" />
+                {map.name}
+              </Button>
+            ))}
+            <Button
+              onClick={createNewMap}
+              variant="outline"
+              className="w-full"
+            >
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Create New Map
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -94,7 +169,7 @@ const NetworkMap = () => {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
-        className="bg-dot-pattern"
+        className="bg-dot-pattern flex-1"
       >
         <Background />
         <Controls />
