@@ -57,7 +57,7 @@ interface EdgeControlPoint {
 }
 
 interface EdgeData {
-  label?: string;
+  label: string;
   metrics?: {
     strength?: number;
     frequency?: number;
@@ -206,42 +206,35 @@ const CustomEdge = ({
             fontWeight: 500,
             zIndex: 1000,
           }}
-          className="nodrag nopan flex flex-col border shadow-sm min-w-[100px]"
+          className="nodrag nopan flex flex-row items-center border shadow-sm gap-2"
         >
-          <div className="flex items-center justify-between gap-2 border-b p-1">
-            <span>{data?.label || ''}</span>
-            <div className="flex gap-1">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-4 w-4 p-0"
-                onClick={onEditClick}
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                onClick={onEdgeClick}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
+          <span>{data?.label || ''}</span>
+          <div className="flex gap-1 border-l pl-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-4 w-4 p-0"
+              onClick={onEditClick}
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+              onClick={onEdgeClick}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
-          {data?.metrics && typeof data.metrics === 'object' && (
-            <div className="text-xs text-muted-foreground px-1 py-0.5">
-              {'strength' in data.metrics && <div>Strength: {data.metrics.strength}</div>}
-              {'frequency' in data.metrics && <div>Frequency: {data.metrics.frequency}</div>}
-            </div>
-          )}
         </div>
       </EdgeLabelRenderer>
+
       <EdgeLabelDialog
         open={isEditing}
         onOpenChange={setIsEditing}
         onSave={handleSaveEdgeData}
-        initialData={data as EdgeData}
+        initialData={data}
       />
     </>
   );
