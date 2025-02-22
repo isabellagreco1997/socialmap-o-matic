@@ -63,6 +63,18 @@ interface EdgeData {
   [key: string]: unknown;
 }
 
+type NodeType = "person" | "organization" | "event" | "venue";
+
+interface NodeData {
+  type: NodeType;
+  name: string;
+  profileUrl?: string;
+  imageUrl?: string;
+  date?: string;
+  address?: string;
+  todos?: TodoItem[];
+}
+
 const CustomEdge = ({
   id,
   sourceX,
