@@ -1,3 +1,4 @@
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -298,10 +299,11 @@ const Flow = () => {
   const handleAddNode = (nodeData: { data: NodeData }) => {
     const newNode = {
       id: `node-${Date.now()}`,
-      type: 'social',
+      type: 'social',  // Always use social node type for all node types
       position: { x: Math.random() * 500, y: Math.random() * 300 },
-      data: nodeData.data,
+      data: nodeData.data,  // Pass the complete node data
     };
+    
     setNodes((nds) => [...nds, newNode]);
     toast({
       title: "Node added",
