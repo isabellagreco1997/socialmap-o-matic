@@ -18,9 +18,19 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
-import EdgeLabelDialog, { EdgeData } from '@/components/EdgeLabelDialog';
+import EdgeLabelDialog from '@/components/EdgeLabelDialog';
+import NetworkChat from '@/components/NetworkChat';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Trash2, Edit } from 'lucide-react';
+import { 
+  PlusIcon, 
+  ChevronLeftIcon, 
+  ChevronRightIcon, 
+  Edit2Icon, 
+  CheckSquare, 
+  Trash2, 
+  Edit,
+  MessageSquare 
+} from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -283,6 +293,7 @@ const Flow = () => {
   const [showTodos, setShowTodos] = useState(false);
   const [isAddingEdge, setIsAddingEdge] = useState(false);
   const [newEdgeConnection, setNewEdgeConnection] = useState<Connection | null>(null);
+  const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
 
   const isSwitchingNetwork = useRef(false);
@@ -486,6 +497,14 @@ const Flow = () => {
             <CheckSquare className="h-4 w-4" />
             {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
           </Button>
+          <Button
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            onClick={() => setShowChat(!showChat)}
+          >
+            <MessageSquare className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
+          </Button>
         </div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -609,6 +628,12 @@ const Flow = () => {
                 </Card>
               ))}
             </div>
+          </Panel>
+        )}
+
+        {showChat && (
+          <Panel position="top-right" className="translate-y-[60px]">
+            <NetworkChat onClose={() => setShowChat(false)} />
           </Panel>
         )}
       </ReactFlow>
