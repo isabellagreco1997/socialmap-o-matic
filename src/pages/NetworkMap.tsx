@@ -58,11 +58,7 @@ interface EdgeControlPoint {
 
 interface EdgeData {
   label: string;
-  description?: string;
-  metrics?: {
-    strength?: number;
-    frequency?: number;
-  };
+  notes?: string;
 }
 
 const CustomEdge = ({
@@ -130,7 +126,7 @@ const CustomEdge = ({
     setEdges((eds) =>
       eds.map((edge) => 
         edge.id === id 
-          ? { ...edge, data: { label: newData.label } }
+          ? { ...edge, data: newData }
           : edge
       )
     );
