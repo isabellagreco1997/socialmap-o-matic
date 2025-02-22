@@ -170,8 +170,9 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
                     {todo.text}
                   </span>
                   {todo.dueDate && (
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
+                      {new Date(todo.dueDate).toLocaleDateString()}
                     </span>
                   )}
                 </li>
