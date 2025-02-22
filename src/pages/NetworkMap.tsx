@@ -1,3 +1,4 @@
+
 import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
@@ -443,8 +444,7 @@ const Flow = () => {
                                 </TableCell>
                                 <TableCell>
                                   {todo.dueDate ? (
-                                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
+                                    <span className="text-sm text-muted-foreground">
                                       {formatDate(todo.dueDate)}
                                     </span>
                                   ) : (
