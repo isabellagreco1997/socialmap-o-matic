@@ -64,6 +64,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface EdgeControlPoint {
   x: number;
@@ -687,89 +688,71 @@ const Flow = () => {
                 </Button>
               </div>
 
-              {networks.map((network: any) => (
-                <Card key={network.id} className="p-6">
-                  <h2 className="text-2xl font-semibold mb-6">{network.name}</h2>
-                  
-                  {network.nodes.map((node: any) => {
-                    if (!node.data.todos?.length) return null;
-                    
-                    return (
-                      <div key={node.id} className="mb-8 last:mb-0">
-                        <h3 className="text-lg font-medium mb-4">{node.data.name}</h3>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-[50px]">Complete</TableHead>
-                              <TableHead>Task</TableHead>
-                              <TableHead className="w-[150px]">Due Date</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {node.data.todos.map((todo: TodoItem) => (
-                              <TableRow key={todo.id}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={false}
-                                    onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  {todo.text}
-                                </TableCell>
-                                <TableCell>
-                                  {todo.dueDate ? (
-                                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                      <Calendar className="h-4 w-4" />
-                                      {formatDate(todo.dueDate)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground">No due date</span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    );
-                  })}
-                </Card>
-              ))}
+              <Tabs defaultValue="original" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="original">Original</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="venues">Venues</TabsTrigger>
+                  <TabsTrigger value="notes">Notes</TabsTrigger>
+                </TabsList>
 
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Filter by Type</h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant={viewType === 'tasks' ? 'default' : 'outline'}
-                    onClick={() => setViewType('tasks')}
-                    className="flex-1 flex items-center justify-center gap-2"
-                    size="sm"
-                  >
-                    <ListChecks className="h-4 w-4" />
-                    Tasks
-                  </Button>
-                  <Button
-                    variant={viewType === 'venues' ? 'default' : 'outline'}
-                    onClick={() => setViewType('venues')}
-                    className="flex-1 flex items-center justify-center gap-2"
-                    size="sm"
-                  >
-                    <MapPin className="h-4 w-4" />
-                    Venues
-                  </Button>
-                  <Button
-                    variant={viewType === 'notes' ? 'default' : 'outline'}
-                    onClick={() => setViewType('notes')}
-                    className="flex-1 flex items-center justify-center gap-2"
-                    size="sm"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Notes
-                  </Button>
-                </div>
+                <TabsContent value="original" className="space-y-4">
+                  {networks.map((network: any) => (
+                    <Card key={network.id} className="p-6">
+                      <h2 className="text-2xl font-semibold mb-6">{network.name}</h2>
+                      
+                      {network.nodes.map((node: any) => {
+                        if (!node.data.todos?.length) return null;
+                        
+                        return (
+                          <div key={node.id} className="mb-8 last:mb-0">
+                            <h3 className="text-lg font-medium mb-4">{node.data.name}</h3>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-[50px]">Complete</TableHead>
+                                  <TableHead>Task</TableHead>
+                                  <TableHead className="w-[150px]">Due Date</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {node.data.todos.map((todo: TodoItem) => (
+                                  <TableRow key={todo.id}>
+                                    <TableCell>
+                                      <Checkbox
+                                        checked={false}
+                                        onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      {todo.text}
+                                    </TableCell>
+                                    <TableCell>
+                                      {todo.dueDate ? (
+                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                          <Calendar className="h-4 w-4" />
+                                          {formatDate(todo.dueDate)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-sm text-muted-foreground">No due date</span>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        );
+                      })}
+                    </Card>
+                  ))}
+                </TabsContent>
 
-                <div className="space-y-4 mt-4">
+                <TabsContent value="tasks" className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ListChecks className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Tasks</h3>
+                  </div>
                   {networks.flatMap((network: any) => 
                     network.nodes.flatMap((node: any) => 
                       (node.data.todos || []).map((todo: TodoItem) => (
@@ -781,12 +764,7 @@ const Flow = () => {
                               onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
                             />
                             <div className="flex-1 space-y-1">
-                              <div className="font-medium">
-                                {viewType === 'tasks' && 'Task: '}
-                                {viewType === 'venues' && 'Venue: '}
-                                {viewType === 'notes' && 'Note: '}
-                                {todo.text}
-                              </div>
+                              <div className="font-medium">{todo.text}</div>
                               <div className="text-sm text-muted-foreground">
                                 {network.name} / {node.data.name}
                               </div>
@@ -802,18 +780,76 @@ const Flow = () => {
                       ))
                     )
                   )}
+                </TabsContent>
 
-                  {networks.every((network: any) => 
-                    network.nodes.every((node: any) => 
-                      !(node.data.todos || []).length
+                <TabsContent value="venues" className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <MapPin className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Venues</h3>
+                  </div>
+                  {networks.flatMap((network: any) => 
+                    network.nodes.flatMap((node: any) => 
+                      (node.data.todos || []).map((todo: TodoItem) => (
+                        <Card key={todo.id} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox 
+                              className="mt-1"
+                              checked={false}
+                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                            />
+                            <div className="flex-1 space-y-1">
+                              <div className="font-medium">{todo.text}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {network.name} / {node.data.name}
+                              </div>
+                              {todo.dueDate && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  {formatDate(todo.dueDate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ))
                     )
-                  ) && (
-                    <div className="text-center text-muted-foreground py-8">
-                      No items found
-                    </div>
                   )}
-                </div>
-              </div>
+                </TabsContent>
+
+                <TabsContent value="notes" className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Notes</h3>
+                  </div>
+                  {networks.flatMap((network: any) => 
+                    network.nodes.flatMap((node: any) => 
+                      (node.data.todos || []).map((todo: TodoItem) => (
+                        <Card key={todo.id} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox 
+                              className="mt-1"
+                              checked={false}
+                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                            />
+                            <div className="flex-1 space-y-1">
+                              <div className="font-medium">{todo.text}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {network.name} / {node.data.name}
+                              </div>
+                              {todo.dueDate && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  {formatDate(todo.dueDate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                    )
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </Panel>
         )}
