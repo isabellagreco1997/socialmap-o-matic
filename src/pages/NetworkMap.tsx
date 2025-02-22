@@ -72,34 +72,10 @@ const CustomEdge = ({
   targetPosition,
   style = {},
   markerEnd,
-  selected,
 }: EdgeProps) => {
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
   
-  const [controlPoints, setControlPoints] = useState<{
-    sourceHandle: EdgeControlPoint;
-    targetHandle: EdgeControlPoint;
-  }>({
-    sourceHandle: { x: 0, y: 0 },
-    targetHandle: { x: 0, y: 0 },
-  });
-
-  const defaultControlPoints = {
-    sourceHandle: {
-      x: sourceX + (targetX - sourceX) * 0.25,
-      y: sourceY + (targetY - sourceY) * 0.25,
-    },
-    targetHandle: {
-      x: sourceX + (targetX - sourceX) * 0.75,
-      y: sourceY + (targetY - sourceY) * 0.75,
-    },
-  };
-
-  const { sourceHandle, targetHandle } = controlPoints.sourceHandle.x === 0 
-    ? defaultControlPoints 
-    : controlPoints;
-
   const [edgePath] = getBezierPath({
     sourceX,
     sourceY,
@@ -132,28 +108,6 @@ const CustomEdge = ({
     );
   };
 
-  const onControlPointDrag = (point: 'sourceHandle' | 'targetHandle') => (e: React.MouseEvent) => {
-    const bounds = (e.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
-    if (!bounds) return;
-
-    const updateControlPoints = (e: MouseEvent) => {
-      const x = e.clientX - bounds.left;
-      const y = e.clientY - bounds.top;
-      setControlPoints(prev => ({
-        ...prev,
-        [point]: { x, y },
-      }));
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', updateControlPoints);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-
-    window.addEventListener('mousemove', updateControlPoints);
-    window.addEventListener('mouseup', onMouseUp);
-  };
-
   return (
     <>
       <BaseEdge 
@@ -166,29 +120,6 @@ const CustomEdge = ({
           cursor: 'pointer'
         }} 
       />
-      
-      {selected && (
-        <>
-          <circle
-            cx={sourceHandle.x}
-            cy={sourceHandle.y}
-            r={4}
-            fill="var(--xy-theme-selected)"
-            cursor="move"
-            className="nodrag"
-            onMouseDown={onControlPointDrag('sourceHandle')}
-          />
-          <circle
-            cx={targetHandle.x}
-            cy={targetHandle.y}
-            r={4}
-            fill="var(--xy-theme-selected)"
-            cursor="move"
-            className="nodrag"
-            onMouseDown={onControlPointDrag('targetHandle')}
-          />
-        </>
-      )}
 
       <EdgeLabelRenderer>
         <div
@@ -231,7 +162,7 @@ const CustomEdge = ({
         open={isEditing}
         onOpenChange={setIsEditing}
         onSave={handleSaveEdgeData}
-        initialData={data}
+        initialData={data as EdgeData}
       />
     </>
   );
