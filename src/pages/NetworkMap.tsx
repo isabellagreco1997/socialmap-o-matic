@@ -6,7 +6,6 @@ import {
   Background,
   Controls,
   Connection,
-  Edge,
   useNodesState,
   useEdgesState,
   Panel,
@@ -14,7 +13,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare, Calendar, Network } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -24,7 +23,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Link } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from '@/components/ui/checkbox';
 
 const nodeTypes = {
   social: SocialNode,
@@ -35,6 +43,13 @@ interface Network {
   name: string;
   nodes: any[];
   edges: any[];
+}
+
+interface TodoItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  dueDate?: string;
 }
 
 const Flow = () => {
@@ -66,6 +81,7 @@ const Flow = () => {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
   const [newNetworkName, setNewNetworkName] = useState('');
+  const [showTodos, setShowTodos] = useState(false);
   const { toast } = useToast();
 
   const isSwitchingNetwork = useRef(false);
@@ -169,6 +185,40 @@ const Flow = () => {
     });
   };
 
+  const formatDate = useCallback((date: string) => {
+    return new Date(date).toLocaleDateString();
+  }, []);
+
+  const handleCompleteTodo = useCallback((networkId: string, nodeId: string, todoId: string, todoText: string) => {
+    const updatedNetworks = networks.map((network: any) => {
+      if (network.id !== networkId) return network;
+
+      return {
+        ...network,
+        nodes: network.nodes.map((node: any) => {
+          if (node.id !== nodeId) return node;
+
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              todos: node.data.todos.filter((todo: TodoItem) => todo.id !== todoId),
+            },
+          };
+        }),
+      };
+    });
+
+    localStorage.setItem('networks', JSON.stringify(updatedNetworks));
+    
+    toast({
+      title: "Todo completed",
+      description: `"${todoText}" has been completed and removed`,
+    });
+    
+    setNetworks(updatedNetworks);
+  }, [networks, toast]);
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -218,15 +268,14 @@ const Flow = () => {
             {!isMenuMinimized && <span className="ml-2">Create Network</span>}
           </Button>
 
-          <Link to="/todos">
-            <Button
-              variant="outline"
-              className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
-            >
-              <CheckSquare className="h-4 w-4" />
-              {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            onClick={() => setShowTodos(!showTodos)}
+          >
+            <CheckSquare className="h-4 w-4" />
+            {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
+          </Button>
         </div>
       </div>
 
@@ -242,12 +291,75 @@ const Flow = () => {
       >
         <Background />
         <Controls />
-        <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur">
+        <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
           <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
             <PlusIcon className="h-4 w-4" />
             Add Node
           </Button>
         </Panel>
+
+        {showTodos && (
+          <Panel position="right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh]">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">To-Do's</h2>
+                <Button variant="ghost" size="icon" onClick={() => setShowTodos(false)}>
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {networks.map((network: any) => (
+                <Card key={network.id} className="p-4">
+                  <h3 className="text-lg font-semibold mb-4">{network.name}</h3>
+                  
+                  {network.nodes.map((node: any) => {
+                    if (!node.data.todos?.length) return null;
+                    
+                    return (
+                      <div key={node.id} className="mb-6 last:mb-0">
+                        <h4 className="text-sm font-medium mb-2">{node.data.name}</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[50px]"></TableHead>
+                              <TableHead>Task</TableHead>
+                              <TableHead className="w-[100px]">Due</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {node.data.todos.map((todo: TodoItem) => (
+                              <TableRow key={todo.id}>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={false}
+                                    onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  {todo.text}
+                                </TableCell>
+                                <TableCell>
+                                  {todo.dueDate ? (
+                                    <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {formatDate(todo.dueDate)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    );
+                  })}
+                </Card>
+              ))}
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
 
       <AddNodeDialog
