@@ -10,8 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 
 interface ContactDetails {
-  email?: string;
-  phone?: string;
   notes?: string;
 }
 
@@ -132,21 +130,9 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
       {isExpanded && (
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Contact Details</h4>
-            <Input
-              placeholder="Email"
-              value={contactDetails.email || ''}
-              onChange={(e) => handleContactDetailsChange('email', e.target.value)}
-              className="text-sm"
-            />
-            <Input
-              placeholder="Phone"
-              value={contactDetails.phone || ''}
-              onChange={(e) => handleContactDetailsChange('phone', e.target.value)}
-              className="text-sm"
-            />
+            <h4 className="text-sm font-medium">Notes</h4>
             <Textarea
-              placeholder="Notes"
+              placeholder="Add notes..."
               value={contactDetails.notes || ''}
               onChange={(e) => handleContactDetailsChange('notes', e.target.value)}
               className="text-sm min-h-[100px]"
@@ -180,17 +166,14 @@ const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }
                     onChange={() => handleToggleTodo(todo.id)}
                     className="h-4 w-4"
                   />
-                  <div className="flex flex-col">
-                    <span className={`text-sm ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
-                      {todo.text}
+                  <span className={`text-sm flex-1 ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
+                    {todo.text}
+                  </span>
+                  {todo.dueDate && (
+                    <span className="text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
                     </span>
-                    {todo.dueDate && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(todo.dueDate).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </li>
               ))}
             </ul>
