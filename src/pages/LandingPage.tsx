@@ -17,7 +17,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-20 bg-gradient-to-b from-background to-secondary/20">
         <div className="max-w-3xl space-y-8">
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">Connect with 
+          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">Connect with
 Anyone in the World</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
