@@ -67,7 +67,7 @@ const TodoDashboard = () => {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Todo Dashboard</h1>
+        <h1 className="text-3xl font-bold">To-Do's</h1>
         <Button asChild>
           <Link to="/" className="flex items-center gap-2">
             <Network className="h-4 w-4" />

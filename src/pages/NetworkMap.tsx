@@ -1,4 +1,3 @@
-
 import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
@@ -15,7 +14,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon } from 'lucide-react';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, Edit2Icon, CheckSquare } from 'lucide-react';
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -25,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Link } from 'react-router-dom';
 
 const nodeTypes = {
   social: SocialNode,
@@ -42,7 +42,6 @@ const Flow = () => {
     const savedNetworks = localStorage.getItem('networks');
     if (savedNetworks) {
       const parsed = JSON.parse(savedNetworks);
-      // Update existing networks to use numeric naming
       return parsed.map((network: Network, index: number) => ({
         ...network,
         name: `Network ${index + 1}`
@@ -69,10 +68,8 @@ const Flow = () => {
   const [newNetworkName, setNewNetworkName] = useState('');
   const { toast } = useToast();
 
-  // Reference to track if we're currently switching networks
   const isSwitchingNetwork = useRef(false);
 
-  // Load current network data
   useEffect(() => {
     isSwitchingNetwork.current = true;
     const currentNetwork = networks.find(network => network.id === currentNetworkId);
@@ -80,23 +77,19 @@ const Flow = () => {
       setNodes(currentNetwork.nodes || []);
       setEdges(currentNetwork.edges || []);
     }
-    // Reset the flag after the state updates
     setTimeout(() => {
       isSwitchingNetwork.current = false;
     }, 0);
   }, [currentNetworkId, networks, setNodes, setEdges]);
 
-  // Save networks when they change
   useEffect(() => {
     localStorage.setItem('networks', JSON.stringify(networks));
   }, [networks]);
 
-  // Save current network id
   useEffect(() => {
     localStorage.setItem('currentNetworkId', currentNetworkId);
   }, [currentNetworkId]);
 
-  // Save current network's nodes and edges when they change
   useEffect(() => {
     if (isSwitchingNetwork.current) return;
 
@@ -106,7 +99,7 @@ const Flow = () => {
           ? { ...network, nodes, edges }
           : network
       ));
-    }, 100); // Debounce the update
+    }, 100);
 
     return () => clearTimeout(timeoutId);
   }, [nodes, edges, currentNetworkId]);
@@ -224,6 +217,16 @@ const Flow = () => {
             <PlusIcon className="h-4 w-4" />
             {!isMenuMinimized && <span className="ml-2">Create Network</span>}
           </Button>
+
+          <Link to="/todos">
+            <Button
+              variant="outline"
+              className={`w-full ${isMenuMinimized ? 'px-2' : ''}`}
+            >
+              <CheckSquare className="h-4 w-4" />
+              {!isMenuMinimized && <span className="ml-2">To-Do's</span>}
+            </Button>
+          </Link>
         </div>
       </div>
 
