@@ -17,7 +17,7 @@ import {
   Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import EdgeLabelDialog from '@/components/EdgeLabelDialog';
 import NetworkChat from '@/components/NetworkChat';
@@ -65,6 +65,8 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface EdgeControlPoint {
   x: number;
@@ -260,6 +262,8 @@ const Flow = () => {
   const [tempNetworkName, setTempNetworkName] = useState('');
   const [draggedNetwork, setDraggedNetwork] = useState<string | null>(null);
   const [viewType, setViewType] = useState<'tasks' | 'venues' | 'notes'>('tasks');
+  const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'overdue'>('all');
 
   const isSwitchingNetwork = useRef(false);
 
@@ -520,9 +524,52 @@ const Flow = () => {
     }
   }, [draggedNetwork]);
 
-  const currentTodos = networks.find(network => network.id === currentNetworkId)?.nodes
-    .flatMap(node => node.data.todos || [])
-    .filter(todo => todo.networkId === currentNetworkId);
+  const filteredTodos = useMemo(() => {
+    return networks.flatMap((network: any) => 
+      network.nodes.flatMap((node: any) => 
+        (node.data.todos || [])
+          .filter((todo: TodoItem) => {
+            // Network filter
+            if (selectedNetwork !== 'all' && network.id !== selectedNetwork) {
+              return false;
+            }
+
+            // Date filter
+            if (dateFilter !== 'all' && todo.dueDate) {
+              const dueDate = new Date(todo.dueDate);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const todayTime = today.getTime();
+
+              switch (dateFilter) {
+                case 'today':
+                  return format(dueDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+                case 'week': {
+                  const weekFromNow = new Date(todayTime + 7 * 24 * 60 * 60 * 1000);
+                  return dueDate >= today && dueDate <= weekFromNow;
+                }
+                case 'month': {
+                  const monthFromNow = new Date(todayTime + 30 * 24 * 60 * 60 * 1000);
+                  return dueDate >= today && dueDate <= monthFromNow;
+                }
+                case 'overdue':
+                  return dueDate < today;
+                default:
+                  return true;
+              }
+            }
+            return true;
+          })
+          .map(todo => ({
+            ...todo,
+            networkId: network.id,
+            networkName: network.name,
+            nodeId: node.id,
+            nodeName: node.data.name
+          }))
+      )
+    );
+  }, [networks, selectedNetwork, dateFilter]);
 
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
@@ -688,98 +735,79 @@ const Flow = () => {
                 </Button>
               </div>
 
-              <Tabs defaultValue="original" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="original">Original</TabsTrigger>
+              <Tabs defaultValue="tasks" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="tasks">Tasks</TabsTrigger>
                   <TabsTrigger value="venues">Venues</TabsTrigger>
                   <TabsTrigger value="notes">Notes</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="original" className="space-y-4">
-                  {networks.map((network: any) => (
-                    <Card key={network.id} className="p-6">
-                      <h2 className="text-2xl font-semibold mb-6">{network.name}</h2>
-                      
-                      {network.nodes.map((node: any) => {
-                        if (!node.data.todos?.length) return null;
-                        
-                        return (
-                          <div key={node.id} className="mb-8 last:mb-0">
-                            <h3 className="text-lg font-medium mb-4">{node.data.name}</h3>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[50px]">Complete</TableHead>
-                                  <TableHead>Task</TableHead>
-                                  <TableHead className="w-[150px]">Due Date</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {node.data.todos.map((todo: TodoItem) => (
-                                  <TableRow key={todo.id}>
-                                    <TableCell>
-                                      <Checkbox
-                                        checked={false}
-                                        onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      {todo.text}
-                                    </TableCell>
-                                    <TableCell>
-                                      {todo.dueDate ? (
-                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                          <Calendar className="h-4 w-4" />
-                                          {formatDate(todo.dueDate)}
-                                        </span>
-                                      ) : (
-                                        <span className="text-sm text-muted-foreground">No due date</span>
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        );
-                      })}
-                    </Card>
-                  ))}
-                </TabsContent>
-
                 <TabsContent value="tasks" className="space-y-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ListChecks className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">Tasks</h3>
-                  </div>
-                  {networks.flatMap((network: any) => 
-                    network.nodes.flatMap((node: any) => 
-                      (node.data.todos || []).map((todo: TodoItem) => (
-                        <Card key={todo.id} className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Checkbox 
-                              className="mt-1"
-                              checked={false}
-                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                            />
-                            <div className="flex-1 space-y-1">
-                              <div className="font-medium">{todo.text}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {network.name} / {node.data.name}
-                              </div>
-                              {todo.dueDate && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(todo.dueDate)}
-                                </div>
-                              )}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="h-5 w-5" />
+                      <h3 className="text-lg font-semibold">Tasks</h3>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Filter by Network" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Networks</SelectItem>
+                          {networks.map((network: any) => (
+                            <SelectItem key={network.id} value={network.id}>
+                              {network.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={dateFilter} onValueChange={setDateFilter}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Filter by Due Date" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Dates</SelectItem>
+                          <SelectItem value="today">Due Today</SelectItem>
+                          <SelectItem value="week">Due This Week</SelectItem>
+                          <SelectItem value="month">Due This Month</SelectItem>
+                          <SelectItem value="overdue">Overdue</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {filteredTodos.map((todo: TodoItem) => (
+                      <Card key={todo.id} className="p-4">
+                        <div className="flex items-start gap-3">
+                          <Checkbox 
+                            className="mt-1"
+                            checked={false}
+                            onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id, todo.text)}
+                          />
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{todo.text}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {todo.networkName} / {todo.nodeName}
                             </div>
+                            {todo.dueDate && (
+                              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {formatDate(todo.dueDate)}
+                              </div>
+                            )}
                           </div>
-                        </Card>
-                      ))
-                    )
-                  )}
+                        </div>
+                      </Card>
+                    ))}
+
+                    {filteredTodos.length === 0 && (
+                      <div className="text-center text-muted-foreground py-8">
+                        No tasks found
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="venues" className="space-y-4">
