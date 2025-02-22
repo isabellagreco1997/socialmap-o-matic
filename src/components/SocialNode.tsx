@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
-import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { Handle, Position, useReactFlow, Node, NodeProps } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,9 +19,10 @@ interface TodoItem {
   id: string;
   text: string;
   completed: boolean;
+  dueDate?: string;
 }
 
-interface SocialNodeData {
+export interface SocialNodeData {
   name: string;
   profileUrl: string;
   imageUrl: string;
@@ -29,16 +30,12 @@ interface SocialNodeData {
   todos?: TodoItem[];
 }
 
-interface SocialNodeProps {
-  id: string;
-  data: SocialNodeData;
-}
-
-const SocialNode = ({ id, data }: SocialNodeProps) => {
+const SocialNode = ({ id, data }: NodeProps<SocialNodeData>) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [contactDetails, setContactDetails] = useState<ContactDetails>(data.contactDetails || {});
   const [todos, setTodos] = useState<TodoItem[]>(data.todos || []);
   const [newTodo, setNewTodo] = useState('');
+  const [newTodoDate, setNewTodoDate] = useState('');
   const { setNodes, getNodes } = useReactFlow();
   const { toast } = useToast();
 
@@ -54,12 +51,14 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     const newTodoItem = {
       id: Date.now().toString(),
       text: newTodo,
-      completed: false
+      completed: false,
+      dueDate: newTodoDate || undefined
     };
     
     const updatedTodos = [...todos, newTodoItem];
     setTodos(updatedTodos);
     setNewTodo('');
+    setNewTodoDate('');
     updateNodeData({ ...data, todos: updatedTodos });
   };
 
@@ -80,8 +79,8 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
   };
 
   const updateNodeData = (newData: SocialNodeData) => {
-    setNodes(nodes =>
-      nodes.map(node =>
+    setNodes((nodes: Node[]) => 
+      nodes.map(node => 
         node.id === id ? { ...node, data: newData } : node
       )
     );
@@ -160,6 +159,12 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
                 className="text-sm"
               />
+              <Input
+                type="date"
+                value={newTodoDate}
+                onChange={(e) => setNewTodoDate(e.target.value)}
+                className="text-sm w-40"
+              />
               <Button onClick={handleAddTodo} className="shrink-0">Add</Button>
             </div>
             <ul className="space-y-2">
@@ -171,9 +176,17 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
                     onChange={() => handleToggleTodo(todo.id)}
                     className="h-4 w-4"
                   />
-                  <span className={`text-sm ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
-                    {todo.text}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className={`text-sm ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
+                      {todo.text}
+                    </span>
+                    {todo.dueDate && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(todo.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
