@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Handle, Position, useReactFlow, NodeProps } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
@@ -30,14 +30,18 @@ export interface SocialNodeData {
   todos?: TodoItem[];
 }
 
-const SocialNode = ({ id, data }: NodeProps<{ data: SocialNodeData }>) => {
+const SocialNode = ({ id, data }: { id: string; data: { data: SocialNodeData } }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [contactDetails, setContactDetails] = useState<ContactDetails>(data.data.contactDetails || {});
-  const [todos, setTodos] = useState<TodoItem[]>(data.data.todos || []);
+  const [contactDetails, setContactDetails] = useState<ContactDetails>(data?.data?.contactDetails || {});
+  const [todos, setTodos] = useState<TodoItem[]>(data?.data?.todos || []);
   const [newTodo, setNewTodo] = useState('');
   const [newTodoDate, setNewTodoDate] = useState('');
   const { setNodes, getNodes } = useReactFlow();
   const { toast } = useToast();
+
+  if (!data?.data) {
+    return null;
+  }
 
   const handleContactDetailsChange = (field: keyof ContactDetails, value: string) => {
     const newDetails = { ...contactDetails, [field]: value };
