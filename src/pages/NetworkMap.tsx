@@ -31,7 +31,8 @@ import {
   Trash2, 
   Edit,
   MessageSquare,
-  MoreVertical
+  MoreVertical,
+  GripVertical
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -468,6 +469,33 @@ const Flow = () => {
     });
   };
 
+  const handleReorderNetworks = (startIndex: number, endIndex: number) => {
+    setNetworks(prevNetworks => {
+      const result = Array.from(prevNetworks);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    });
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (dragIndex !== dropIndex) {
+      handleReorderNetworks(dragIndex, dropIndex);
+    }
+  };
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -515,34 +543,26 @@ const Flow = () => {
         </div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {networks.map((network) => (
-            <div key={network.id} className="flex gap-2">
+          {networks.map((network, index) => (
+            <div 
+              key={network.id} 
+              draggable={!isMenuMinimized}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+              className={`flex items-center gap-2 ${!isMenuMinimized ? 'cursor-move' : ''}`}
+            >
               <Button
                 variant={currentNetworkId === network.id ? "default" : "ghost"}
                 className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
                 onClick={() => setCurrentNetworkId(network.id)}
               >
+                {!isMenuMinimized && (
+                  <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
+                )}
                 {!isMenuMinimized && network.name}
                 {isMenuMinimized && network.name.split(' ')[1]}
               </Button>
-              {!isMenuMinimized && (
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRenameClick(network)}
-                  >
-                    <Edit2Icon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteNetwork(network.id, network.name)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              )}
             </div>
           ))}
         </div>
