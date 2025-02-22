@@ -12,6 +12,8 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getBezierPath,
+  useReactFlow,
+  EdgeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import AddNodeDialog from '@/components/AddNodeDialog';
@@ -48,7 +50,7 @@ const CustomEdge = ({
   targetPosition,
   style = {},
   markerEnd,
-}) => {
+}: EdgeProps) => {
   const { setEdges } = useReactFlow();
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
