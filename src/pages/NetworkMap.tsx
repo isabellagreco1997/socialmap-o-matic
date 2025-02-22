@@ -63,7 +63,8 @@ const CustomEdge = ({
     targetPosition,
   });
 
-  const onEdgeClick = () => {
+  const onEdgeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setEdges((edges) => edges.filter((edge) => edge.id !== id));
   };
 
@@ -82,7 +83,16 @@ const CustomEdge = ({
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge 
+        path={edgePath} 
+        markerEnd={markerEnd} 
+        style={{ 
+          ...style,
+          zIndex: 0,
+          pointerEvents: 'all',
+          cursor: 'pointer'
+        }} 
+      />
       <EdgeLabelRenderer>
         <div
           style={{
@@ -94,6 +104,7 @@ const CustomEdge = ({
             borderRadius: '4px',
             fontSize: 12,
             fontWeight: 500,
+            zIndex: 1000,
           }}
           className="nodrag nopan flex flex-col border shadow-sm min-w-[100px]"
         >
@@ -439,6 +450,13 @@ const Flow = () => {
         edgeTypes={edgeTypes}
         fitView
         className="bg-dot-pattern flex-1"
+        elementsSelectable={true}
+        selectNodesOnDrag={false}
+        proOptions={{ hideAttribution: true }}
+        defaultEdgeOptions={{
+          zIndex: 0,
+          interactionWidth: 20,
+        }}
       >
         <Background />
         <Controls />
