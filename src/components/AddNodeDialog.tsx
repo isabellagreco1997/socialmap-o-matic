@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -26,10 +25,10 @@ interface NodeData {
   // Event fields
   date?: string;
   description?: string;
-  capacity?: string;
+  eventCapacity?: string;
   // Venue fields
   address?: string;
-  capacity?: string;
+  venueCapacity?: string;
   amenities?: string;
 }
 
@@ -212,14 +211,14 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="capacity" className="text-sm font-medium">
-                  Capacity
+                <label htmlFor="eventCapacity" className="text-sm font-medium">
+                  Event Capacity
                 </label>
                 <Input
-                  id="capacity"
+                  id="eventCapacity"
                   type="number"
-                  value={formData.capacity}
-                  onChange={handleInputChange("capacity")}
+                  value={formData.eventCapacity}
+                  onChange={handleInputChange("eventCapacity")}
                   placeholder="Number of attendees"
                 />
               </div>
@@ -241,13 +240,13 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="venueCapacity" className="text-sm font-medium">
-                  Capacity
+                  Venue Capacity
                 </label>
                 <Input
                   id="venueCapacity"
                   type="number"
-                  value={formData.capacity}
-                  onChange={handleInputChange("capacity")}
+                  value={formData.venueCapacity}
+                  onChange={handleInputChange("venueCapacity")}
                   placeholder="Venue capacity"
                 />
               </div>

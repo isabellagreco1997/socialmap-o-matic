@@ -17,6 +17,7 @@ import {
   Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import EdgeLabelDialog from '@/components/EdgeLabelDialog';
 import NetworkChat from '@/components/NetworkChat';
@@ -282,12 +283,12 @@ const Flow = () => {
     [setEdges, toast]
   );
 
-  const handleAddNode = (nodeData: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
+  const handleAddNode = (nodeData: { data: NodeData }) => {
     const newNode = {
       id: `node-${Date.now()}`,
       type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 300 },
-      data: { data: nodeData.data },
+      data: nodeData.data,
     };
     setNodes((nds) => [...nds, newNode]);
     toast({
