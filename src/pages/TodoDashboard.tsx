@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { 
@@ -27,8 +26,6 @@ interface TodoItem {
 
 const TodoDashboard = () => {
   const { toast } = useToast();
-  const [viewType, setViewType] = useState<ViewType>('tasks');
-  
   const networks = useMemo(() => {
     const savedNetworks = localStorage.getItem('networks');
     return savedNetworks ? JSON.parse(savedNetworks) : [];
@@ -79,33 +76,6 @@ const TodoDashboard = () => {
           </Link>
         </Button>
       </div>
-
-      <div className="flex gap-2">
-        <Button
-          variant={viewType === 'tasks' ? 'default' : 'outline'}
-          onClick={() => setViewType('tasks')}
-          className="flex items-center gap-2"
-        >
-          <ListChecks className="h-4 w-4" />
-          Upcoming Tasks
-        </Button>
-        <Button
-          variant={viewType === 'venues' ? 'default' : 'outline'}
-          onClick={() => setViewType('venues')}
-          className="flex items-center gap-2"
-        >
-          <MapPin className="h-4 w-4" />
-          Upcoming Venues
-        </Button>
-        <Button
-          variant={viewType === 'notes' ? 'default' : 'outline'}
-          onClick={() => setViewType('notes')}
-          className="flex items-center gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          Notes
-        </Button>
-      </div>
       
       {networks.map((network: any) => (
         <Card key={network.id} className="p-6">
@@ -121,11 +91,7 @@ const TodoDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]">Complete</TableHead>
-                      <TableHead>
-                        {viewType === 'tasks' && 'Task'}
-                        {viewType === 'venues' && 'Venue'}
-                        {viewType === 'notes' && 'Note'}
-                      </TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead className="w-[150px]">Due Date</TableHead>
                     </TableRow>
                   </TableHeader>

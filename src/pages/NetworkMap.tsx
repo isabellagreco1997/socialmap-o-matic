@@ -32,7 +32,10 @@ import {
   Edit,
   MessageSquare,
   MoreVertical,
-  GripVertical
+  GripVertical,
+  ListChecks,
+  MapPin,
+  FileText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -254,6 +257,7 @@ const Flow = () => {
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
   const [tempNetworkName, setTempNetworkName] = useState('');
   const [draggedNetwork, setDraggedNetwork] = useState<string | null>(null);
+  const [viewType, setViewType] = useState<'tasks' | 'venues' | 'notes'>('tasks');
 
   const isSwitchingNetwork = useRef(false);
 
@@ -514,6 +518,10 @@ const Flow = () => {
     }
   }, [draggedNetwork]);
 
+  const currentTodos = networks.find(network => network.id === currentNetworkId)?.nodes
+    .flatMap(node => node.data.todos || [])
+    .filter(todo => todo.networkId === currentNetworkId);
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -677,59 +685,77 @@ const Flow = () => {
                   <ChevronRightIcon className="h-4 w-4" />
                 </Button>
               </div>
-              
-              {networks.map((network: any) => (
-                <Card key={network.id} className="p-4">
-                  <h3 className="text-lg font-semibold mb-4">{network.name}</h3>
-                  
-                  {network.nodes.map((node: any) => {
-                    if (!node.data.todos?.length) return null;
-                    
-                    return (
-                      <div key={node.id} className="mb-6 last:mb-0">
-                        <h4 className="text-sm font-medium mb-2">{node.data.name}</h4>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-[50px]"></TableHead>
-                              <TableHead>Task</TableHead>
-                              <TableHead className="w-[100px]">Due</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {node.data.todos.map((todo: TodoItem) => (
-                              <TableRow key={todo.id}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={false}
-                                    onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  {todo.text}
-                                </TableCell>
-                                <TableCell>
-                                  {todo.dueDate ? (
-                                    <span className="text-sm text-muted-foreground">
-                                      {formatDate(todo.dueDate)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground">-</span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={viewType === 'tasks' ? 'default' : 'outline'}
+                  onClick={() => setViewType('tasks')}
+                  className="flex-1 flex items-center justify-center gap-2"
+                  size="sm"
+                >
+                  <ListChecks className="h-4 w-4" />
+                  Tasks
+                </Button>
+                <Button
+                  variant={viewType === 'venues' ? 'default' : 'outline'}
+                  onClick={() => setViewType('venues')}
+                  className="flex-1 flex items-center justify-center gap-2"
+                  size="sm"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Venues
+                </Button>
+                <Button
+                  variant={viewType === 'notes' ? 'default' : 'outline'}
+                  onClick={() => setViewType('notes')}
+                  className="flex-1 flex items-center justify-center gap-2"
+                  size="sm"
+                >
+                  <FileText className="h-4 w-4" />
+                  Notes
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {currentTodos.map((todo) => (
+                  <Card key={todo.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Checkbox 
+                        className="mt-1"
+                        checked={false}
+                        onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id)}
+                      />
+                      <div className="flex-1 space-y-1">
+                        <div className="font-medium">
+                          {viewType === 'tasks' && 'Task: '}
+                          {viewType === 'venues' && 'Venue: '}
+                          {viewType === 'notes' && 'Note: '}
+                          {todo.text}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Added to: {todo.networkName} / {todo.nodeName}
+                        </div>
+                        {todo.dueDate && (
+                          <div className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(todo.dueDate)}
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
-                </Card>
-              ))}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {currentTodos.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  No tasks found
+                </div>
+              )}
             </div>
           </Panel>
         )}
-
+        
         {showChat && (
           <Panel position="top-right" className="translate-y-[60px]">
             <NetworkChat onClose={() => setShowChat(false)} />
