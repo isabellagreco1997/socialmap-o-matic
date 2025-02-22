@@ -131,17 +131,17 @@ const Flow = () => {
     [setEdges, toast]
   );
 
-  const handleAddNode = (nodeData: { name: string; profileUrl: string; imageUrl: string }) => {
+  const handleAddNode = (nodeData: { data: { name: string; profileUrl: string; imageUrl: string } }) => {
     const newNode = {
       id: `node-${Date.now()}`,
       type: 'social',
       position: { x: Math.random() * 500, y: Math.random() * 300 },
-      data: nodeData,
+      data: nodeData.data,
     };
     setNodes((nds) => [...nds, newNode]);
     toast({
       title: "Node added",
-      description: `Added ${nodeData.name} to the network`,
+      description: `Added ${nodeData.data.name} to the network`,
     });
   };
 

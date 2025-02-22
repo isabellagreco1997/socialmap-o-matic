@@ -13,7 +13,7 @@ import { useState } from "react";
 interface AddNodeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (data: { name: string; profileUrl: string; imageUrl: string }) => void;
+  onAdd: (data: { data: { name: string; profileUrl: string; imageUrl: string } }) => void;
 }
 
 const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
@@ -23,7 +23,13 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({ name, profileUrl, imageUrl });
+    onAdd({
+      data: {
+        name,
+        profileUrl,
+        imageUrl,
+      }
+    });
     setName("");
     setProfileUrl("");
     setImageUrl("");
