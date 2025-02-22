@@ -19,6 +19,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
+import type { NodeData } from '@/components/AddNodeDialog';
 import EdgeLabelDialog from '@/components/EdgeLabelDialog';
 import NetworkChat from '@/components/NetworkChat';
 import { Button } from '@/components/ui/button';

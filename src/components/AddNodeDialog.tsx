@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -8,28 +9,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 
-type NodeType = "person" | "company" | "event" | "venue";
+type NodeType = "person" | "organization" | "event" | "venue";
 
 interface NodeData {
   type: NodeType;
   name: string;
   profileUrl?: string;
   imageUrl?: string;
-  // Company fields
-  industry?: string;
-  website?: string;
-  location?: string;
+  // Organization fields - no specific fields
   // Event fields
   date?: string;
-  description?: string;
-  eventCapacity?: string;
   // Venue fields
   address?: string;
-  venueCapacity?: string;
-  amenities?: string;
 }
 
 interface AddNodeDialogProps {
@@ -62,7 +55,7 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
   };
 
   const handleInputChange = (field: keyof NodeData) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setFormData(prev => ({
       ...prev,
@@ -101,7 +94,7 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="person">Person</SelectItem>
-                <SelectItem value="company">Company</SelectItem>
+                <SelectItem value="organization">Organization</SelectItem>
                 <SelectItem value="event">Event</SelectItem>
                 <SelectItem value="venue">Venue</SelectItem>
               </SelectContent>
@@ -121,7 +114,7 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
             />
           </div>
 
-          {nodeType === "person" && (
+          {(nodeType === "person" || nodeType === "organization" || nodeType === "event" || nodeType === "venue") && (
             <>
               <div className="space-y-2">
                 <label htmlFor="profile" className="text-sm font-medium">
@@ -131,7 +124,7 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
                   id="profile"
                   value={formData.profileUrl}
                   onChange={handleInputChange("profileUrl")}
-                  placeholder="https://linkedin.com/in/johndoe"
+                  placeholder="https://example.com/profile"
                 />
               </div>
               <div className="space-y-2">
@@ -142,126 +135,38 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
                   id="image"
                   value={formData.imageUrl}
                   onChange={handleInputChange("imageUrl")}
-                  placeholder="https://example.com/profile.jpg"
-                />
-              </div>
-            </>
-          )}
-
-          {nodeType === "company" && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="industry" className="text-sm font-medium">
-                  Industry
-                </label>
-                <Input
-                  id="industry"
-                  value={formData.industry}
-                  onChange={handleInputChange("industry")}
-                  placeholder="Technology, Finance, etc."
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="website" className="text-sm font-medium">
-                  Website
-                </label>
-                <Input
-                  id="website"
-                  value={formData.website}
-                  onChange={handleInputChange("website")}
-                  placeholder="https://company.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="location" className="text-sm font-medium">
-                  Location
-                </label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={handleInputChange("location")}
-                  placeholder="City, Country"
+                  placeholder="https://example.com/image.jpg"
                 />
               </div>
             </>
           )}
 
           {nodeType === "event" && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="date" className="text-sm font-medium">
-                  Date
-                </label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleInputChange("date")}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">
-                  Description
-                </label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={handleInputChange("description")}
-                  placeholder="Event description"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="eventCapacity" className="text-sm font-medium">
-                  Event Capacity
-                </label>
-                <Input
-                  id="eventCapacity"
-                  type="number"
-                  value={formData.eventCapacity}
-                  onChange={handleInputChange("eventCapacity")}
-                  placeholder="Number of attendees"
-                />
-              </div>
-            </>
+            <div className="space-y-2">
+              <label htmlFor="date" className="text-sm font-medium">
+                Date
+              </label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={handleInputChange("date")}
+              />
+            </div>
           )}
 
           {nodeType === "venue" && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="address" className="text-sm font-medium">
-                  Address
-                </label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={handleInputChange("address")}
-                  placeholder="Full address"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="venueCapacity" className="text-sm font-medium">
-                  Venue Capacity
-                </label>
-                <Input
-                  id="venueCapacity"
-                  type="number"
-                  value={formData.venueCapacity}
-                  onChange={handleInputChange("venueCapacity")}
-                  placeholder="Venue capacity"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="amenities" className="text-sm font-medium">
-                  Amenities
-                </label>
-                <Textarea
-                  id="amenities"
-                  value={formData.amenities}
-                  onChange={handleInputChange("amenities")}
-                  placeholder="List of amenities"
-                />
-              </div>
-            </>
+            <div className="space-y-2">
+              <label htmlFor="address" className="text-sm font-medium">
+                Address
+              </label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={handleInputChange("address")}
+                placeholder="Full address"
+              />
+            </div>
           )}
 
           <div className="flex justify-end gap-2">
