@@ -22,7 +22,7 @@ const LandingPage = () => {
           <img 
             src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point-line-composition-concept-global-business-vector-illustration_41981-1906.jpg?w=2000" 
             alt="Global Network Connection"
-            className="w-full h-full object-cover opacity-15"
+            className="w-full h-full object-cover opacity-25"
           />
         </div>
         <div className="max-w-4xl space-y-10 relative z-10">
