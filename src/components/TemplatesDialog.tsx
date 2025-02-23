@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -41,11 +40,25 @@ const templates: Template[] = [
         type: 'social',
         position: { x: 400, y: 100 },
         data: { type: 'person', name: 'Decision Maker', imageUrl: '', todos: [] }
+      },
+      {
+        id: '4',
+        type: 'social',
+        position: { x: 150, y: 200 },
+        data: { type: 'person', name: 'Technical Lead', imageUrl: '', todos: [] }
+      },
+      {
+        id: '5',
+        type: 'social',
+        position: { x: 350, y: 200 },
+        data: { type: 'person', name: 'Finance Director', imageUrl: '', todos: [] }
       }
     ],
     edges: [
       { id: 'e1-2', source: '1', target: '2', type: 'custom' },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' },
+      { id: 'e3-4', source: '3', target: '4', type: 'custom' },
+      { id: 'e3-5', source: '3', target: '5', type: 'custom' }
     ]
   },
   {
@@ -65,18 +78,39 @@ const templates: Template[] = [
         id: '2',
         type: 'social',
         position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Potential Partner', imageUrl: '', todos: [] }
+        data: { type: 'person', name: 'Keynote Speaker', imageUrl: '', todos: [] }
       },
       {
         id: '3',
         type: 'social',
         position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Tech Company', imageUrl: '', todos: [] }
+        data: { type: 'organization', name: 'Sponsor Company', imageUrl: '', todos: [] }
+      },
+      {
+        id: '4',
+        type: 'social',
+        position: { x: 0, y: 200 },
+        data: { type: 'person', name: 'Attendee 1', imageUrl: '', todos: [] }
+      },
+      {
+        id: '5',
+        type: 'social',
+        position: { x: 200, y: 200 },
+        data: { type: 'person', name: 'Attendee 2', imageUrl: '', todos: [] }
+      },
+      {
+        id: '6',
+        type: 'social',
+        position: { x: 400, y: 200 },
+        data: { type: 'person', name: 'Attendee 3', imageUrl: '', todos: [] }
       }
     ],
     edges: [
       { id: 'e1-2', source: '1', target: '2', type: 'custom' },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' },
+      { id: 'e2-4', source: '2', target: '4', type: 'custom' },
+      { id: 'e2-5', source: '2', target: '5', type: 'custom' },
+      { id: 'e3-6', source: '3', target: '6', type: 'custom' }
     ]
   },
   {
@@ -445,7 +479,7 @@ export function TemplatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-[1200px] h-[800px] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Templates</DialogTitle>
         </DialogHeader>
@@ -460,39 +494,41 @@ export function TemplatesDialog({
           />
         </div>
 
-        <ScrollArea className="flex-1 pr-4">
-          {categories.map(category => {
-            const categoryTemplates = filteredTemplates.filter(t => t.category === category);
-            if (categoryTemplates.length === 0) return null;
+        <ScrollArea className="flex-1">
+          <div className="pr-4 space-y-8">
+            {categories.map(category => {
+              const categoryTemplates = filteredTemplates.filter(t => t.category === category);
+              if (categoryTemplates.length === 0) return null;
 
-            return (
-              <div key={category} className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">{category}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categoryTemplates.map(template => (
-                    <Card
-                      key={template.id}
-                      className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-                      onClick={() => onSelectTemplate(template)}
-                    >
-                      {template.previewImage && (
-                        <div 
-                          className="w-full h-32 bg-cover bg-center"
-                          style={{ 
-                            backgroundImage: `url(${template.previewImage})`,
-                          }}
-                        />
-                      )}
-                      <div className="p-4">
-                        <h4 className="font-medium mb-2">{template.title}</h4>
-                        <p className="text-sm text-muted-foreground">{template.description}</p>
-                      </div>
-                    </Card>
-                  ))}
+              return (
+                <div key={category}>
+                  <h3 className="text-lg font-semibold mb-4">{category}</h3>
+                  <div className="grid grid-cols-3 gap-6">
+                    {categoryTemplates.map(template => (
+                      <Card
+                        key={template.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+                        onClick={() => onSelectTemplate(template)}
+                      >
+                        {template.previewImage && (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center"
+                            style={{ 
+                              backgroundImage: `url(${template.previewImage})`,
+                            }}
+                          />
+                        )}
+                        <div className="p-6">
+                          <h4 className="text-lg font-medium mb-2">{template.title}</h4>
+                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
