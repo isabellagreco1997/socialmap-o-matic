@@ -1,3 +1,4 @@
+<lov-code>
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -961,4 +962,4 @@ const Flow = () => {
                     <h3 className="text-lg font-semibold">Notes</h3>
                   </div>
                   {networks.flatMap((network: any) => 
-                    network.nodes.flatMap((node
+                    network.nodes.
