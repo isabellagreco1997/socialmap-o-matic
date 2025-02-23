@@ -479,8 +479,8 @@ const LandingPage = () => {
       <section className="py-20 px-4 bg-secondary/10">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">Pricing Plans</h2>
-          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
-            <div className="bg-background p-8 rounded-lg shadow-sm border text-center">
+          <div className="flex flex-col md:flex-row justify-center gap-8 max-w-4xl mx-auto">
+            <div className="bg-background p-8 rounded-lg shadow-sm border text-center flex-1">
               <h3 className="text-xl font-semibold mb-4">Free</h3>
               <p className="text-3xl font-bold mb-6">$0<span className="text-base font-normal text-muted-foreground">/month</span></p>
               <ul className="space-y-4 mb-8">
@@ -505,7 +505,7 @@ const LandingPage = () => {
                 <Link to="/network">Get Started</Link>
               </Button>
             </div>
-            <div className="bg-background p-8 rounded-lg shadow-sm border border-primary relative text-center">
+            <div className="bg-background p-8 rounded-lg shadow-sm border border-primary relative text-center flex-1">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-[#0A2463] text-white px-4 py-1 rounded-full text-sm">Most Popular</span>
               </div>
