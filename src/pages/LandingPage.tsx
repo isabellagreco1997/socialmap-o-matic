@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -44,7 +45,7 @@ Anyone in the World</h1>
       {/* Dashboard Preview Section */}
       <section className="py-20 px-4 bg-background">
         <div className="container">
-          <div className="rounded-lg overflow-hidden border shadow-lg">
+          <div className="rounded-lg overflow-hidden border shadow-lg max-w-[60%] mx-auto">
             <img 
               src="/lovable-uploads/4e6120a9-6483-43a1-acfb-f127780a4ffe.png"
               alt="Network Dashboard Preview"
