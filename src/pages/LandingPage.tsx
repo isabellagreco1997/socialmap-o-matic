@@ -1,9 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2 } from "lucide-react";
-
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       {/* Navigation */}
@@ -19,18 +17,14 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 pt-20 pb-48 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point-line-composition-concept-global-business-vector-illustration_41981-1906.jpg?w=2000" 
-            alt="Global Network Connection"
-            className="w-full h-full object-cover opacity-25"
-          />
+          <img src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point-line-composition-concept-global-business-vector-illustration_41981-1906.jpg?w=2000" alt="Global Network Connection" className="w-full h-full object-cover opacity-25" />
         </div>
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
             <span>Connect with</span>
             <span>Anyone in the World</span>
           </h1>
-          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
           </p>
           <div className="flex gap-4 justify-center pt-4">
@@ -74,11 +68,7 @@ const LandingPage = () => {
       <section className="py-20 px-4 bg-background">
         <div className="container">
           <div className="rounded-lg overflow-hidden border shadow-lg max-w-[78%] mx-auto">
-            <img 
-              src="/lovable-uploads/4e6120a9-6483-43a1-acfb-f127780a4ffe.png"
-              alt="Network Dashboard Preview"
-              className="w-full h-auto"
-            />
+            <img src="/lovable-uploads/4e6120a9-6483-43a1-acfb-f127780a4ffe.png" alt="Network Dashboard Preview" className="w-full h-auto" />
           </div>
         </div>
       </section>
