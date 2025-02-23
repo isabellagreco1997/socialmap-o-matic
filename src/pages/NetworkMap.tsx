@@ -71,6 +71,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TemplatesDialog } from '@/components/TemplatesDialog';
+import { Link } from 'react-router-dom';
 
 interface EdgeControlPoint {
   x: number;
@@ -674,15 +675,17 @@ export const Flow = () => {
           <Button
             variant="outline"
             className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-            onClick={() => setShowTodos(!showTodos)}
+            asChild
           >
-            <CheckSquare className="h-4 w-4 shrink-0" />
-            {!isMenuMinimized && <span className="ml-2">Tasks</span>}
+            <Link to="/network/overview">
+              <CheckSquare className="h-4 w-4 shrink-0" />
+              {!isMenuMinimized && <span className="ml-2">Tasks</span>}
+            </Link>
           </Button>
           <Button
             variant="outline"
             className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-            onClick={() => setShowChat(!showChat)}
+            onClick={() => setShowTodos(!showTodos)}
           >
             <MessageSquare className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
