@@ -80,6 +80,7 @@ interface EdgeControlPoint {
 interface EdgeData {
   label: string;
   notes?: string;
+  labelPosition?: number;
   [key: string]: unknown;
 }
 
@@ -109,6 +110,7 @@ const CustomEdge = ({
 }: EdgeProps) => {
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
+  const [labelPosition, setLabelPosition] = useState<number>(0.5); // 0 to 1 position along the edge
   
   const [edgePath] = getBezierPath({
     sourceX,
@@ -119,8 +121,9 @@ const CustomEdge = ({
     targetPosition: targetPosition || Position.Top,
   });
 
-  const labelX = (sourceX + targetX) / 2;
-  const labelY = (sourceY + targetY) / 2;
+  // Calculate label position along the edge
+  const labelX = sourceX + (targetX - sourceX) * labelPosition;
+  const labelY = sourceY + (targetY - sourceY) * labelPosition;
 
   const onEdgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -138,7 +141,36 @@ const CustomEdge = ({
         if (edge.id === id) {
           return {
             ...edge,
-            data: { ...newData } as unknown as Record<string, unknown>
+            data: { ...newData, labelPosition } as unknown as Record<string, unknown>
+          };
+        }
+        return edge;
+      })
+    );
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const totalWidth = targetX - sourceX;
+    let newPosition = x / totalWidth;
+    
+    // Clamp the position between 0 and 1
+    newPosition = Math.max(0, Math.min(1, newPosition));
+    
+    setLabelPosition(newPosition);
+    
+    // Update the edge data to persist the label position
+    setEdges((eds: Edge[]) =>
+      eds.map((edge) => {
+        if (edge.id === id) {
+          return {
+            ...edge,
+            data: { 
+              ...edge.data,
+              labelPosition: newPosition 
+            }
           };
         }
         return edge;
@@ -147,6 +179,13 @@ const CustomEdge = ({
   };
 
   const edgeData = data as EdgeData;
+
+  // Initialize label position from saved data
+  useEffect(() => {
+    if (edgeData?.labelPosition !== undefined) {
+      setLabelPosition(edgeData.labelPosition);
+    }
+  }, [edgeData?.labelPosition]);
 
   return (
     <>
@@ -163,10 +202,13 @@ const CustomEdge = ({
 
       <EdgeLabelRenderer>
         <div
+          draggable
+          onDrag={handleDrag}
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: 'all',
+            cursor: 'move',
             backgroundColor: 'white',
             padding: '4px 8px',
             borderRadius: '4px',
@@ -919,84 +961,4 @@ const Flow = () => {
                     <h3 className="text-lg font-semibold">Notes</h3>
                   </div>
                   {networks.flatMap((network: any) => 
-                    network.nodes.flatMap((node: any) => 
-                      (node.data.todos || []).map((todo: TodoItem) => (
-                        <Card key={todo.id} className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Checkbox 
-                              className="mt-1"
-                              checked={false}
-                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                            />
-                            <div className="flex-1 space-y-1">
-                              <div className="font-medium">{todo.text}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {network.name} / {node.data.name}
-                              </div>
-                              {todo.dueDate && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(todo.dueDate)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      ))
-                    )
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </Panel>
-        )}
-        
-        {showChat && (
-          <Panel position="top-right" className="translate-y-[60px]">
-            <NetworkChat onClose={() => setShowChat(false)} />
-          </Panel>
-        )}
-      </ReactFlow>
-
-      <AddNodeDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onAdd={handleAddNode}
-      />
-
-      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename Network</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <Input
-              value={newNetworkName}
-              onChange={(e) => setNewNetworkName(e.target.value)}
-              placeholder="Enter new name"
-            />
-            <Button onClick={handleRename} className="w-full">
-              Save
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <TemplatesDialog
-        open={isTemplatesOpen}
-        onOpenChange={setIsTemplatesOpen}
-        onSelectTemplate={handleTemplateSelect}
-      />
-    </div>
-  );
-};
-
-const NetworkMap = () => {
-  return (
-    <ReactFlowProvider>
-      <Flow />
-    </ReactFlowProvider>
-  );
-};
-
-export default NetworkMap;
+                    network.nodes.flatMap((node
