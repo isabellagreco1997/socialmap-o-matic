@@ -686,7 +686,7 @@ export const Flow = () => {
           </Button>
           <Button
             variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${showChat ? 'bg-accent text-accent-foreground' : ''}`}
             onClick={() => setShowChat(!showChat)}
           >
             <MessageSquare className="h-4 w-4 shrink-0" />
@@ -958,5 +958,4 @@ export const Flow = () => {
                 )}
               </Panel>
 
-              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
-                <Button onClick={() => setIsDialogOpen(
+              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-
