@@ -1,13 +1,32 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2 } from "lucide-react";
+
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       {/* Navigation */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between">
-          <span className="text-xl font-semibold">Science of Six</span>
+          <div className="flex items-center gap-8">
+            <span className="text-xl font-semibold">Science of Six</span>
+            <div className="hidden md:flex items-center gap-6">
+              <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+                Pricing
+              </Link>
+              <Link to="#about" className="text-sm font-medium hover:text-primary transition-colors">
+                About
+              </Link>
+              <Link to="#faq" className="text-sm font-medium hover:text-primary transition-colors">
+                FAQs
+              </Link>
+              <span className="text-sm font-medium text-muted-foreground cursor-not-allowed flex items-center gap-2">
+                Community
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Coming Soon</span>
+              </span>
+            </div>
+          </div>
           <Button asChild>
             <Link to="/network">Get Started</Link>
           </Button>
