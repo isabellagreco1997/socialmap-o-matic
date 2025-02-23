@@ -23,7 +23,7 @@ const templates: Template[] = [
     title: "Sales Pipeline",
     description: "Track leads, opportunities, and customer relationships",
     category: "Sales",
-    previewImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
     nodes: [
       {
         id: '1',
@@ -54,7 +54,7 @@ const templates: Template[] = [
     title: "Networking Event",
     description: "Map connections made at conferences and events",
     category: "Networking",
-    previewImage: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
     nodes: [
       {
         id: '1',
@@ -85,7 +85,7 @@ const templates: Template[] = [
     title: "Business Ecosystem",
     description: "Map your business partnerships and collaborations",
     category: "Business Development",
-    previewImage: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
     nodes: [
       {
         id: '1',
@@ -116,7 +116,7 @@ const templates: Template[] = [
     title: "Client Relationships",
     description: "Visualize key stakeholders and decision makers",
     category: "Account Management",
-    previewImage: "https://images.unsplash.com/photo-1518005020951-eccb494ad742",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
     nodes: [
       {
         id: '1',
@@ -135,6 +135,161 @@ const templates: Template[] = [
         type: 'social',
         position: { x: 400, y: 100 },
         data: { type: 'person', name: 'Client Stakeholder', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "influencer-network",
+    title: "Influencer Network",
+    description: "Track relationships with industry influencers",
+    category: "Marketing",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'person', name: 'Key Influencer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'organization', name: 'Brand', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'Marketing Manager', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "investor-relations",
+    title: "Investor Relations",
+    description: "Map relationships with investors and stakeholders",
+    category: "Finance",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'organization', name: 'Investment Firm', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Lead Investor', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'CFO', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "partnership-mapping",
+    title: "Partnership Mapping",
+    description: "Visualize strategic partnerships and alliances",
+    category: "Business Development",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'organization', name: 'Strategic Partner', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Partnership Manager', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'organization', name: 'Technology Provider', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "channel-partners",
+    title: "Channel Partners",
+    description: "Organize relationships with distributors and resellers",
+    category: "Sales",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'organization', name: 'Channel Partner', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Channel Manager', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'organization', name: 'End Client', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "customer-success",
+    title: "Customer Success",
+    description: "Track customer relationships and success stories",
+    category: "Account Management",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'organization', name: 'Customer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Success Manager', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'Product Specialist', imageUrl: '', todos: [] }
       }
     ],
     edges: [
