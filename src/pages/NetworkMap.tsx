@@ -852,7 +852,7 @@ export const Flow = () => {
               <Tabs defaultValue="tasks" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                  <TabsTrigger value="venues">Venues</TabsTrigger>
+                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
                   <TabsTrigger value="notes">Notes</TabsTrigger>
                 </TabsList>
 
@@ -917,37 +917,53 @@ export const Flow = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="venues" className="space-y-4">
+                <TabsContent value="calendar" className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <MapPin className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">Venues</h3>
+                    <Calendar className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Calendar</h3>
                   </div>
-                  {networks.flatMap((network: any) => 
-                    network.nodes.flatMap((node: any) => 
-                      (node.data.todos || []).map((todo: TodoItem) => (
-                        <Card key={todo.id} className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Checkbox 
-                              className="mt-1"
-                              checked={false}
-                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                            />
-                            <div className="flex-1 space-y-1">
-                              <div className="font-medium">{todo.text}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {network.name} / {node.data.name}
-                              </div>
-                              {todo.dueDate && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(todo.dueDate)}
-                                </div>
+                  {networks
+                    .filter(network => network.id === currentNetworkId)
+                    .flatMap(network => 
+                      network.nodes
+                        .filter(node => node.data.type === 'event' || node.data.type === 'venue')
+                        .map(node => (
+                          <Card key={node.id} className="p-4">
+                            <div className="flex items-start gap-3">
+                              {node.data.type === 'event' ? (
+                                <Calendar className="h-5 w-5 mt-1 text-muted-foreground" />
+                              ) : (
+                                <MapPin className="h-5 w-5 mt-1 text-muted-foreground" />
                               )}
+                              <div className="flex-1 space-y-1">
+                                <div className="font-medium">{node.data.name}</div>
+                                {node.data.date && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    {formatDate(node.data.date)}
+                                  </div>
+                                )}
+                                {node.data.address && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    {node.data.address}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </Card>
-                      ))
-                    )
+                          </Card>
+                        ))
+                    )}
+                  {networks
+                    .filter(network => network.id === currentNetworkId)
+                    .every(network => 
+                      network.nodes.filter(node => 
+                        node.data.type === 'event' || node.data.type === 'venue'
+                      ).length === 0
+                    ) && (
+                    <div className="text-center text-muted-foreground py-8">
+                      No events or venues found in this network
+                    </div>
                   )}
                 </TabsContent>
 
