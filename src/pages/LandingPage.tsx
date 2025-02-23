@@ -8,9 +8,9 @@ const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       {/* Navigation */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container flex h-16 items-center justify-center relative">
-          <div className="flex items-center gap-8">
-            <span className="text-xl font-semibold">Science of Six</span>
+        <div className="container flex h-16 items-center relative">
+          <span className="text-xl font-semibold">Science of Six</span>
+          <div className="flex-1 flex justify-center">
             <div className="hidden md:flex items-center gap-6">
               <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
                 Pricing
