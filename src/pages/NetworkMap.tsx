@@ -829,6 +829,14 @@ const Flow = () => {
             <PlusIcon className="h-4 w-4" />
             Add Node
           </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setShowTodos(!showTodos)} 
+            className="flex items-center gap-2"
+          >
+            <CheckSquare className="h-4 w-4" />
+            Tasks
+          </Button>
         </Panel>
 
         {showTodos && (
@@ -871,51 +879,39 @@ const Flow = () => {
                           <SelectItem value="overdue">Overdue</SelectItem>
                         </SelectContent>
                       </Select>
-
-                      <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Filter by Network" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Networks</SelectItem>
-                          {networks.map((network: any) => (
-                            <SelectItem key={network.id} value={network.id}>
-                              {network.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
 
-                    {filteredTodos.map((todo: FilteredTodoItem) => (
-                      <Card key={todo.id} className="p-4">
-                        <div className="flex items-start gap-3">
-                          <Checkbox 
-                            className="mt-1"
-                            checked={false}
-                            onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id, todo.text)}
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="font-medium">{todo.text}</div>
-                              {todo.dueDate && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-1 shrink-0">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(todo.dueDate)}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {todo.networkName} / {todo.nodeName}
+                    {filteredTodos
+                      .filter(todo => todo.networkId === currentNetworkId)
+                      .map((todo: FilteredTodoItem) => (
+                        <Card key={todo.id} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox 
+                              className="mt-1"
+                              checked={false}
+                              onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id, todo.text)}
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="font-medium">{todo.text}</div>
+                                {todo.dueDate && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1 shrink-0">
+                                    <Calendar className="h-4 w-4" />
+                                    {formatDate(todo.dueDate)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {todo.nodeName}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </Card>
+                        </Card>
                     ))}
 
-                    {filteredTodos.length === 0 && (
+                    {filteredTodos.filter(todo => todo.networkId === currentNetworkId).length === 0 && (
                       <div className="text-center text-muted-foreground py-8">
-                        No tasks found
+                        No tasks found in this network
                       </div>
                     )}
                   </div>
@@ -961,4 +957,6 @@ const Flow = () => {
                     <h3 className="text-lg font-semibold">Notes</h3>
                   </div>
                   {networks.flatMap((network: any) => 
-                    network.nodes.flatMap((node
+                    network.nodes.flatMap((node: any) => 
+                      (node.data.todos || []).map((todo: TodoItem) => (
+                        <Card key
