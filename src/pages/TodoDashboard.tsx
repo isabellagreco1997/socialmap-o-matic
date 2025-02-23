@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { 
@@ -15,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import { Toggle } from "@/components/ui/toggle";
 
-type ViewType = 'tasks' | 'venues' | 'notes';
+type ViewType = 'tasks' | 'calendar' | 'notes';
 
 interface TodoItem {
   id: string;
