@@ -20,7 +20,7 @@ const LandingPage = () => {
       <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 py-20 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point_41981-1194.jpg?w=2000" 
+            src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point-line-composition-concept-global-business-vector-illustration_41981-1906.jpg?w=2000" 
             alt="Global Network Connection"
             className="w-full h-full object-cover opacity-20"
           />
