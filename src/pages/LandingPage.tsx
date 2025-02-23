@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -96,6 +95,27 @@ const LandingPage = () => {
             <p className="text-muted-foreground">
               Find the shortest path to connect with anyone in your extended network
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Map Preview Section */}
+      <section className="py-20 px-4 bg-secondary/10">
+        <div className="container">
+          <div className="grid gap-12 md:grid-cols-2 items-center">
+            <div className="space-y-6">
+              <h2 className="text-4xl font-bold text-[#0A2463]">Map Complexity</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Map out complex networks including individuals, organizations, venues, and events. Visualize interconnections and discover hidden relationships within your network through an intuitive interface.
+              </p>
+            </div>
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <img 
+                src="/lovable-uploads/0f4e6749-603a-4738-a4cc-189c60492f5f.png" 
+                alt="Network Mapping Interface" 
+                className="w-full h-auto"
+              />
+            </div>
           </div>
         </div>
       </section>
