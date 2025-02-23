@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Handle, Position, useReactFlow, Node } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
@@ -50,7 +49,6 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<NodeData>(data);
 
-  // Safeguard against undefined data
   if (!data || !data.name) {
     return (
       <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur">
@@ -134,9 +132,11 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
 
   return (
     <>
-      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur">
+      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur relative">
         <Handle type="target" position={Position.Left} className="!bg-primary !w-3 !h-3" />
         <Handle type="source" position={Position.Right} className="!bg-primary !w-3 !h-3" />
+        <Handle type="target" position={Position.Top} className="!bg-primary !w-3 !h-3" />
+        <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3" />
         
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
