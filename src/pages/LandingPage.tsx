@@ -123,8 +123,20 @@ const LandingPage = () => {
       {/* Dashboard Preview Section */}
       <section className="py-20 px-4 bg-background">
         <div className="container">
-          <div className="rounded-lg overflow-hidden border shadow-lg max-w-[78%] mx-auto">
-            <img src="/lovable-uploads/4e6120a9-6483-43a1-acfb-f127780a4ffe.png" alt="Network Dashboard Preview" className="w-full h-auto" />
+          <div className="grid gap-12 md:grid-cols-2 items-center">
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <img 
+                src="/lovable-uploads/63771b4f-0415-470a-b75f-29616c68f487.png" 
+                alt="Task Tracking System" 
+                className="w-full h-auto"
+              />
+            </div>
+            <div className="space-y-6">
+              <h2 className="text-4xl font-bold text-[#0A2463]">Maintain Relationships</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Keep your network active and engaged with our comprehensive task tracking system. Schedule follow-ups, set reminders for important dates, and maintain meaningful connections through organized relationship management.
+              </p>
+            </div>
           </div>
         </div>
       </section>
