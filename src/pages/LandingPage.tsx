@@ -478,35 +478,50 @@ const LandingPage = () => {
       <section className="py-20 px-4 bg-secondary/10">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">Pricing Plans</h2>
-          <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
             <div className="bg-background p-8 rounded-lg shadow-sm border">
               <h3 className="text-xl font-semibold mb-4">Free</h3>
               <p className="text-3xl font-bold mb-6">$0<span className="text-base font-normal text-muted-foreground">/month</span></p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Up to 50 connections</span>
+                  <span>Create one network</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span>Unlimited connections</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span>Task management</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-primary" />
                   <span>Basic visualization</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Community support</span>
                 </li>
               </ul>
               <Button className="w-full" variant="outline" asChild>
                 <Link to="/network">Get Started</Link>
               </Button>
             </div>
-            <div className="bg-background p-8 rounded-lg shadow-sm border border-primary">
-              <h3 className="text-xl font-semibold mb-4">Pro</h3>
+            <div className="bg-background p-8 rounded-lg shadow-sm border border-primary relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-[#0A2463] text-white px-4 py-1 rounded-full text-sm">Most Popular</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Master Networker</h3>
               <p className="text-3xl font-bold mb-6">$9<span className="text-base font-normal text-muted-foreground">/month</span></p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Unlimited connections</span>
+                  <span>Everything in Free</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Unlimited networks</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span className="font-medium">AI-powered network insights</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-primary" />
@@ -517,26 +532,7 @@ const LandingPage = () => {
                   <span>Priority support</span>
                 </li>
               </ul>
-              <Button className="w-full">Subscribe Now</Button>
-            </div>
-            <div className="bg-background p-8 rounded-lg shadow-sm border">
-              <h3 className="text-xl font-semibold mb-4">Enterprise</h3>
-              <p className="text-3xl font-bold mb-6">Custom</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Custom integration</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Dedicated support</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>SLA guarantee</span>
-                </li>
-              </ul>
-              <Button className="w-full" variant="outline">Contact Sales</Button>
+              <Button className="w-full bg-[#0A2463] hover:bg-[#0A2463]/90">Subscribe Now</Button>
             </div>
           </div>
         </div>
