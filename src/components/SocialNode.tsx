@@ -134,10 +134,61 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   return (
     <>
       <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur relative">
-        <Handle type="target" position={Position.Left} className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" />
-        <Handle type="source" position={Position.Right} className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" />
-        <Handle type="target" position={Position.Top} className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" />
-        <Handle type="source" position={Position.Bottom} className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" />
+        {/* Left handle - both source and target */}
+        <Handle 
+          type="source" 
+          position={Position.Left} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" 
+          id="left-source"
+        />
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD] !top-[60%]" 
+          id="left-target"
+        />
+
+        {/* Right handle - both source and target */}
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" 
+          id="right-source"
+        />
+        <Handle 
+          type="target" 
+          position={Position.Right} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD] !top-[60%]" 
+          id="right-target"
+        />
+
+        {/* Top handle - both source and target */}
+        <Handle 
+          type="source" 
+          position={Position.Top} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" 
+          id="top-source"
+        />
+        <Handle 
+          type="target" 
+          position={Position.Top} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD] !left-[60%]" 
+          id="top-target"
+        />
+
+        {/* Bottom handle - both source and target */}
+        <Handle 
+          type="source" 
+          position={Position.Bottom} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD]" 
+          id="bottom-source"
+        />
+        <Handle 
+          type="target" 
+          position={Position.Bottom} 
+          className="!bg-[#D3E4FD] !w-2 !h-2 border-2 border-[#D3E4FD] !left-[60%]" 
+          id="bottom-target"
+        />
         
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
