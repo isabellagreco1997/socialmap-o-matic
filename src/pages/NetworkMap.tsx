@@ -70,6 +70,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TemplatesDialog } from '@/components/TemplatesDialog';
 
 interface EdgeControlPoint {
   x: number;
@@ -267,6 +268,7 @@ const Flow = () => {
   const [newNetworkName, setNewNetworkName] = useState('');
   const [showTodos, setShowTodos] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const { toast } = useToast();
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
   const [tempNetworkName, setTempNetworkName] = useState('');
@@ -581,6 +583,24 @@ const Flow = () => {
     ) as FilteredTodoItem[];
   }, [networks, selectedNetwork, dateFilter]);
 
+  const handleTemplateSelect = (template: any) => {
+    const newNetwork: Network = {
+      id: `network-${Date.now()}`,
+      name: template.title,
+      nodes: template.nodes,
+      edges: template.edges
+    };
+    
+    setNetworks(prev => [...prev, newNetwork]);
+    setCurrentNetworkId(newNetwork.id);
+    setIsTemplatesOpen(false);
+    
+    toast({
+      title: "Template applied",
+      description: `Created new network from "${template.title}" template`,
+    });
+  };
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col h-full ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -664,12 +684,10 @@ const Flow = () => {
             <Button
               variant="ghost"
               className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-              asChild
+              onClick={() => setIsTemplatesOpen(true)}
             >
-              <a href="#templates">
-                <BookOpen className="h-4 w-4 shrink-0" />
-                {!isMenuMinimized && <span className="ml-2">Templates</span>}
-              </a>
+              <BookOpen className="h-4 w-4 shrink-0" />
+              {!isMenuMinimized && <span className="ml-2">Templates</span>}
             </Button>
             <Button
               variant="ghost"
@@ -963,6 +981,12 @@ const Flow = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <TemplatesDialog
+        open={isTemplatesOpen}
+        onOpenChange={setIsTemplatesOpen}
+        onSelectTemplate={handleTemplateSelect}
+      />
     </div>
   );
 };
