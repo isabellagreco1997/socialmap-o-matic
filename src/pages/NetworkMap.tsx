@@ -767,98 +767,97 @@ export const Flow = () => {
         </div>
       </div>
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        minZoom={0.1}
-        maxZoom={4}
-        className="bg-dot-pattern flex-1"
-        elementsSelectable={true}
-        selectNodesOnDrag={false}
-        proOptions={{ hideAttribution: true }}
-        defaultEdgeOptions={{
-          type: 'custom',
-          zIndex: 0,
-          interactionWidth: 20,
-        }}
-      >
-        <Background />
-        <Controls />
-        
-        <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
-          {isEditingNetworkName ? (
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSaveNetworkName();
-              }}
-              className="flex items-center gap-2"
-            >
-              <Input
-                value={tempNetworkName}
-                onChange={(e) => setTempNetworkName(e.target.value)}
-                className="h-8 text-sm"
-                autoFocus
-                onBlur={handleSaveNetworkName}
-              />
-            </form>
-          ) : (
-            <>
-              <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={handleStartEditingName}>
-                    <Edit2Icon className="mr-2 h-4 w-4" />
-                    Rename
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleDeleteNetwork2}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Network
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          )}
-        </Panel>
-
-        <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
-          <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
-            <PlusIcon className="h-4 w-4" />
-            Add Node
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setShowTodos(!showTodos)} 
-            className="flex items-center gap-2"
+      <div className="flex-1">
+        {!showOverview ? (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            minZoom={0.1}
+            maxZoom={4}
+            className="bg-dot-pattern"
+            elementsSelectable={true}
+            selectNodesOnDrag={false}
+            proOptions={{ hideAttribution: true }}
+            defaultEdgeOptions={{
+              type: 'custom',
+              zIndex: 0,
+              interactionWidth: 20,
+            }}
           >
-            <CheckSquare className="h-4 w-4" />
-            Tasks
-          </Button>
-        </Panel>
+            <Background />
+            <Controls />
+            
+            <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
+              {isEditingNetworkName ? (
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSaveNetworkName();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Input
+                    value={tempNetworkName}
+                    onChange={(e) => setTempNetworkName(e.target.value)}
+                    className="h-8 text-sm"
+                    autoFocus
+                    onBlur={handleSaveNetworkName}
+                  />
+                </form>
+              ) : (
+                <>
+                  <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={handleStartEditingName}>
+                        <Edit2Icon className="mr-2 h-4 w-4" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={handleDeleteNetwork2}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Network
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              )}
+            </Panel>
 
-        {showOverview && (
-          <Panel position="top-right" className="w-[600px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh]">
-            <div className="space-y-6">
+            <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
+              <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
+                <PlusIcon className="h-4 w-4" />
+                Add Node
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowTodos(!showTodos)} 
+                className="flex items-center gap-2"
+              >
+                <CheckSquare className="h-4 w-4" />
+                Tasks
+              </Button>
+            </Panel>
+          </ReactFlow>
+        ) : (
+          <div className="h-full p-8 overflow-y-auto">
+            <div className="max-w-5xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Overview</h2>
-                <Button variant="ghost" size="icon" onClick={() => setShowOverview(false)}>
-                  <ChevronRightIcon className="h-4 w-4" />
-                </Button>
+                <h2 className="text-2xl font-bold">Network Overview</h2>
               </div>
 
               <Tabs defaultValue="tasks" className="w-full">
@@ -873,7 +872,7 @@ export const Flow = () => {
                     <ListChecks className="h-5 w-5" />
                     <h3 className="text-lg font-semibold">All Tasks</h3>
                   </div>
-                  {networks.map((network: any) => (
+                  {networks.map((network) => (
                     <div key={network.id}>
                       <h3 className="text-lg font-medium mb-4">{network.name}</h3>
                       {network.nodes.map((node: any) => {
@@ -888,7 +887,7 @@ export const Flow = () => {
                               <div className="flex-1">
                                 <div className="font-medium">{todo.text}</div>
                                 <div className="text-sm text-muted-foreground">
-                                  {node.data.name}
+                                  {network.name} / {node.data.name}
                                 </div>
                                 {todo.dueDate && (
                                   <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
@@ -910,7 +909,7 @@ export const Flow = () => {
                     <Calendar className="h-5 w-5" />
                     <h3 className="text-lg font-semibold">All Events & Venues</h3>
                   </div>
-                  {networks.map((network: any) => (
+                  {networks.map((network) => (
                     <div key={network.id}>
                       <h3 className="text-lg font-medium mb-4">{network.name}</h3>
                       {network.nodes
@@ -927,6 +926,9 @@ export const Flow = () => {
                               )}
                               <div className="flex-1 space-y-1">
                                 <div className="font-medium">{node.data.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {network.name}
+                                </div>
                                 {node.data.date && (
                                   <div className="text-sm text-muted-foreground flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
@@ -952,7 +954,7 @@ export const Flow = () => {
                     <FileText className="h-5 w-5" />
                     <h3 className="text-lg font-semibold">All Notes</h3>
                   </div>
-                  {networks.map((network: any) => (
+                  {networks.map((network) => (
                     <div key={network.id}>
                       <h3 className="text-lg font-medium mb-4">{network.name}</h3>
                       {network.nodes.map((node: any) => {
@@ -961,6 +963,9 @@ export const Flow = () => {
                           <Card key={node.id} className="p-4 mb-4">
                             <div className="space-y-2">
                               <div className="font-medium">{node.data.name}</div>
+                              <div className="text-sm text-muted-foreground mb-1">
+                                {network.name}
+                              </div>
                               <div className="text-sm">{node.data.notes}</div>
                             </div>
                           </Card>
@@ -971,175 +976,9 @@ export const Flow = () => {
                 </TabsContent>
               </Tabs>
             </div>
-          </Panel>
+          </div>
         )}
-
-        {showTodos && (
-          <Panel position="top-right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh] translate-y-[60px]">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Tasks</h2>
-                <Button variant="ghost" size="icon" onClick={() => setShowTodos(false)}>
-                  <ChevronRightIcon className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <Tabs defaultValue="tasks" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="tasks" className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <ListChecks className="h-5 w-5" />
-                      <h3 className="text-lg font-semibold">Tasks</h3>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Select 
-                        value={dateFilter} 
-                        onValueChange={(value: 'all' | 'today' | 'week' | 'month' | 'overdue') => setDateFilter(value)}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Filter by Due Date" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Dates</SelectItem>
-                          <SelectItem value="today">Due Today</SelectItem>
-                          <SelectItem value="week">Due This Week</SelectItem>
-                          <SelectItem value="month">Due This Month</SelectItem>
-                          <SelectItem value="overdue">Overdue</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {filteredTodos
-                      .filter(todo => todo.networkId === currentNetworkId)
-                      .map((todo: FilteredTodoItem) => (
-                        <Card key={todo.id} className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Checkbox 
-                              className="mt-1"
-                              checked={false}
-                              onCheckedChange={() => handleCompleteTodo(todo.networkId, todo.nodeId, todo.id, todo.text)}
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="font-medium">{todo.text}</div>
-                                {todo.dueDate && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="h-4 w-4" />
-                                    {formatDate(todo.dueDate)}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground mt-1">
-                                {todo.nodeName}
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                    ))}
-
-                    {filteredTodos.filter(todo => todo.networkId === currentNetworkId).length === 0 && (
-                      <div className="text-center text-muted-foreground py-8">
-                        No tasks found in this network
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="calendar" className="space-y-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">Calendar</h3>
-                  </div>
-                  {networks
-                    .filter(network => network.id === currentNetworkId)
-                    .flatMap(network => 
-                      network.nodes
-                        .filter(node => node.data.type === 'event' || node.data.type === 'venue')
-                        .map(node => (
-                          <Card key={node.id} className="p-4">
-                            <div className="flex items-start gap-3">
-                              {node.data.type === 'event' ? (
-                                <Calendar className="h-5 w-5 mt-1 text-muted-foreground" />
-                              ) : (
-                                <MapPin className="h-5 w-5 mt-1 text-muted-foreground" />
-                              )}
-                              <div className="flex-1 space-y-1">
-                                <div className="font-medium">{node.data.name}</div>
-                                {node.data.date && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="h-4 w-4" />
-                                    {formatDate(node.data.date)}
-                                  </div>
-                                )}
-                                {node.data.address && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <MapPin className="h-4 w-4" />
-                                    {node.data.address}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        ))
-                    )}
-                  {networks
-                    .filter(network => network.id === currentNetworkId)
-                    .every(network => 
-                      network.nodes.filter(node => 
-                        node.data.type === 'event' || node.data.type === 'venue'
-                      ).length === 0
-                    ) && (
-                    <div className="text-center text-muted-foreground py-8">
-                      No events or venues found in this network
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="notes" className="space-y-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FileText className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">Notes</h3>
-                  </div>
-                  {networks.flatMap((network: any) => 
-                    network.nodes.flatMap((node: any) => 
-                      (node.data.todos || []).map((todo: TodoItem) => (
-                        <Card key={todo.id} className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Checkbox 
-                              className="mt-1"
-                              checked={false}
-                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                            />
-                            <div className="flex-1 space-y-1">
-                              <div className="font-medium">{todo.text}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {network.name} / {node.data.name}
-                              </div>
-                              {todo.dueDate && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(todo.dueDate)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      ))
-                    )
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </Panel>
-        )}
-      </ReactFlow>
+      </div>
 
       <AddNodeDialog
         open={isDialogOpen}
