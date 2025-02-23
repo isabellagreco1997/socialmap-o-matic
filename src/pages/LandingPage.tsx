@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -108,6 +109,9 @@ const LandingPage = () => {
               <p className="text-xl text-muted-foreground leading-relaxed">
                 Map out complex networks including individuals, organizations, venues, and events. Visualize interconnections and discover hidden relationships within your network through an intuitive interface.
               </p>
+              <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90" asChild>
+                <Link to="/network">Start Mapping</Link>
+              </Button>
             </div>
             <div className="rounded-lg overflow-hidden shadow-lg">
               <img 
@@ -136,6 +140,9 @@ const LandingPage = () => {
               <p className="text-xl text-muted-foreground leading-relaxed">
                 Keep your network active and engaged with our comprehensive task tracking system. Schedule follow-ups, set reminders for important dates, and maintain meaningful connections through organized relationship management.
               </p>
+              <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90" asChild>
+                <Link to="/network">Try Task Manager</Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -150,6 +157,9 @@ const LandingPage = () => {
               <p className="text-xl text-muted-foreground leading-relaxed">
                 Leverage AI-powered insights to understand your network better. Get personalized suggestions for connecting with others, discover optimal outreach strategies, and uncover valuable opportunities within your professional circle.
               </p>
+              <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90" asChild>
+                <Link to="/network">Start Chatting</Link>
+              </Button>
             </div>
             <div className="rounded-lg overflow-hidden shadow-lg">
               <img 
