@@ -1,4 +1,3 @@
-
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -37,15 +36,14 @@ import {
   ListChecks,
   MapPin,
   FileText,
-  Calendar,
-  ChevronDown
+  Calendar
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import SocialNode from '@/components/SocialNode';
@@ -584,7 +582,7 @@ const Flow = () => {
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
         <div className="p-4 border-b flex items-center justify-between">
-          {!isMenuMinimized && <h2 className="font-semibold">Menu</h2>}
+          {!isMenuMinimized && <h2 className="font-semibold">Your Networks</h2>}
           <Button 
             variant="ghost" 
             size="icon"
@@ -599,84 +597,62 @@ const Flow = () => {
           </Button>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-2">
-            {!isMenuMinimized && (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium">Networks</span>
-                  <Button onClick={createNewNetwork} size="icon" variant="ghost" className="h-8 w-8">
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-1">
-                  {networks.map((network, index) => (
-                    <div 
-                      key={network.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, index, network.id)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, index)}
-                      onDragEnd={handleDragEnd}
-                      className={`group ${draggedNetwork === network.id ? 'opacity-50' : ''}`}
-                    >
-                      <div className="flex items-center">
-                        <Button
-                          variant={currentNetworkId === network.id ? "default" : "ghost"}
-                          className="flex-1 justify-start h-8 px-2 text-sm"
-                          onClick={(e) => handleNetworkSelect(network.id, e)}
-                        >
-                          <GripVertical className="h-4 w-4 mr-2 text-muted-foreground cursor-move" />
-                          <span className="truncate">{network.name}</span>
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleRenameClick(network)}>
-                              <Edit2Icon className="mr-2 h-4 w-4" />
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteNetwork(network.id, network.name)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+        <div className="p-4 border-b space-y-2">
+          <Button
+            onClick={createNewNetwork}
+            variant="outline"
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+          >
+            <PlusIcon className="h-4 w-4 shrink-0" />
+            {!isMenuMinimized && <span className="ml-2">Create Network</span>}
+          </Button>
+          <Button
+            variant="outline"
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+            onClick={() => setShowTodos(!showTodos)}
+          >
+            <CheckSquare className="h-4 w-4 shrink-0" />
+            {!isMenuMinimized && <span className="ml-2">Tasks</span>}
+          </Button>
+          <Button
+            variant="outline"
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+            onClick={() => setShowChat(!showChat)}
+          >
+            <MessageSquare className="h-4 w-4 shrink-0" />
+            {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
+          </Button>
+        </div>
 
-          <div className="p-4 space-y-2">
-            {!isMenuMinimized && <div className="text-sm font-medium mb-4">Tools</div>}
-            <Button
-              variant="outline"
-              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-              onClick={() => setShowTodos(!showTodos)}
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {networks.map((network, index) => (
+            <div 
+              key={network.id} 
+              draggable={!isMenuMinimized}
+              onDragStart={(e) => handleDragStart(e, index, network.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center gap-2 ${
+                !isMenuMinimized ? 'cursor-move' : ''
+              } ${
+                draggedNetwork === network.id ? 'opacity-50' : ''
+              }`}
+              onClick={(e) => handleNetworkSelect(network.id, e)}
             >
-              <CheckSquare className="h-4 w-4 shrink-0" />
-              {!isMenuMinimized && <span className="ml-2">Tasks</span>}
-            </Button>
-            <Button
-              variant="outline"
-              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-              onClick={() => setShowChat(!showChat)}
-            >
-              <MessageSquare className="h-4 w-4 shrink-0" />
-              {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
-            </Button>
-          </div>
+              <Button
+                variant={currentNetworkId === network.id ? "default" : "ghost"}
+                className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
+                tabIndex={-1}
+              >
+                {!isMenuMinimized && (
+                  <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
+                )}
+                {!isMenuMinimized && network.name}
+                {isMenuMinimized && network.name.split(' ')[1]}
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 
