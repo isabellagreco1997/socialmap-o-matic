@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -42,19 +41,6 @@ Anyone in the World</h1>
         </div>
       </section>
 
-      {/* Dashboard Preview Section */}
-      <section className="py-20 px-4 bg-background">
-        <div className="container">
-          <div className="rounded-lg overflow-hidden border shadow-lg max-w-[60%] mx-auto">
-            <img 
-              src="/lovable-uploads/4e6120a9-6483-43a1-acfb-f127780a4ffe.png"
-              alt="Network Dashboard Preview"
-              className="w-full h-auto"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-20 px-4 bg-background">
         <div className="container grid gap-8 md:grid-cols-3">
@@ -75,6 +61,19 @@ Anyone in the World</h1>
             <p className="text-muted-foreground">
               Find the shortest path to connect with anyone in your extended network
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Dashboard Preview Section */}
+      <section className="py-20 px-4 bg-background">
+        <div className="container">
+          <div className="rounded-lg overflow-hidden border shadow-lg max-w-[60%] mx-auto">
+            <img 
+              src="/lovable-uploads/4e6120a9-6483-43a1-acfb-f127780a4ffe.png"
+              alt="Network Dashboard Preview"
+              className="w-full h-auto"
+            />
           </div>
         </div>
       </section>
