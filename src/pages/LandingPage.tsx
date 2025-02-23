@@ -123,14 +123,16 @@ const LandingPage = () => {
       </section>
 
       {/* Public Figures Carousel Section */}
-      <section className="py-20 px-4 bg-secondary/10">
-        <div className="container max-w-5xl mx-auto">
+      <section className="py-20 bg-secondary/10">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center space-y-6 mb-12">
             <h2 className="text-4xl font-bold text-[#0A2463]">Connect with Influential Figures</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               On average, you are only 6 introductions away from your ideal connection. Map this out using Science of Six.
             </p>
           </div>
+        </div>
+        <div className="w-full overflow-hidden">
           <Carousel
             opts={{
               align: "start",
@@ -143,7 +145,7 @@ const LandingPage = () => {
             <CarouselContent className="flex animate-carousel">
               {[...Array(2)].map((_, outerIndex) => (
                 <React.Fragment key={outerIndex}>
-                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
                         <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=elon" alt="Elon Musk" />
@@ -152,7 +154,7 @@ const LandingPage = () => {
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">CEO</span>
                     </div>
                   </CarouselItem>
-                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
                         <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=obama" alt="Barack Obama" />
@@ -161,7 +163,7 @@ const LandingPage = () => {
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">Politician</span>
                     </div>
                   </CarouselItem>
-                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
                         <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=taylor" alt="Taylor Swift" />
@@ -170,7 +172,7 @@ const LandingPage = () => {
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">Celebrity</span>
                     </div>
                   </CarouselItem>
-                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
                         <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=bill" alt="Bill Gates" />
@@ -179,7 +181,7 @@ const LandingPage = () => {
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">Billionaire</span>
                     </div>
                   </CarouselItem>
-                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
                         <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=angelina" alt="Angelina Jolie" />
@@ -188,11 +190,29 @@ const LandingPage = () => {
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">Celebrity</span>
                     </div>
                   </CarouselItem>
-                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
                         <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=mark" alt="Mark Zuckerberg" />
                         <AvatarFallback>MZ</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">CEO</span>
+                    </div>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
+                        <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=oprah" alt="Oprah Winfrey" />
+                        <AvatarFallback>OW</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">Celebrity</span>
+                    </div>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/8 md:basis-1/8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
+                        <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=jeff" alt="Jeff Bezos" />
+                        <AvatarFallback>JB</AvatarFallback>
                       </Avatar>
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">CEO</span>
                     </div>
