@@ -34,7 +34,7 @@ const LandingPage = () => {
             <Button variant="outline" asChild>
               <Link to="/login">Log In</Link>
             </Button>
-            <Button asChild>
+            <Button className="bg-[#0A2463] hover:bg-[#0A2463]/90" asChild>
               <Link to="/network">Get Started</Link>
             </Button>
           </div>
@@ -49,13 +49,13 @@ const LandingPage = () => {
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
             <span>Connect with</span>
-            <span><span className="text-[#0EA5E9]">Anyone</span> in the World</span>
+            <span><span className="text-[#0A2463]">Anyone</span> in the World</span>
           </h1>
           <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
           </p>
           <div className="flex gap-4 justify-center pt-4">
-            <Button size="lg" className="bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-lg h-14 px-10" asChild>
+            <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90 text-lg h-14 px-10" asChild>
               <Link to="/network">Start Mapping</Link>
             </Button>
           </div>
