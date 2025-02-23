@@ -959,4 +959,55 @@ const Flow = () => {
                   {networks.flatMap((network: any) => 
                     network.nodes.flatMap((node: any) => 
                       (node.data.todos || []).map((todo: TodoItem) => (
-                        <Card key
+                        <Card key={todo.id} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox 
+                              className="mt-1"
+                              checked={false}
+                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                            />
+                            <div className="flex-1 space-y-1">
+                              <div className="font-medium">{todo.text}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {network.name} / {node.data.name}
+                              </div>
+                              {todo.dueDate && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  {formatDate(todo.dueDate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                    )
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </Panel>
+        )}
+      </ReactFlow>
+
+      <AddNodeDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSave={handleAddNode}
+      />
+      
+      <TemplatesDialog 
+        open={isTemplatesOpen} 
+        onOpenChange={setIsTemplatesOpen}
+        onSelect={handleTemplateSelect}
+      />
+
+      {showChat && (
+        <NetworkChat
+          open={showChat}
+          onOpenChange={setShowChat}
+        />
+      )}
+    </div>
+  );
+};
