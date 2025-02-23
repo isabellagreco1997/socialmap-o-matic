@@ -2,6 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2, Eye, Activity, Route as RouteIcon } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
@@ -109,6 +117,70 @@ const LandingPage = () => {
               className="w-full h-auto"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Public Figures Carousel Section */}
+      <section className="py-20 px-4 bg-secondary/10">
+        <div className="container max-w-5xl mx-auto">
+          <div className="text-center space-y-6 mb-12">
+            <h2 className="text-4xl font-bold text-[#0A2463]">Work Out Your Six Degrees of Separation</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Connect with influential figures through your network
+            </p>
+          </div>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+              dragFree: true,
+              duration: 40,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="flex animate-carousel">
+              {[...Array(2)].map((_, outerIndex) => (
+                <React.Fragment key={outerIndex}>
+                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                    <Avatar className="w-20 h-20">
+                      <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=elon" alt="Elon Musk" />
+                      <AvatarFallback>EM</AvatarFallback>
+                    </Avatar>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                    <Avatar className="w-20 h-20">
+                      <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=obama" alt="Barack Obama" />
+                      <AvatarFallback>BO</AvatarFallback>
+                    </Avatar>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                    <Avatar className="w-20 h-20">
+                      <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=taylor" alt="Taylor Swift" />
+                      <AvatarFallback>TS</AvatarFallback>
+                    </Avatar>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                    <Avatar className="w-20 h-20">
+                      <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=bill" alt="Bill Gates" />
+                      <AvatarFallback>BG</AvatarFallback>
+                    </Avatar>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                    <Avatar className="w-20 h-20">
+                      <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=angelina" alt="Angelina Jolie" />
+                      <AvatarFallback>AJ</AvatarFallback>
+                    </Avatar>
+                  </CarouselItem>
+                  <CarouselItem className="basis-1/6 md:basis-1/6">
+                    <Avatar className="w-20 h-20">
+                      <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=mark" alt="Mark Zuckerberg" />
+                      <AvatarFallback>MZ</AvatarFallback>
+                    </Avatar>
+                  </CarouselItem>
+                </React.Fragment>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
       </section>
 
@@ -405,4 +477,5 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
+
 export default LandingPage;
