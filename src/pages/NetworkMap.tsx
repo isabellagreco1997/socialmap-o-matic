@@ -583,8 +583,8 @@ const Flow = () => {
 
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
-      <div className={`bg-background border-r transition-all duration-300 flex flex-col ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
-        <div className="p-4 border-b flex items-center justify-between">
+      <div className={`bg-background border-r transition-all duration-300 flex flex-col h-full ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
+        <div className="p-4 border-b flex items-center justify-between shrink-0">
           {!isMenuMinimized && <h2 className="font-semibold">Your Networks</h2>}
           <Button 
             variant="ghost" 
@@ -600,7 +600,7 @@ const Flow = () => {
           </Button>
         </div>
         
-        <div className="p-4 border-b space-y-2">
+        <div className="p-4 border-b space-y-2 shrink-0">
           <Button
             onClick={createNewNetwork}
             variant="outline"
@@ -627,7 +627,7 @@ const Flow = () => {
           </Button>
         </div>
 
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
           {networks.map((network, index) => (
             <div 
               key={network.id} 
@@ -658,8 +658,7 @@ const Flow = () => {
           ))}
         </div>
 
-        {/* Discover Menu */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t mt-auto shrink-0">
           {!isMenuMinimized && <h3 className="text-sm font-medium mb-2">Discover</h3>}
           <div className="space-y-1">
             <Button
