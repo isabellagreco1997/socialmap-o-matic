@@ -285,26 +285,12 @@ export const Flow = () => {
     const savedNetworks = localStorage.getItem('networks');
     if (savedNetworks) {
       const parsed = JSON.parse(savedNetworks);
-      return [
-        {
-          id: 'overview',
-          name: 'Overview',
-          nodes: [],
-          edges: []
-        },
-        ...parsed.map((network: Network, index: number) => ({
-          ...network,
-          name: `Network ${index + 1}`
-        }))
-      ];
+      return parsed.map((network: Network, index: number) => ({
+        ...network,
+        name: `Network ${index + 1}`
+      }));
     }
     return [
-      {
-        id: 'overview',
-        name: 'Overview',
-        nodes: [],
-        edges: []
-      },
       {
         id: '1',
         name: 'Network 1',
@@ -318,6 +304,7 @@ export const Flow = () => {
     return localStorage.getItem('currentNetworkId') || '1';
   });
 
+  const [showOverview, setShowOverview] = useState(false);
   const [isMenuMinimized, setIsMenuMinimized] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -328,7 +315,6 @@ export const Flow = () => {
   const [showTodos, setShowTodos] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
-  const [showOverview, setShowOverview] = useState(false);
   const { toast } = useToast();
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
   const [tempNetworkName, setTempNetworkName] = useState('');
@@ -691,8 +677,8 @@ export const Flow = () => {
           </Button>
           <Button
             variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${currentNetworkId === 'overview' ? 'bg-accent text-accent-foreground' : ''}`}
-            onClick={() => setCurrentNetworkId('overview')}
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${showOverview ? 'bg-accent text-accent-foreground' : ''}`}
+            onClick={() => setShowOverview(!showOverview)}
           >
             <ListChecks className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">Overview</span>}
@@ -708,9 +694,7 @@ export const Flow = () => {
         </div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
-          {networks
-            .filter(network => network.id !== 'overview')
-            .map((network, index) => (
+          {networks.map((network, index) => (
             <div 
               key={network.id} 
               draggable={!isMenuMinimized}
@@ -776,7 +760,7 @@ export const Flow = () => {
       </div>
 
       <div className="flex-1">
-        {currentNetworkId === 'overview' ? (
+        {showOverview ? (
           <div className="h-full p-8 overflow-y-auto">
             <div className="max-w-5xl mx-auto space-y-6">
               <Tabs defaultValue="tasks" className="w-full">
