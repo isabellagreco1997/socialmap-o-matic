@@ -8,7 +8,6 @@ import LandingPage from "./pages/LandingPage";
 import { Flow as NetworkMap } from "./pages/NetworkMap";
 import TodoDashboard from "./pages/TodoDashboard";
 import NotFound from "./pages/NotFound";
-import GlobalOverview from "./pages/GlobalOverview";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +20,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/network" element={<NetworkMap />} />
-          <Route path="/network/overview" element={<GlobalOverview />} />
           <Route path="/todos" element={<TodoDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

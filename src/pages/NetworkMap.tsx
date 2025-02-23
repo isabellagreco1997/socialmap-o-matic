@@ -312,6 +312,7 @@ export const Flow = () => {
   const [showTodos, setShowTodos] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [showOverview, setShowOverview] = useState(false);
   const { toast } = useToast();
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
   const [tempNetworkName, setTempNetworkName] = useState('');
@@ -690,6 +691,14 @@ export const Flow = () => {
             <MessageSquare className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
           </Button>
+          <Button
+            variant="outline"
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+            onClick={() => setShowOverview(!showOverview)}
+          >
+            <CheckSquare className="h-4 w-4 shrink-0" />
+            {!isMenuMinimized && <span className="ml-2">Tasks</span>}
+          </Button>
         </div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
@@ -842,6 +851,129 @@ export const Flow = () => {
           </Button>
         </Panel>
 
+        {showOverview && (
+          <Panel position="top-right" className="w-[600px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh]">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Overview</h2>
+                <Button variant="ghost" size="icon" onClick={() => setShowOverview(false)}>
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Tabs defaultValue="tasks" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
+                  <TabsTrigger value="notes">Notes</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="tasks" className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <ListChecks className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">All Tasks</h3>
+                  </div>
+                  {networks.map((network: any) => (
+                    <div key={network.id}>
+                      <h3 className="text-lg font-medium mb-4">{network.name}</h3>
+                      {network.nodes.map((node: any) => {
+                        if (!node.data.todos?.length) return null;
+                        return node.data.todos.map((todo: TodoItem) => (
+                          <Card key={todo.id} className="p-4 mb-4">
+                            <div className="flex items-start gap-3">
+                              <Checkbox
+                                checked={false}
+                                onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium">{todo.text}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {node.data.name}
+                                </div>
+                                {todo.dueDate && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                    <Calendar className="h-4 w-4" />
+                                    {formatDate(todo.dueDate)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        ));
+                      })}
+                    </div>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="calendar" className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">All Events & Venues</h3>
+                  </div>
+                  {networks.map((network: any) => (
+                    <div key={network.id}>
+                      <h3 className="text-lg font-medium mb-4">{network.name}</h3>
+                      {network.nodes
+                        .filter((node: { data: NodeData }) => 
+                          node.data.type === 'event' || node.data.type === 'venue'
+                        )
+                        .map((node: { id: string; data: NodeData }) => (
+                          <Card key={node.id} className="p-4 mb-4">
+                            <div className="flex items-start gap-3">
+                              {node.data.type === 'event' ? (
+                                <Calendar className="h-5 w-5 mt-1 text-muted-foreground" />
+                              ) : (
+                                <MapPin className="h-5 w-5 mt-1 text-muted-foreground" />
+                              )}
+                              <div className="flex-1 space-y-1">
+                                <div className="font-medium">{node.data.name}</div>
+                                {node.data.date && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    {formatDate(node.data.date)}
+                                  </div>
+                                )}
+                                {node.data.address && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    {node.data.address}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                    </div>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="notes" className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">All Notes</h3>
+                  </div>
+                  {networks.map((network: any) => (
+                    <div key={network.id}>
+                      <h3 className="text-lg font-medium mb-4">{network.name}</h3>
+                      {network.nodes.map((node: any) => {
+                        if (!node.data.notes) return null;
+                        return (
+                          <Card key={node.id} className="p-4 mb-4">
+                            <div className="space-y-2">
+                              <div className="font-medium">{node.data.name}</div>
+                              <div className="text-sm">{node.data.notes}</div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </Panel>
+        )}
+
         {showTodos && (
           <Panel position="top-right" className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur overflow-y-auto max-h-[80vh] translate-y-[60px]">
             <div className="space-y-6">
@@ -898,7 +1030,7 @@ export const Flow = () => {
                               <div className="flex items-start justify-between gap-4">
                                 <div className="font-medium">{todo.text}</div>
                                 {todo.dueDate && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1 shrink-0">
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
                                     {formatDate(todo.dueDate)}
                                   </div>
