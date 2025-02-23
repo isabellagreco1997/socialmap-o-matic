@@ -17,7 +17,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 py-20 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
+      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 py-32 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point-line-composition-concept-global-business-vector-illustration_41981-1906.jpg?w=2000" 
@@ -25,16 +25,16 @@ const LandingPage = () => {
             className="w-full h-full object-cover opacity-20"
           />
         </div>
-        <div className="max-w-3xl space-y-8 relative z-10">
-          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-2">
+        <div className="max-w-4xl space-y-12 relative z-10">
+          <h1 className="text-6xl sm:text-8xl font-bold tracking-tight flex flex-col gap-4">
             <span>Connect with</span>
             <span>Anyone in the World</span>
           </h1>
-          <p className="text-2xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-3xl text-muted-foreground max-w-3xl mx-auto">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button size="lg" className="bg-[#1A1F2C] hover:bg-[#1A1F2C]/90" asChild>
+          <div className="flex gap-4 justify-center pt-4">
+            <Button size="lg" className="bg-[#1A1F2C] hover:bg-[#1A1F2C]/90 text-xl h-16 px-12" asChild>
               <Link to="/network">Start Mapping</Link>
             </Button>
           </div>
