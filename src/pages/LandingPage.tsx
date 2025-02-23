@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -36,21 +37,6 @@ const LandingPage = () => {
             <Button size="lg" className="bg-[#1A1F2C] hover:bg-[#1A1F2C]/90" asChild>
               <Link to="/network">Start Mapping</Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Background Section */}
-      <section className="py-20 px-4 bg-background">
-        <div className="container max-w-4xl">
-          <h2 className="text-3xl font-bold text-center mb-12">The Science Behind Six Degrees</h2>
-          <div className="prose prose-gray mx-auto">
-            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              The concept of "Six Degrees of Separation" suggests that all people are six or fewer social connections away from each other. This theory was first proposed by Frigyes Karinthy in 1929 and has since been explored in numerous social experiments and scientific studies.
-            </p>
-            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              In today's interconnected world, this phenomenon is more relevant than ever. Our platform helps you visualize and leverage these connections, making it easier to navigate your extended social and professional networks.
-            </p>
           </div>
         </div>
       </section>
@@ -115,6 +101,21 @@ const LandingPage = () => {
                 Discover how you're connected to new friends and acquaintances through your social circles.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Background Section */}
+      <section className="py-20 px-4 bg-background">
+        <div className="container max-w-4xl">
+          <h2 className="text-3xl font-bold text-center mb-12">The Science Behind Six Degrees</h2>
+          <div className="prose prose-gray mx-auto">
+            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+              The concept of "Six Degrees of Separation" suggests that all people are six or fewer social connections away from each other. This theory was first proposed by Frigyes Karinthy in 1929 and has since been explored in numerous social experiments and scientific studies.
+            </p>
+            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+              In today's interconnected world, this phenomenon is more relevant than ever. Our platform helps you visualize and leverage these connections, making it easier to navigate your extended social and professional networks.
+            </p>
           </div>
         </div>
       </section>
