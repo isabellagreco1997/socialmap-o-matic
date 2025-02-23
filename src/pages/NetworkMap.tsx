@@ -691,13 +691,11 @@ export const Flow = () => {
           </Button>
           <Button
             variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-            asChild
+            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${currentNetworkId === 'overview' ? 'bg-accent text-accent-foreground' : ''}`}
+            onClick={() => setCurrentNetworkId('overview')}
           >
-            <Link to="/network/overview">
-              <CheckSquare className="h-4 w-4 shrink-0" />
-              {!isMenuMinimized && <span className="ml-2">Tasks</span>}
-            </Link>
+            <ListChecks className="h-4 w-4 shrink-0" />
+            {!isMenuMinimized && <span className="ml-2">Overview</span>}
           </Button>
           <Button
             variant="outline"
@@ -707,18 +705,12 @@ export const Flow = () => {
             <MessageSquare className="h-4 w-4 shrink-0" />
             {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
           </Button>
-          <Button
-            variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-            onClick={() => setShowOverview(!showOverview)}
-          >
-            <CheckSquare className="h-4 w-4 shrink-0" />
-            {!isMenuMinimized && <span className="ml-2">Tasks</span>}
-          </Button>
         </div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
-          {networks.map((network, index) => (
+          {networks
+            .filter(network => network.id !== 'overview')
+            .map((network, index) => (
             <div 
               key={network.id} 
               draggable={!isMenuMinimized}
