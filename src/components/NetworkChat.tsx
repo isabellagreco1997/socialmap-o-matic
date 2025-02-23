@@ -12,10 +12,11 @@ interface Message {
 }
 
 interface NetworkChatProps {
+  show: boolean;
   onClose: () => void;
 }
 
-const NetworkChat = ({ onClose }: NetworkChatProps) => {
+const NetworkChat = ({ show, onClose }: NetworkChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -33,7 +34,7 @@ const NetworkChat = ({ onClose }: NetworkChatProps) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
-    // Simulate AI response (you'll want to replace this with actual AI integration)
+    // Simulate AI response
     const demoResponse = { 
       role: 'assistant' as const, 
       content: "Thanks for your message! This is a placeholder response. In the future, this will be connected to an AI that can provide real networking advice and suggestions based on your network data."
@@ -44,8 +45,10 @@ const NetworkChat = ({ onClose }: NetworkChatProps) => {
     }, 1000);
   };
 
+  if (!show) return null;
+
   return (
-    <div className="w-[400px] bg-background/95 p-4 rounded-lg shadow-lg backdrop-blur flex flex-col h-[80vh]">
+    <div className="absolute right-0 top-0 h-full w-[400px] bg-background/95 p-4 rounded-l-lg shadow-lg backdrop-blur flex flex-col z-50">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Network Assistant</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -84,3 +87,4 @@ const NetworkChat = ({ onClose }: NetworkChatProps) => {
 };
 
 export default NetworkChat;
+
