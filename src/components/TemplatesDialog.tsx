@@ -459,13 +459,13 @@ const templates: Template[] = [
 interface TemplatesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectTemplate: (template: Template) => void;
+  onSelect: (template: Template) => void;
 }
 
 export function TemplatesDialog({
   open,
   onOpenChange,
-  onSelectTemplate
+  onSelect
 }: TemplatesDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -508,7 +508,7 @@ export function TemplatesDialog({
                       <Card
                         key={template.id}
                         className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-                        onClick={() => onSelectTemplate(template)}
+                        onClick={() => onSelect(template)}
                       >
                         {template.previewImage && (
                           <div 
