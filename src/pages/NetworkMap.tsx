@@ -1,3 +1,4 @@
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -36,14 +37,15 @@ import {
   ListChecks,
   MapPin,
   FileText,
-  Calendar
+  Calendar,
+  ChevronDown
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import SocialNode from '@/components/SocialNode';
@@ -624,35 +626,50 @@ const Flow = () => {
           </Button>
         </div>
 
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {networks.map((network, index) => (
-            <div 
-              key={network.id} 
-              draggable={!isMenuMinimized}
-              onDragStart={(e) => handleDragStart(e, index, network.id)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
-              className={`flex items-center gap-2 ${
-                !isMenuMinimized ? 'cursor-move' : ''
-              } ${
-                draggedNetwork === network.id ? 'opacity-50' : ''
-              }`}
-              onClick={(e) => handleNetworkSelect(network.id, e)}
-            >
-              <Button
-                variant={currentNetworkId === network.id ? "default" : "ghost"}
-                className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
-                tabIndex={-1}
-              >
-                {!isMenuMinimized && (
-                  <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
-                )}
-                {!isMenuMinimized && network.name}
-                {isMenuMinimized && network.name.split(' ')[1]}
-              </Button>
-            </div>
-          ))}
+        <div className="flex-1 p-4">
+          {!isMenuMinimized && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <span>Networks</span>
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[280px]">
+                {networks.map((network, index) => (
+                  <DropdownMenuItem
+                    key={network.id}
+                    className={`flex items-center gap-2 ${currentNetworkId === network.id ? 'bg-accent' : ''}`}
+                    onSelect={(e) => handleNetworkSelect(network.id, e as unknown as React.MouseEvent)}
+                  >
+                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
+                    <span className="flex-1">{network.name}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleRenameClick(network)}>
+                          <Edit2Icon className="mr-2 h-4 w-4" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteNetwork(network.id, network.name)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
