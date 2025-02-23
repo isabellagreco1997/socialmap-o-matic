@@ -757,6 +757,22 @@ const Flow = () => {
                     </div>
 
                     <div className="flex gap-2">
+                      <Select 
+                        value={dateFilter} 
+                        onValueChange={(value: 'all' | 'today' | 'week' | 'month' | 'overdue') => setDateFilter(value)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Filter by Due Date" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Dates</SelectItem>
+                          <SelectItem value="today">Due Today</SelectItem>
+                          <SelectItem value="week">Due This Week</SelectItem>
+                          <SelectItem value="month">Due This Month</SelectItem>
+                          <SelectItem value="overdue">Overdue</SelectItem>
+                        </SelectContent>
+                      </Select>
+
                       <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Filter by Network" />
@@ -768,19 +784,6 @@ const Flow = () => {
                               {network.name}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={dateFilter} onValueChange={setDateFilter}>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Filter by Due Date" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Dates</SelectItem>
-                          <SelectItem value="today">Due Today</SelectItem>
-                          <SelectItem value="week">Due This Week</SelectItem>
-                          <SelectItem value="month">Due This Month</SelectItem>
-                          <SelectItem value="overdue">Overdue</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
