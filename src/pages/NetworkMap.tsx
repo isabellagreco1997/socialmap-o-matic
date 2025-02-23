@@ -74,6 +74,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { Link } from 'react-router-dom';
 
+import type { AddNodeDialogProps } from '@/components/AddNodeDialog';
+
 interface EdgeControlPoint {
   x: number;
   y: number;

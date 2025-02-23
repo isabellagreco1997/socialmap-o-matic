@@ -1,96 +1,67 @@
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { useState } from "react";
-
-type NodeType = "person" | "organization" | "event" | "venue";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface NodeData {
-  type: NodeType;
+  type: "person" | "organization" | "event" | "venue";
   name: string;
   profileUrl?: string;
   imageUrl?: string;
-  // Organization fields - no specific fields
-  // Event fields
   date?: string;
-  // Venue fields
   address?: string;
 }
 
-interface AddNodeDialogProps {
+export interface AddNodeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (data: { data: NodeData }) => void;
+  onSave: (nodeData: { data: NodeData }) => void;
 }
 
-const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
-  const [nodeType, setNodeType] = useState<NodeType>("person");
-  const [formData, setFormData] = useState<NodeData>({
+const AddNodeDialog = ({ open, onOpenChange, onSave }: AddNodeDialogProps) => {
+  const [nodeData, setNodeData] = useState<NodeData>({
     type: "person",
     name: "",
-    profileUrl: "",
-    imageUrl: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({
-      data: formData
-    });
-    setFormData({
-      type: nodeType,
-      name: "",
-      profileUrl: "",
-      imageUrl: "",
-    });
+    onSave({ data: nodeData });
+    setNodeData({ type: "person", name: "" });
     onOpenChange(false);
-  };
-
-  const handleInputChange = (field: keyof NodeData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-  };
-
-  const handleTypeChange = (value: NodeType) => {
-    setNodeType(value);
-    setFormData(prev => ({
-      ...prev,
-      type: value
-    }));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Node</DialogTitle>
-          <DialogDescription>
-            Add a new node to your network map.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="type" className="text-sm font-medium">
-              Type
-            </label>
+            <Label>Type</Label>
             <Select
-              value={nodeType}
-              onValueChange={(value: NodeType) => handleTypeChange(value)}
+              value={nodeData.type}
+              onValueChange={(value: "person" | "organization" | "event" | "venue") =>
+                setNodeData({ ...nodeData, type: value })
+              }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select node type" />
+                <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="person">Person</SelectItem>
@@ -102,79 +73,61 @@ const AddNodeDialog = ({ open, onOpenChange, onAdd }: AddNodeDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name
-            </label>
+            <Label>Name</Label>
             <Input
-              id="name"
-              value={formData.name}
-              onChange={handleInputChange("name")}
-              placeholder={`Enter ${nodeType} name`}
-              required
+              value={nodeData.name}
+              onChange={(e) => setNodeData({ ...nodeData, name: e.target.value })}
+              placeholder="Enter name"
             />
           </div>
 
-          {(nodeType === "person" || nodeType === "organization" || nodeType === "event" || nodeType === "venue") && (
+          <div className="space-y-2">
+            <Label>Profile URL (optional)</Label>
+            <Input
+              value={nodeData.profileUrl || ""}
+              onChange={(e) => setNodeData({ ...nodeData, profileUrl: e.target.value })}
+              placeholder="Enter profile URL"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Image URL (optional)</Label>
+            <Input
+              value={nodeData.imageUrl || ""}
+              onChange={(e) => setNodeData({ ...nodeData, imageUrl: e.target.value })}
+              placeholder="Enter image URL"
+            />
+          </div>
+
+          {(nodeData.type === "event" || nodeData.type === "venue") && (
             <>
-              <div className="space-y-2">
-                <label htmlFor="profile" className="text-sm font-medium">
-                  Profile URL
-                </label>
-                <Input
-                  id="profile"
-                  value={formData.profileUrl}
-                  onChange={handleInputChange("profileUrl")}
-                  placeholder="https://example.com/profile"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="image" className="text-sm font-medium">
-                  Profile Image URL
-                </label>
-                <Input
-                  id="image"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange("imageUrl")}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
+              {nodeData.type === "event" && (
+                <div className="space-y-2">
+                  <Label>Date</Label>
+                  <Input
+                    type="date"
+                    value={nodeData.date || ""}
+                    onChange={(e) => setNodeData({ ...nodeData, date: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {nodeData.type === "venue" && (
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <Input
+                    value={nodeData.address || ""}
+                    onChange={(e) => setNodeData({ ...nodeData, address: e.target.value })}
+                    placeholder="Enter address"
+                  />
+                </div>
+              )}
             </>
           )}
 
-          {nodeType === "event" && (
-            <div className="space-y-2">
-              <label htmlFor="date" className="text-sm font-medium">
-                Date
-              </label>
-              <Input
-                id="date"
-                type="date"
-                value={formData.date}
-                onChange={handleInputChange("date")}
-              />
-            </div>
-          )}
-
-          {nodeType === "venue" && (
-            <div className="space-y-2">
-              <label htmlFor="address" className="text-sm font-medium">
-                Address
-              </label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={handleInputChange("address")}
-                placeholder="Full address"
-              />
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
-              Cancel
-            </Button>
-            <Button type="submit">Add Node</Button>
-          </div>
+          <Button type="submit" className="w-full">
+            Add Node
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
