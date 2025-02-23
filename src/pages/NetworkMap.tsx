@@ -265,7 +265,7 @@ const Flow = () => {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
   const [newNetworkName, setNewNetworkName] = useState('');
-  const [showTodos, setShowTodos] = useState(showTodos);
+  const [showTodos, setShowTodos] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);

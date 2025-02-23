@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { Handle, Position, useReactFlow, Node } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, ChevronDown, ChevronUp, Trash2, Calendar, MapPin, Building2, User, Edit } from 'lucide-react';
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 
 interface ContactDetails {
   notes?: string;
+  [key: string]: unknown;
 }
 
 interface TodoItem {
@@ -21,6 +22,7 @@ interface TodoItem {
   text: string;
   completed: boolean;
   dueDate?: string;
+  [key: string]: unknown;
 }
 
 type NodeType = "person" | "organization" | "event" | "venue";
@@ -34,6 +36,7 @@ interface NodeData {
   address?: string;
   contactDetails?: ContactDetails;
   todos?: TodoItem[];
+  [key: string]: unknown;
 }
 
 const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
@@ -111,8 +114,8 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
   };
 
   const updateNodeData = (newData: NodeData) => {
-    setNodes((nds) => 
-      nds.map(node => 
+    setNodes((nds: Node[]) => 
+      nds.map((node: Node) => 
         node.id === id 
           ? { ...node, data: newData }
           : node
