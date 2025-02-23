@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -290,6 +289,130 @@ const templates: Template[] = [
         type: 'social',
         position: { x: 400, y: 100 },
         data: { type: 'person', name: 'Product Specialist', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "alumni-network",
+    title: "Alumni Network",
+    description: "Connect with and leverage your alumni relationships",
+    category: "Networking",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'organization', name: 'University', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Alumni Officer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'Alumni Member', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "referral-program",
+    title: "Referral Program",
+    description: "Track and nurture your referral network",
+    category: "Business Development",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'person', name: 'Referral Partner', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Referred Lead', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'organization', name: 'Your Company', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "events-strategy",
+    title: "Events Strategy",
+    description: "Plan and track networking events and outcomes",
+    category: "Events",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'event', name: 'Annual Conference', date: '2024-09-15', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Event Planner', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'organization', name: 'Sponsor', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "centers-of-influence",
+    title: "Centers of Influence",
+    description: "Map key industry influencers and thought leaders",
+    category: "Networking",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'person', name: 'Industry Expert', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'organization', name: 'Professional Association', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'Community Leader', imageUrl: '', todos: [] }
       }
     ],
     edges: [
