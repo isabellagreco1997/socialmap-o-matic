@@ -1,3 +1,4 @@
+<lov-code>
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -36,7 +37,10 @@ import {
   ListChecks,
   MapPin,
   FileText,
-  Calendar
+  Calendar,
+  BookOpen,
+  Globe,
+  Users,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -262,7 +266,7 @@ const Flow = () => {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [networkToRename, setNetworkToRename] = useState<Network | null>(null);
   const [newNetworkName, setNewNetworkName] = useState('');
-  const [showTodos, setShowTodos] = useState(false);
+  const [showTodos, setShowTodos] = useState(showTodos);
   const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
   const [isEditingNetworkName, setIsEditingNetworkName] = useState(false);
@@ -654,6 +658,43 @@ const Flow = () => {
             </div>
           ))}
         </div>
+
+        {/* Discover Menu */}
+        <div className="p-4 border-t">
+          {!isMenuMinimized && <h3 className="text-sm font-medium mb-2">Discover</h3>}
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+              asChild
+            >
+              <a href="#templates">
+                <BookOpen className="h-4 w-4 shrink-0" />
+                {!isMenuMinimized && <span className="ml-2">Templates</span>}
+              </a>
+            </Button>
+            <Button
+              variant="ghost"
+              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+              asChild
+            >
+              <a href="#resources">
+                <Globe className="h-4 w-4 shrink-0" />
+                {!isMenuMinimized && <span className="ml-2">Resources</span>}
+              </a>
+            </Button>
+            <Button
+              variant="ghost"
+              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+              asChild
+            >
+              <a href="#community">
+                <Users className="h-4 w-4 shrink-0" />
+                {!isMenuMinimized && <span className="ml-2">Community</span>}
+              </a>
+            </Button>
+          </div>
+        </div>
       </div>
 
       <ReactFlow
@@ -924,22 +965,4 @@ const Flow = () => {
               onChange={(e) => setNewNetworkName(e.target.value)}
               placeholder="Enter new name"
             />
-            <Button onClick={handleRename} className="w-full">
-              Save
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-const NetworkMap = () => {
-  return (
-    <ReactFlowProvider>
-      <Flow />
-    </ReactFlowProvider>
-  );
-};
-
-export default NetworkMap;
+            <Button onClick={handleRename
