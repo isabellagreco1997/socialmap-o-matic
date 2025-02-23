@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -34,11 +33,8 @@ const LandingPage = () => {
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" asChild>
+            <Button size="lg" className="bg-[#1A1F2C] hover:bg-[#1A1F2C]/90" asChild>
               <Link to="/network">Start Mapping</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/about">Learn More</Link>
             </Button>
           </div>
         </div>
