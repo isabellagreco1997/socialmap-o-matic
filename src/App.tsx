@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import NetworkMap from "./pages/NetworkMap";
+import { Flow as NetworkMap } from "./pages/NetworkMap";
 import TodoDashboard from "./pages/TodoDashboard";
 import NotFound from "./pages/NotFound";
 

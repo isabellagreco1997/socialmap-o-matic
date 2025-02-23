@@ -279,7 +279,7 @@ interface FilteredTodoItem extends TodoItem {
   nodeName: string;
 }
 
-const Flow = () => {
+export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>(() => {
     const savedNetworks = localStorage.getItem('networks');
     if (savedNetworks) {
@@ -993,21 +993,22 @@ const Flow = () => {
       <AddNodeDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSave={handleAddNode}
+        onAdd={handleAddNode}
       />
       
       <TemplatesDialog 
         open={isTemplatesOpen} 
         onOpenChange={setIsTemplatesOpen}
-        onSelect={handleTemplateSelect}
+        onSelectTemplate={handleTemplateSelect}
       />
 
       {showChat && (
         <NetworkChat
-          open={showChat}
-          onOpenChange={setShowChat}
+          onClose={() => setShowChat(false)}
         />
       )}
     </div>
   );
 };
+
+export default Flow;
