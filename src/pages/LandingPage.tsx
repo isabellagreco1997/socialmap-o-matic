@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -25,11 +26,11 @@ const LandingPage = () => {
           />
         </div>
         <div className="max-w-3xl space-y-8 relative z-10">
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight flex flex-col gap-2">
+          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-2">
             <span>Connect with</span>
             <span>Anyone in the World</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-2xl text-muted-foreground max-w-2xl mx-auto">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
           </p>
           <div className="flex gap-4 justify-center">
