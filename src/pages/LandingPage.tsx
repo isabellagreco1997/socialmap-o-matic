@@ -66,25 +66,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Network Visualization Section */}
-      <section className="py-20 px-4 bg-background">
-        <div className="container max-w-5xl mx-auto">
-          <div className="text-center space-y-6 mb-12">
-            <h2 className="text-4xl font-bold text-[#0A2463]">Map Your Connections</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Create an interactive visualization of your network. Track relationships, discover connections, and uncover hidden opportunities within your professional circle.
-            </p>
-          </div>
-          <div className="rounded-lg overflow-hidden shadow-lg bg-white">
-            <img 
-              src="/lovable-uploads/8b314916-5aa3-481f-8918-7421d57be8b9.png" 
-              alt="Network Visualization Interface" 
-              className="w-full h-auto"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-12 px-4 bg-background relative">
         <div className="container grid gap-8 md:grid-cols-3">
@@ -114,6 +95,25 @@ const LandingPage = () => {
             <p className="text-muted-foreground">
               Find the shortest path to connect with anyone in your extended network
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Network Visualization Section */}
+      <section className="py-20 px-4 bg-background">
+        <div className="container max-w-5xl mx-auto">
+          <div className="text-center space-y-6 mb-12">
+            <h2 className="text-4xl font-bold text-[#0A2463]">Map Your Connections</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Create an interactive visualization of your network. Track relationships, discover connections, and uncover hidden opportunities within your professional circle.
+            </p>
+          </div>
+          <div className="rounded-lg overflow-hidden shadow-lg bg-white">
+            <img 
+              src="/lovable-uploads/8b314916-5aa3-481f-8918-7421d57be8b9.png" 
+              alt="Network Visualization Interface" 
+              className="w-full h-auto"
+            />
           </div>
         </div>
       </section>
