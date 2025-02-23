@@ -141,6 +141,27 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* AI Chat Section */}
+      <section className="py-20 px-4 bg-secondary/10">
+        <div className="container">
+          <div className="grid gap-12 md:grid-cols-2 items-center">
+            <div className="space-y-6">
+              <h2 className="text-4xl font-bold text-[#0A2463]">Chat with your Network</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Leverage AI-powered insights to understand your network better. Get personalized suggestions for connecting with others, discover optimal outreach strategies, and uncover valuable opportunities within your professional circle.
+              </p>
+            </div>
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <img 
+                src="/lovable-uploads/c8f0e758-66af-47cc-a027-984a8fe16ab4.png" 
+                alt="AI Network Chat Interface" 
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Use Cases Section */}
       <section className="py-20 px-4 bg-secondary/10">
         <div className="container">
