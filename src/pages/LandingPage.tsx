@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2 } from "lucide-react";
+import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2, Eye, Activity, Route as RouteIcon } from "lucide-react";
 
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
@@ -42,7 +41,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 pt-20 pb-48 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
+      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 pt-20 pb-32 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src="https://img.freepik.com/premium-vector/global-network-connection-world-map-point-line-composition-concept-global-business-vector-illustration_41981-1906.jpg?w=2000" alt="Global Network Connection" className="w-full h-full object-cover opacity-25" />
         </div>
@@ -68,22 +67,31 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-background relative">
+      <section className="py-12 px-4 bg-background relative">
         <div className="container grid gap-8 md:grid-cols-3">
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Visualize Connections</h3>
+            <div className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-[#0A2463]" />
+              <h3 className="text-xl font-semibold">Visualize Connections</h3>
+            </div>
             <p className="text-muted-foreground">
               Create an interactive map of your professional and social networks
             </p>
           </div>
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Track Relationships</h3>
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[#0A2463]" />
+              <h3 className="text-xl font-semibold">Track Relationships</h3>
+            </div>
             <p className="text-muted-foreground">
               Monitor the strength and frequency of your connections
             </p>
           </div>
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Discover Paths</h3>
+            <div className="flex items-center gap-2">
+              <RouteIcon className="w-5 h-5 text-[#0A2463]" />
+              <h3 className="text-xl font-semibold">Discover Paths</h3>
+            </div>
             <p className="text-muted-foreground">
               Find the shortest path to connect with anyone in your extended network
             </p>
