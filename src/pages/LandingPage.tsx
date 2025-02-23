@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2 } from "lucide-react";
 
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
@@ -88,22 +88,58 @@ const LandingPage = () => {
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">Use Cases</h2>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-background p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Professional Networking</h3>
+            <div className="bg-background p-8 rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <UsersRound className="w-6 h-6 text-primary" />
+                <h3 className="text-xl font-semibold">Professional Networking</h3>
+              </div>
               <p className="text-muted-foreground">
                 Find warm introductions to potential clients, employers, or business partners through your existing network.
               </p>
             </div>
-            <div className="bg-background p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Academic Collaboration</h3>
+            <div className="bg-background p-8 rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <GraduationCap className="w-6 h-6 text-primary" />
+                <h3 className="text-xl font-semibold">Academic Collaboration</h3>
+              </div>
               <p className="text-muted-foreground">
                 Connect with researchers and experts in your field through mutual colleagues and institutions.
               </p>
             </div>
-            <div className="bg-background p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Social Connection</h3>
+            <div className="bg-background p-8 rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <UserRoundSearch className="w-6 h-6 text-primary" />
+                <h3 className="text-xl font-semibold">Social Connection</h3>
+              </div>
               <p className="text-muted-foreground">
                 Discover how you're connected to new friends and acquaintances through your social circles.
+              </p>
+            </div>
+            <div className="bg-background p-8 rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <Globe2 className="w-6 h-6 text-primary" />
+                <h3 className="text-xl font-semibold">Global Reach</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Expand your network internationally and bridge cultural gaps through mutual connections worldwide.
+              </p>
+            </div>
+            <div className="bg-background p-8 rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <Building2 className="w-6 h-6 text-primary" />
+                <h3 className="text-xl font-semibold">Business Development</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Identify strategic partnerships and business opportunities by leveraging your extended professional network.
+              </p>
+            </div>
+            <div className="bg-background p-8 rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <Network className="w-6 h-6 text-primary" />
+                <h3 className="text-xl font-semibold">Industry Insights</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Gain valuable industry knowledge and trends through your connected network of professionals.
               </p>
             </div>
           </div>
