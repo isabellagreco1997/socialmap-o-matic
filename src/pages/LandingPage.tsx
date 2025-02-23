@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -363,13 +362,33 @@ const LandingPage = () => {
       <section className="py-20 px-4 bg-background">
         <div className="container max-w-4xl">
           <h2 className="text-3xl font-bold text-center mb-12">The Science Behind Six Degrees</h2>
-          <div className="prose prose-gray mx-auto">
-            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              The concept of "Six Degrees of Separation" suggests that all people are six or fewer social connections away from each other. This theory was first proposed by Frigyes Karinthy in 1929 and has since been explored in numerous social experiments and scientific studies.
-            </p>
-            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              In today's interconnected world, this phenomenon is more relevant than ever. Our platform helps you visualize and leverage these connections, making it easier to navigate your extended social and professional networks.
-            </p>
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            <div className="prose prose-gray">
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                The concept of "<a href="https://en.wikipedia.org/wiki/Six_degrees_of_separation" target="_blank" rel="noopener noreferrer" className="text-[#0A2463] hover:underline">Six Degrees of Separation</a>" was first introduced by Hungarian writer Frigyes Karinthy in his 1929 short story "Chains." This groundbreaking idea suggests that any two individuals on Earth are connected through a chain of no more than six social connections.
+              </p>
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Karinthy's theory was revolutionary for its time, predicting the interconnected nature of modern society decades before the advent of social media and the internet. His work laid the foundation for network science and influenced countless studies in social psychology and network theory.
+              </p>
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                In the digital age, this phenomenon has become even more relevant. Recent studies, including those by Microsoft and Facebook, have shown that the average degree of separation between any two people has decreased to approximately 3.5 connections, making our world more interconnected than ever.
+              </p>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Science of Six leverages this principle to help you visualize and navigate your extended social and professional networks, making it easier than ever to discover and utilize these powerful connections.
+              </p>
+            </div>
+            <div className="space-y-8">
+              <div className="rounded-lg overflow-hidden shadow-lg">
+                <img 
+                  src="/lovable-uploads/e7e15ff6-a7fb-402d-b577-923ffedd9b0e.png" 
+                  alt="Frigyes Karinthy" 
+                  className="w-full h-auto grayscale"
+                />
+                <div className="p-4 bg-secondary/20">
+                  <p className="text-sm text-muted-foreground">Frigyes Karinthy (1887-1938), Hungarian author who first proposed the concept of six degrees of separation in his 1929 short story "Chains."</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
