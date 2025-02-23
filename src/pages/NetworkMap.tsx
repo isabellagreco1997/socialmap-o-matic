@@ -1,4 +1,3 @@
-<lov-code>
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -747,7 +746,7 @@ const Flow = () => {
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
+                <DropdownMenuContent>
                   <DropdownMenuItem onClick={handleStartEditingName}>
                     <Edit2Icon className="mr-2 h-4 w-4" />
                     Rename
@@ -948,12 +947,6 @@ const Flow = () => {
         onAdd={handleAddNode}
       />
 
-      <EdgeLabelDialog
-        open={false}
-        onOpenChange={() => {}}
-        onSave={() => {}}
-      />
-
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -965,4 +958,22 @@ const Flow = () => {
               onChange={(e) => setNewNetworkName(e.target.value)}
               placeholder="Enter new name"
             />
-            <Button onClick={handleRename
+            <Button onClick={handleRename} className="w-full">
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const NetworkMap = () => {
+  return (
+    <ReactFlowProvider>
+      <Flow />
+    </ReactFlowProvider>
+  );
+};
+
+export default NetworkMap;
