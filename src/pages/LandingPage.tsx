@@ -18,6 +18,9 @@ const LandingPage = () => {
               <Link to="#about" className="text-sm font-medium hover:text-primary transition-colors">
                 About
               </Link>
+              <Link to="#blog" className="text-sm font-medium hover:text-primary transition-colors">
+                Blog
+              </Link>
               <Link to="#faq" className="text-sm font-medium hover:text-primary transition-colors">
                 FAQs
               </Link>
