@@ -40,6 +40,7 @@ import {
   BookOpen,
   Globe,
   Users,
+  X,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -759,7 +760,7 @@ export const Flow = () => {
         </div>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 relative">
         {showOverview ? (
           <div className="h-full p-8 overflow-y-auto">
             <div className="max-w-5xl mx-auto space-y-6">
@@ -887,112 +888,75 @@ export const Flow = () => {
             </div>
           </div>
         ) : (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            fitView
-            minZoom={0.1}
-            maxZoom={4}
-            className="bg-dot-pattern"
-            elementsSelectable={true}
-            selectNodesOnDrag={false}
-            proOptions={{ hideAttribution: true }}
-            defaultEdgeOptions={{
-              type: 'custom',
-              zIndex: 0,
-              interactionWidth: 20,
-            }}
-          >
-            <Background />
-            <Controls />
-            
-            <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
-              {isEditingNetworkName ? (
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSaveNetworkName();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Input
-                    value={tempNetworkName}
-                    onChange={(e) => setTempNetworkName(e.target.value)}
-                    className="h-8 text-sm"
-                    autoFocus
-                    onBlur={handleSaveNetworkName}
-                  />
-                </form>
-              ) : (
-                <>
-                  <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={handleStartEditingName}>
-                        <Edit2Icon className="mr-2 h-4 w-4" />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={handleDeleteNetwork2}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Network
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              )}
-            </Panel>
+          <>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              fitView
+              minZoom={0.1}
+              maxZoom={4}
+              className="bg-dot-pattern"
+              elementsSelectable={true}
+              selectNodesOnDrag={false}
+              proOptions={{ hideAttribution: true }}
+              defaultEdgeOptions={{
+                type: 'custom',
+                zIndex: 0,
+                interactionWidth: 20,
+              }}
+            >
+              <Background />
+              <Controls />
+              
+              <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
+                {isEditingNetworkName ? (
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSaveNetworkName();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Input
+                      value={tempNetworkName}
+                      onChange={(e) => setTempNetworkName(e.target.value)}
+                      className="h-8 text-sm"
+                      autoFocus
+                      onBlur={handleSaveNetworkName}
+                    />
+                  </form>
+                ) : (
+                  <>
+                    <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={handleStartEditingName}>
+                          <Edit2Icon className="mr-2 h-4 w-4" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={handleDeleteNetwork2}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Network
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
+              </Panel>
 
-            <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
-              <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
-                <PlusIcon className="h-4 w-4" />
-                Add Node
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setShowTodos(!showTodos)} 
-                className="flex items-center gap-2"
-              >
-                <CheckSquare className="h-4 w-4" />
-                Tasks
-              </Button>
-            </Panel>
-          </ReactFlow>
-        )}
-      </div>
-
-      <AddNodeDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onAdd={handleAddNode}
-      />
-      
-      <TemplatesDialog 
-        open={isTemplatesOpen} 
-        onOpenChange={setIsTemplatesOpen}
-        onSelectTemplate={handleTemplateSelect}
-      />
-
-      {showChat && (
-        <NetworkChat
-          onClose={() => setShowChat(false)}
-        />
-      )}
-    </div>
-  );
-};
-
-export default Flow;
+              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
+                <Button onClick={() => setIsDialogOpen(
