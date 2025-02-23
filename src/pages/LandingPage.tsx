@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2, Eye, Activity, Route as RouteIcon } from "lucide-react";
+import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2, Eye, Activity, Route as RouteIcon, Star } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -11,6 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
@@ -389,6 +390,86 @@ const LandingPage = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="py-20 px-4 bg-secondary/10">
+        <div className="container max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">What Our Users Say</h2>
+          <p className="text-xl text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Join thousands of professionals who are already leveraging the power of network visualization.
+          </p>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="bg-background">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />
+                  ))}
+                </div>
+                <p className="text-muted-foreground mb-6">
+                  "Science of Six has completely transformed how I approach networking. I've made connections I never thought possible, leading to several successful business partnerships."
+                </p>
+                <div className="flex items-center gap-4">
+                  <Avatar>
+                    <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=sarah" alt="Sarah Chen" />
+                    <AvatarFallback>SC</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">Sarah Chen</p>
+                    <p className="text-sm text-muted-foreground">Startup Founder</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />
+                  ))}
+                </div>
+                <p className="text-muted-foreground mb-6">
+                  "The visualization tools are incredible. Being able to see my network mapped out has helped me identify and leverage connections I didn't even know I had."
+                </p>
+                <div className="flex items-center gap-4">
+                  <Avatar>
+                    <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=marcus" alt="Marcus Johnson" />
+                    <AvatarFallback>MJ</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">Marcus Johnson</p>
+                    <p className="text-sm text-muted-foreground">Business Development</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />
+                  ))}
+                </div>
+                <p className="text-muted-foreground mb-6">
+                  "As a recruiter, Science of Six has become an invaluable tool. It's helped me find perfect candidates through unexpected connections and referrals."
+                </p>
+                <div className="flex items-center gap-4">
+                  <Avatar>
+                    <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=elena" alt="Elena Rodriguez" />
+                    <AvatarFallback>ER</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">Elena Rodriguez</p>
+                    <p className="text-sm text-muted-foreground">Senior Recruiter</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
