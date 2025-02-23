@@ -30,9 +30,14 @@ const LandingPage = () => {
               </span>
             </div>
           </div>
-          <Button asChild className="absolute right-8">
-            <Link to="/network">Get Started</Link>
-          </Button>
+          <div className="absolute right-8 flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/login">Log In</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/network">Get Started</Link>
+            </Button>
+          </div>
         </div>
       </nav>
 
