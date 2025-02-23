@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -67,35 +66,26 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 px-4 bg-background relative">
-        <div className="container grid gap-8 md:grid-cols-3">
-          <div className="space-y-4 flex flex-col items-center text-center">
-            <div className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-[#0A2463]" />
-              <h3 className="text-xl font-semibold">Visualize Connections</h3>
+      {/* Features Section with Network Visualization */}
+      <section className="py-20 px-4 bg-background relative">
+        <div className="container">
+          <div className="grid gap-12 md:grid-cols-2 items-center">
+            <div className="space-y-6">
+              <h2 className="text-4xl font-bold text-[#0A2463]">Visualize Your Network</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Create an interactive map of your professional and social connections. See how your network grows and evolves over time with our intuitive visualization tools.
+              </p>
+              <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90" asChild>
+                <Link to="/network">Start Mapping</Link>
+              </Button>
             </div>
-            <p className="text-muted-foreground">
-              Create an interactive map of your professional and social networks
-            </p>
-          </div>
-          <div className="space-y-4 flex flex-col items-center text-center">
-            <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#0A2463]" />
-              <h3 className="text-xl font-semibold">Track Relationships</h3>
+            <div className="rounded-lg overflow-hidden shadow-lg bg-white">
+              <img 
+                src="/lovable-uploads/5a10a51d-6549-4078-83a2-b080d4259396.png"
+                alt="Network Visualization Interface"
+                className="w-full h-auto"
+              />
             </div>
-            <p className="text-muted-foreground">
-              Monitor the strength and frequency of your connections
-            </p>
-          </div>
-          <div className="space-y-4 flex flex-col items-center text-center">
-            <div className="flex items-center gap-2">
-              <RouteIcon className="w-5 h-5 text-[#0A2463]" />
-              <h3 className="text-xl font-semibold">Discover Paths</h3>
-            </div>
-            <p className="text-muted-foreground">
-              Find the shortest path to connect with anyone in your extended network
-            </p>
           </div>
         </div>
       </section>
