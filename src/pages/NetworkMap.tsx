@@ -958,4 +958,87 @@ export const Flow = () => {
                 )}
               </Panel>
 
-              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-
+              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
+                <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
+                  <PlusIcon className="h-4 w-4" />
+                  Add Node
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowTodos(!showTodos)} 
+                  className="flex items-center gap-2"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  Tasks
+                </Button>
+              </Panel>
+            </ReactFlow>
+
+            {showTodos && (
+              <div className="absolute right-0 top-0 h-full w-[400px] bg-background border-l shadow-lg p-6 overflow-y-auto">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-semibold">Tasks</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setShowTodos(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {networks
+                  .filter(network => network.id === currentNetworkId)
+                  .map((network) => (
+                    network.nodes.map((node: any) => {
+                      if (!node.data.todos?.length) return null;
+                      return node.data.todos.map((todo: TodoItem) => (
+                        <Card key={todo.id} className="p-4 mb-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              checked={false}
+                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium">{todo.text}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {node.data.name}
+                              </div>
+                              {todo.dueDate && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                  <Calendar className="h-4 w-4" />
+                                  {formatDate(todo.dueDate)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ));
+                    })
+                  ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <AddNodeDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        onSave={handleAddNode}
+      />
+
+      <TemplatesDialog
+        open={isTemplatesOpen}
+        onOpenChange={setIsTemplatesOpen}
+        onSelect={handleTemplateSelect}
+      />
+
+      <NetworkChat 
+        show={showChat}
+        onClose={() => setShowChat(false)}
+      />
+    </div>
+  );
+};
+
+export default Flow;
