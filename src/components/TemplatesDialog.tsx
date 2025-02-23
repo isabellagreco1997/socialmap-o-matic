@@ -12,34 +12,36 @@ interface Template {
   title: string;
   description: string;
   category: string;
+  previewImage?: string;
   nodes: any[];
   edges: any[];
 }
 
 const templates: Template[] = [
   {
-    id: "team-structure",
-    title: "Team Structure",
-    description: "Visualize your team's organizational structure",
-    category: "Organization",
+    id: "sales-pipeline",
+    title: "Sales Pipeline",
+    description: "Track leads, opportunities, and customer relationships",
+    category: "Sales",
+    previewImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
     nodes: [
       {
         id: '1',
         type: 'social',
         position: { x: 250, y: 0 },
-        data: { type: 'person', name: 'CEO', imageUrl: '', todos: [] }
+        data: { type: 'organization', name: 'Lead Company', imageUrl: '', todos: [] }
       },
       {
         id: '2',
         type: 'social',
         position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'CTO', imageUrl: '', todos: [] }
+        data: { type: 'person', name: 'Sales Rep', imageUrl: '', todos: [] }
       },
       {
         id: '3',
         type: 'social',
         position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'COO', imageUrl: '', todos: [] }
+        data: { type: 'person', name: 'Decision Maker', imageUrl: '', todos: [] }
       }
     ],
     edges: [
@@ -48,28 +50,29 @@ const templates: Template[] = [
     ]
   },
   {
-    id: "project-planning",
-    title: "Project Planning",
-    description: "Map out project stakeholders and milestones",
-    category: "Project Management",
+    id: "networking-event",
+    title: "Networking Event",
+    description: "Map connections made at conferences and events",
+    category: "Networking",
+    previewImage: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
     nodes: [
       {
         id: '1',
         type: 'social',
         position: { x: 250, y: 0 },
-        data: { type: 'event', name: 'Project Kickoff', date: '2024-04-01', todos: [] }
+        data: { type: 'event', name: 'Industry Conference', date: '2024-05-15', imageUrl: '', todos: [] }
       },
       {
         id: '2',
         type: 'social',
         position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Project Manager', todos: [] }
+        data: { type: 'person', name: 'Potential Partner', imageUrl: '', todos: [] }
       },
       {
         id: '3',
         type: 'social',
         position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Client Company', todos: [] }
+        data: { type: 'organization', name: 'Tech Company', imageUrl: '', todos: [] }
       }
     ],
     edges: [
@@ -78,28 +81,60 @@ const templates: Template[] = [
     ]
   },
   {
-    id: "event-planning",
-    title: "Event Planning",
-    description: "Organize events and manage venues and attendees",
-    category: "Events",
+    id: "business-ecosystem",
+    title: "Business Ecosystem",
+    description: "Map your business partnerships and collaborations",
+    category: "Business Development",
+    previewImage: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952",
     nodes: [
       {
         id: '1',
         type: 'social',
         position: { x: 250, y: 0 },
-        data: { type: 'event', name: 'Conference 2024', date: '2024-06-15', todos: [] }
+        data: { type: 'organization', name: 'Your Company', imageUrl: '', todos: [] }
       },
       {
         id: '2',
         type: 'social',
         position: { x: 100, y: 100 },
-        data: { type: 'venue', name: 'Convention Center', address: '123 Main St', todos: [] }
+        data: { type: 'organization', name: 'Partner Company', imageUrl: '', todos: [] }
       },
       {
         id: '3',
         type: 'social',
         position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Event Coordinator', todos: [] }
+        data: { type: 'organization', name: 'Supplier', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', type: 'custom' },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom' }
+    ]
+  },
+  {
+    id: "client-relationships",
+    title: "Client Relationships",
+    description: "Visualize key stakeholders and decision makers",
+    category: "Account Management",
+    previewImage: "https://images.unsplash.com/photo-1518005020951-eccb494ad742",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 250, y: 0 },
+        data: { type: 'organization', name: 'Client Organization', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 100, y: 100 },
+        data: { type: 'person', name: 'Account Manager', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'Client Stakeholder', imageUrl: '', todos: [] }
       }
     ],
     edges: [
@@ -159,11 +194,21 @@ export function TemplatesDialog({
                   {categoryTemplates.map(template => (
                     <Card
                       key={template.id}
-                      className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                      className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
                       onClick={() => onSelectTemplate(template)}
                     >
-                      <h4 className="font-medium mb-2">{template.title}</h4>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                      {template.previewImage && (
+                        <div 
+                          className="w-full h-32 bg-cover bg-center"
+                          style={{ 
+                            backgroundImage: `url(${template.previewImage})`,
+                          }}
+                        />
+                      )}
+                      <div className="p-4">
+                        <h4 className="font-medium mb-2">{template.title}</h4>
+                        <p className="text-sm text-muted-foreground">{template.description}</p>
+                      </div>
                     </Card>
                   ))}
                 </div>
