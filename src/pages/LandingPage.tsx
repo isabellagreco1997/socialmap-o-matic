@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -69,7 +70,7 @@ const LandingPage = () => {
       {/* Features Section */}
       <section className="py-12 px-4 bg-background relative">
         <div className="container grid gap-8 md:grid-cols-3">
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center text-center">
             <div className="flex items-center gap-2">
               <Eye className="w-5 h-5 text-[#0A2463]" />
               <h3 className="text-xl font-semibold">Visualize Connections</h3>
@@ -78,7 +79,7 @@ const LandingPage = () => {
               Create an interactive map of your professional and social networks
             </p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center text-center">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-[#0A2463]" />
               <h3 className="text-xl font-semibold">Track Relationships</h3>
@@ -87,7 +88,7 @@ const LandingPage = () => {
               Monitor the strength and frequency of your connections
             </p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center text-center">
             <div className="flex items-center gap-2">
               <RouteIcon className="w-5 h-5 text-[#0A2463]" />
               <h3 className="text-xl font-semibold">Discover Paths</h3>
