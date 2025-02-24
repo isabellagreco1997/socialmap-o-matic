@@ -9,6 +9,141 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      edges: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string | null
+          label_position: number | null
+          network_id: string
+          notes: string | null
+          source_id: string
+          target_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          label_position?: number | null
+          network_id: string
+          notes?: string | null
+          source_id: string
+          target_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          label_position?: number | null
+          network_id?: string
+          notes?: string | null
+          source_id?: string
+          target_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edges_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edges_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edges_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      networks: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nodes: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          date: string | null
+          id: string
+          image_url: string | null
+          name: string
+          network_id: string
+          profile_url: string | null
+          type: string
+          updated_at: string | null
+          x_position: number
+          y_position: number
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          network_id: string
+          profile_url?: string | null
+          type: string
+          updated_at?: string | null
+          x_position: number
+          y_position: number
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          network_id?: string
+          profile_url?: string | null
+          type?: string
+          updated_at?: string | null
+          x_position?: number
+          y_position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nodes_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +170,44 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      todos: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          due_date: string | null
+          id: string
+          node_id: string
+          text: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          node_id: string
+          text: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          node_id?: string
+          text?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "todos_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
