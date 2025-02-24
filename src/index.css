@@ -108,5 +108,5 @@
 
 .react-flow__edge.animated .react-flow__edge-path {
   stroke-dasharray: 5;
-  animation: flow 15s linear infinite;
+  animation: flow 3s linear infinite;
 }
