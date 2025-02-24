@@ -2,6 +2,7 @@ import { ReactFlow, ReactFlowProvider, addEdge, Background, Controls, Connection
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
+import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+
 type Network = Database['public']['Tables']['networks']['Row'];
 type NodeData = {
   type: "person" | "organization" | "event" | "venue";
@@ -20,6 +22,7 @@ type NodeData = {
   date?: string;
   address?: string;
 };
+
 const CustomEdge = ({
   id,
   sourceX,
@@ -109,16 +112,21 @@ const CustomEdge = ({
       </Dialog>
     </>;
 };
+
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [currentNetworkId, setCurrentNetworkId] = useState<string | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvRows, setCsvRows] = useState<string[][]>([]);
   const {
     toast
   } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
@@ -144,6 +152,7 @@ export const Flow = () => {
     };
     fetchNetworks();
   }, [currentNetworkId, toast]);
+
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
@@ -193,6 +202,7 @@ export const Flow = () => {
     };
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
+
   const onConnect = useCallback(async (connection: Connection) => {
     if (!currentNetworkId || !connection.source || !connection.target) return;
     try {
@@ -229,6 +239,7 @@ export const Flow = () => {
       });
     }
   }, [currentNetworkId, setEdges, toast]);
+
   const createNewNetwork = async () => {
     try {
       const {
@@ -260,6 +271,7 @@ export const Flow = () => {
       });
     }
   };
+
   const handleDeleteNetwork = async () => {
     if (!currentNetworkId) return;
     try {
@@ -287,6 +299,7 @@ export const Flow = () => {
       });
     }
   };
+
   const handleAddNode = async (nodeData: {
     data: NodeData;
   }) => {
@@ -333,6 +346,66 @@ export const Flow = () => {
       });
     }
   };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+      const headers = rows[0];
+      const dataRows = rows.slice(1).filter(row => row.length === headers.length);
+      
+      setCsvHeaders(headers);
+      setCsvRows(dataRows);
+      setIsCsvDialogOpen(true);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleCsvImport = async (columnMapping: {
+    name?: string;
+    type?: string;
+    profile?: string;
+    image?: string;
+    date?: string;
+    address?: string;
+  }) => {
+    if (!currentNetworkId) return;
+
+    try {
+      const nodes = csvRows.map(row => {
+        const nodeData: NodeData = {
+          type: (columnMapping.type ? row[csvHeaders.indexOf(columnMapping.type)] : 'person') as NodeData['type'],
+          name: columnMapping.name ? row[csvHeaders.indexOf(columnMapping.name)] : 'Unnamed',
+          profileUrl: columnMapping.profile ? row[csvHeaders.indexOf(columnMapping.profile)] : undefined,
+          imageUrl: columnMapping.image ? row[csvHeaders.indexOf(columnMapping.image)] : undefined,
+          date: columnMapping.date ? row[csvHeaders.indexOf(columnMapping.date)] : undefined,
+          address: columnMapping.address ? row[csvHeaders.indexOf(columnMapping.address)] : undefined,
+        };
+        return nodeData;
+      });
+
+      for (const nodeData of nodes) {
+        await handleAddNode({ data: nodeData });
+      }
+
+      toast({
+        title: "CSV Import Successful",
+        description: `Imported ${nodes.length} nodes`,
+      });
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      toast({
+        variant: "destructive",
+        title: "Import Failed",
+        description: "Failed to import CSV data",
+      });
+    }
+  };
+
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
@@ -421,9 +494,16 @@ export const Flow = () => {
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Add Node
                   </Button>
-                  <Button variant="outline" className="bg-white shadow-lg">
+                  <Button variant="outline" className="bg-white shadow-lg" onClick={() => document.getElementById('csv-input')?.click()}>
                     <FileText className="h-4 w-4 mr-2" />
                     Import CSV
+                    <input
+                      id="csv-input"
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
                   </Button>
                   <Button variant="outline" className="bg-white shadow-lg">
                     <ListTodo className="h-4 w-4 mr-2" />
@@ -438,8 +518,16 @@ export const Flow = () => {
           </ReactFlowProvider>
 
           <AddNodeDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onSave={handleAddNode} />
+          <CsvPreviewDialog 
+            open={isCsvDialogOpen}
+            onOpenChange={setIsCsvDialogOpen}
+            headers={csvHeaders}
+            rows={csvRows}
+            onConfirm={handleCsvImport}
+          />
         </div>
       </div>
     </SidebarProvider>;
 };
+
 export default Flow;
