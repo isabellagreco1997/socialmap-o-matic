@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,7 +7,7 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
  
@@ -34,15 +35,6 @@
     --ring: 215 20.2% 65.1%;
  
     --radius: 0.5rem;
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-muted: 217.2 32.6% 17.5%;
-    --sidebar-muted-foreground: 215 20.2% 65.1%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 216 34% 17%;
-    --sidebar-input: 217.2 32.6% 17.5%;
   }
  
   .dark {
@@ -117,33 +109,4 @@
 .react-flow__edge.animated .react-flow__edge-path {
   stroke-dasharray: 5;
   animation: flow 3s linear infinite;
-}
-
-/* Sidebar Specific Styles */
-[data-sidebar="menu"] {
-  @apply space-y-0.5;
-}
-
-[data-sidebar="menu-button"] {
-  @apply text-[13px] font-medium;
-}
-
-[data-sidebar="group"] {
-  @apply p-1.5;
-}
-
-[data-sidebar="group-label"] {
-  @apply px-2 py-1.5 text-[11px] font-semibold tracking-wide uppercase text-sidebar-muted-foreground;
-}
-
-[data-sidebar="menu-button"] svg {
-  @apply w-[18px] h-[18px] opacity-70;
-}
-
-[data-sidebar="menu-button"]:hover svg {
-  @apply opacity-100;
-}
-
-[data-sidebar="sidebar"] {
-  @apply bg-sidebar text-sidebar-foreground;
 }
