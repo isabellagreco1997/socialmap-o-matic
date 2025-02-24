@@ -12,7 +12,7 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-16 items-center relative">
-          <span className="text-xl font-semibold pl-8">Profile Mapper</span>
+          <span className="text-xl font-semibold pl-8">Connection Mapper</span>
           <div className="flex-1 flex justify-center">
             <div className="hidden md:flex items-center gap-6">
               <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
