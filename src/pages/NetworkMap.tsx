@@ -336,7 +336,7 @@ export const Flow = () => {
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
-          <SidebarContent className="w-[280px] border-r bg-white flex flex-col">
+          <SidebarContent className="w-[350px] border-r bg-white flex flex-col">
             <div className="p-6 flex items-center justify-between border-b">
               <h2 className="font-bold text-base">Your Networks</h2>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -344,7 +344,7 @@ export const Flow = () => {
               </Button>
             </div>
 
-            <div className="flex-1 p-4 space-y-3">
+            <div className="flex-1 p-4 space-y-3 py-0">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base font-medium rounded-lg" onClick={createNewNetwork}>
                 <PlusIcon className="h-5 w-5" />
                 Create Network
