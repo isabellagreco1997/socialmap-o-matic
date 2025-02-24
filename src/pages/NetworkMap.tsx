@@ -653,6 +653,79 @@ export const Flow = () => {
     });
   };
 
+  const handleCsvUpload = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csvText = event.target?.result as string;
+      const lines = csvText.split('\n');
+      const headers = lines[0].split(',').map(header => header.trim());
+      const rows = lines
+        .slice(1)
+        .filter(row => row.trim())
+        .map(row => row.split(',').map(cell => cell.trim()));
+      
+      setCsvData({
+        headers,
+        rows,
+      });
+      setCsvPreviewOpen(true);
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const createNodesFromCsv = useCallback((mapping: ColumnMapping, csvData: { headers: string[]; rows: string[][] }) => {
+    const { headers, rows } = csvData;
+    const getColumnIndex = (columnName?: string) => 
+      columnName ? headers.indexOf(columnName) : -1;
+
+    const indices = {
+      name: getColumnIndex(mapping.name),
+      type: getColumnIndex(mapping.type),
+      profile: getColumnIndex(mapping.profile),
+      image: getColumnIndex(mapping.image),
+      date: getColumnIndex(mapping.date),
+      address: getColumnIndex(mapping.address),
+    };
+
+    const BATCH_SIZE = 50;
+    const processNextBatch = (startIndex: number) => {
+      if (startIndex >= rows.length) {
+        toast({
+          title: "CSV import complete",
+          description: `Created ${rows.length} nodes`,
+        });
+        return;
+      }
+
+      const endIndex = Math.min(startIndex + BATCH_SIZE, rows.length);
+      const batchNodes = rows.slice(startIndex, endIndex).map((row, index) => ({
+        id: `node-${Date.now()}-${startIndex + index}`,
+        type: 'social',
+        position: { 
+          x: (Math.random() * 800) - 400, // Spread nodes out more
+          y: (Math.random() * 600) - 300
+        },
+        data: {
+          type: indices.type >= 0 ? 
+            (row[indices.type]?.toLowerCase() as NodeType) || 'person' : 
+            'person',
+          name: indices.name >= 0 ? row[indices.name] : `Node ${startIndex + index + 1}`,
+          profileUrl: indices.profile >= 0 ? row[indices.profile] : undefined,
+          imageUrl: indices.image >= 0 ? row[indices.image] : undefined,
+          date: indices.date >= 0 ? row[indices.date] : undefined,
+          address: indices.address >= 0 ? row[indices.address] : undefined,
+          todos: [],
+        },
+      }));
+
+      setNodes(nds => [...nds, ...batchNodes]);
+      
+      setTimeout(() => processNextBatch(endIndex), 50);
+    };
+
+    processNextBatch(0);
+  }, [setNodes, toast]);
+
   return (
     <div className="w-screen h-screen bg-gray-50 flex">
       <div className={`bg-background border-r transition-all duration-300 flex flex-col h-full ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
@@ -977,23 +1050,7 @@ export const Flow = () => {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const csvText = event.target?.result as string;
-                          const lines = csvText.split('\n');
-                          const headers = lines[0].split(',').map(header => header.trim());
-                          const rows = lines
-                            .slice(1)
-                            .filter(row => row.trim())
-                            .map(row => row.split(',').map(cell => cell.trim()));
-                          
-                          setCsvData({
-                            headers,
-                            rows,
-                          });
-                          setCsvPreviewOpen(true);
-                        };
-                        reader.readAsText(file);
+                        handleCsvUpload(file);
                         e.target.value = '';
                       }
                     }}
@@ -1021,50 +1078,7 @@ export const Flow = () => {
               rows={csvData?.rows || []}
               onConfirm={(mapping) => {
                 if (!csvData) return;
-
-                const { headers, rows } = csvData;
-                const getColumnIndex = (columnName?: string) => 
-                  columnName ? headers.indexOf(columnName) : -1;
-
-                const nameIndex = getColumnIndex(mapping.name);
-                const typeIndex = getColumnIndex(mapping.type);
-                const profileIndex = getColumnIndex(mapping.profile);
-                const imageIndex = getColumnIndex(mapping.image);
-                const dateIndex = getColumnIndex(mapping.date);
-                const addressIndex = getColumnIndex(mapping.address);
-
-                let xPosition = Math.random() * 300;
-                let yPosition = Math.random() * 200;
-
-                const newNodes = rows.map((row, index) => {
-                  const nodeData = {
-                    type: typeIndex >= 0 ? 
-                      (row[typeIndex]?.toLowerCase() as NodeType) || 'person' : 
-                      'person',
-                    name: nameIndex >= 0 ? row[nameIndex] : `Node ${index + 1}`,
-                    profileUrl: profileIndex >= 0 ? row[profileIndex] : undefined,
-                    imageUrl: imageIndex >= 0 ? row[imageIndex] : undefined,
-                    date: dateIndex >= 0 ? row[dateIndex] : undefined,
-                    address: addressIndex >= 0 ? row[addressIndex] : undefined,
-                    todos: [],
-                  };
-
-                  return {
-                    id: `node-${Date.now()}-${index}`,
-                    type: 'social',
-                    position: { 
-                      x: xPosition + (index * 50), 
-                      y: yPosition + (index * 30)
-                    },
-                    data: nodeData,
-                  };
-                });
-
-                setNodes(nds => [...nds, ...newNodes]);
-                toast({
-                  title: "CSV imported",
-                  description: `Created ${newNodes.length} nodes from CSV`,
-                });
+                createNodesFromCsv(mapping, csvData);
               }}
             />
 
