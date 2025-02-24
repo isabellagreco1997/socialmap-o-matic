@@ -80,6 +80,9 @@ const LandingPage = () => {
 
       {/* Features Section */}
       <section className="py-12 px-4 bg-background relative">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 max-w-3xl mx-auto text-[#0A2463]">
+          Let me guess... you want to expand your network, but either forget to or don't know where to start?
+        </h2>
         <div className="container grid gap-8 md:grid-cols-3">
           <div className="space-y-4 flex flex-col items-center text-center">
             <div className="flex items-center gap-2">
