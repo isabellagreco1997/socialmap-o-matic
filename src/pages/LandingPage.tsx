@@ -1,19 +1,11 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, UserRoundSearch, Globe2, Building2, Eye, Activity, Route as RouteIcon, Star } from "lucide-react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       {/* Navigation */}
@@ -113,16 +105,12 @@ const LandingPage = () => {
 
       {/* Network Visualization Section */}
       <section className="py-20 px-4 bg-background">
-        <p className="text-lg text-center mb-12 max-w-3xl mx-auto text-muted-foreground">
+        <p className="text-lg text-center mb-12 max-w-3xl mx-auto text-sky-950 font-bold">
           Let me guess... you want to expand your network, but either forget to or don't know where to start?
         </p>
         <div className="container max-w-5xl mx-auto">
           <div className="rounded-lg overflow-hidden shadow-lg bg-white">
-            <img 
-              src="/lovable-uploads/8b314916-5aa3-481f-8918-7421d57be8b9.png" 
-              alt="Network Visualization Interface" 
-              className="w-full h-auto"
-            />
+            <img src="/lovable-uploads/8b314916-5aa3-481f-8918-7421d57be8b9.png" alt="Network Visualization Interface" className="w-full h-auto" />
           </div>
         </div>
       </section>
@@ -138,18 +126,14 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="w-full overflow-hidden">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-              dragFree: true,
-              duration: 40,
-            }}
-            className="w-full"
-          >
+          <Carousel opts={{
+          align: "start",
+          loop: true,
+          dragFree: true,
+          duration: 40
+        }} className="w-full">
             <CarouselContent className="flex animate-carousel">
-              {[...Array(2)].map((_, outerIndex) => (
-                <React.Fragment key={outerIndex}>
+              {[...Array(2)].map((_, outerIndex) => <React.Fragment key={outerIndex}>
                   <CarouselItem className="basis-1/8 md:basis-1/8">
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-20 h-20 shadow-lg border-2 border-[#0A2463]/10">
@@ -222,8 +206,7 @@ const LandingPage = () => {
                       <span className="text-xs font-medium text-[#0A2463] bg-[#0A2463]/10 px-2 py-0.5 rounded-full">CEO</span>
                     </div>
                   </CarouselItem>
-                </React.Fragment>
-              ))}
+                </React.Fragment>)}
             </CarouselContent>
           </Carousel>
         </div>
@@ -243,11 +226,7 @@ const LandingPage = () => {
               </Button>
             </div>
             <div className="rounded-lg overflow-hidden shadow-lg">
-              <img 
-                src="/lovable-uploads/0f4e6749-603a-4738-a4cc-189c60492f5f.png" 
-                alt="Network Mapping Interface" 
-                className="w-full h-auto"
-              />
+              <img src="/lovable-uploads/0f4e6749-603a-4738-a4cc-189c60492f5f.png" alt="Network Mapping Interface" className="w-full h-auto" />
             </div>
           </div>
         </div>
@@ -258,11 +237,7 @@ const LandingPage = () => {
         <div className="container">
           <div className="grid gap-12 md:grid-cols-2 items-center">
             <div className="rounded-lg overflow-hidden shadow-lg">
-              <img 
-                src="/lovable-uploads/63771b4f-0415-470a-b75f-29616c68f487.png" 
-                alt="Task Tracking System" 
-                className="w-full h-auto"
-              />
+              <img src="/lovable-uploads/63771b4f-0415-470a-b75f-29616c68f487.png" alt="Task Tracking System" className="w-full h-auto" />
             </div>
             <div className="space-y-6">
               <h2 className="text-4xl font-bold text-[#0A2463]">Maintain Relationships</h2>
@@ -291,11 +266,7 @@ const LandingPage = () => {
               </Button>
             </div>
             <div className="rounded-lg overflow-hidden shadow-lg">
-              <img 
-                src="/lovable-uploads/c8f0e758-66af-47cc-a027-984a8fe16ab4.png" 
-                alt="AI Network Chat Interface" 
-                className="w-full h-auto"
-              />
+              <img src="/lovable-uploads/c8f0e758-66af-47cc-a027-984a8fe16ab4.png" alt="AI Network Chat Interface" className="w-full h-auto" />
             </div>
           </div>
         </div>
@@ -385,11 +356,7 @@ const LandingPage = () => {
             </div>
             <div className="space-y-8">
               <div className="rounded-lg overflow-hidden shadow-lg">
-                <img 
-                  src="/lovable-uploads/e7e15ff6-a7fb-402d-b577-923ffedd9b0e.png" 
-                  alt="Frigyes Karinthy" 
-                  className="w-full h-auto grayscale"
-                />
+                <img src="/lovable-uploads/e7e15ff6-a7fb-402d-b577-923ffedd9b0e.png" alt="Frigyes Karinthy" className="w-full h-auto grayscale" />
                 <div className="p-4 bg-secondary/20">
                   <p className="text-sm text-muted-foreground">Frigyes Karinthy (1887-1938), Hungarian author who first proposed the concept of six degrees of separation in his 1929 short story "Chains."</p>
                 </div>
@@ -410,9 +377,7 @@ const LandingPage = () => {
             <Card className="bg-background">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />)}
                 </div>
                 <p className="text-muted-foreground mb-6">
                   "Science of Six has completely transformed how I approach networking. I've made connections I never thought possible, leading to several successful business partnerships."
@@ -433,9 +398,7 @@ const LandingPage = () => {
             <Card className="bg-background">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />)}
                 </div>
                 <p className="text-muted-foreground mb-6">
                   "The visualization tools are incredible. Being able to see my network mapped out has helped me identify and leverage connections I didn't even know I had."
@@ -456,9 +419,7 @@ const LandingPage = () => {
             <Card className="bg-background">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />)}
                 </div>
                 <p className="text-muted-foreground mb-6">
                   "As a recruiter, Science of Six has become an invaluable tool. It's helped me find perfect candidates through unexpected connections and referrals."
@@ -618,5 +579,4 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
-
 export default LandingPage;
