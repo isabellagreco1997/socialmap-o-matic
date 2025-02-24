@@ -29,7 +29,8 @@ import {
   Users,
   Grid,
   FileText,
-  ListTodo
+  ListTodo,
+  MoreHorizontal
 } from 'lucide-react';
 import {
   Sidebar,
@@ -86,7 +87,7 @@ const CustomEdge = ({
             }}
             className="nodrag nopan bg-white px-2 py-1 rounded shadow-sm border"
           >
-            {data.label}
+            {data.label as string}
           </div>
         </EdgeLabelRenderer>
       )}
@@ -434,48 +435,52 @@ export const Flow = () => {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-medium">
-                {networks.find(n => n.id === currentNetworkId)?.name || 'Select Network'}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Add Node
-              </Button>
-              <Button variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Import CSV
-              </Button>
-              <Button variant="outline">
-                <ListTodo className="h-4 w-4 mr-2" />
-                Tasks
-              </Button>
-            </div>
-          </div>
+        <div className="flex-1">
+          <ReactFlowProvider>
+            <div className="h-full">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={{ social: SocialNode }}
+                edgeTypes={{ custom: CustomEdge }}
+                fitView
+              >
+                <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2">
+                  <span className="text-lg font-medium">
+                    {networks.find(n => n.id === currentNetworkId)?.name || 'Network 1'}
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 ml-1">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </Panel>
+                
+                <Panel position="top-right" className="flex gap-2 m-4">
+                  <Button 
+                    variant="default" 
+                    className="bg-[#0F172A] hover:bg-[#1E293B] shadow-lg"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Add Node
+                  </Button>
+                  <Button variant="outline" className="bg-white shadow-lg">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Import CSV
+                  </Button>
+                  <Button variant="outline" className="bg-white shadow-lg">
+                    <ListTodo className="h-4 w-4 mr-2" />
+                    Tasks
+                  </Button>
+                </Panel>
 
-          <div className="flex-1">
-            <ReactFlowProvider>
-              <div className="h-full">
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  nodeTypes={{ social: SocialNode }}
-                  edgeTypes={{ custom: CustomEdge }}
-                  fitView
-                >
-                  <Background />
-                  <Controls />
-                </ReactFlow>
-              </div>
-            </ReactFlowProvider>
-          </div>
+                <Background />
+                <Controls />
+              </ReactFlow>
+            </div>
+          </ReactFlowProvider>
 
           <AddNodeDialog
             open={isDialogOpen}
