@@ -73,6 +73,7 @@ import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { Link } from 'react-router-dom';
+import { CsvPreviewDialog } from "@/components/CsvPreviewDialog";
 
 import type { AddNodeDialogProps } from '@/components/AddNodeDialog';
 
@@ -325,6 +326,8 @@ export const Flow = () => {
   const [viewType, setViewType] = useState<'tasks' | 'venues' | 'notes'>('tasks');
   const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'overdue'>('all');
+  const [csvPreviewOpen, setCsvPreviewOpen] = useState(false);
+  const [csvData, setCsvData] = useState<{ headers: string[]; rows: string[][] } | null>(null);
 
   const isSwitchingNetwork = useRef(false);
 
@@ -951,174 +954,4 @@ export const Flow = () => {
                           onClick={handleDeleteNetwork2}
                           className="text-destructive focus:text-destructive"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Network
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
-              </Panel>
-
-              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
-                <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
-                  <PlusIcon className="h-4 w-4" />
-                  Add Node
-                </Button>
-                <div className="relative">
-                  <input
-                    id="csv-upload"
-                    type="file"
-                    accept=".csv"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const csvText = event.target?.result as string;
-                          const lines = csvText.split('\n');
-                          const headers = lines[0].split(',').map(header => header.trim());
-                          
-                          const nameIndex = headers.findIndex(h => 
-                            h.toLowerCase().includes('name') || 
-                            h.toLowerCase().includes('title')
-                          );
-                          const typeIndex = headers.findIndex(h => h.toLowerCase().includes('type'));
-                          const profileIndex = headers.findIndex(h => h.toLowerCase().includes('profile'));
-                          const imageIndex = headers.findIndex(h => h.toLowerCase().includes('image'));
-                          const dateIndex = headers.findIndex(h => h.toLowerCase().includes('date'));
-                          const addressIndex = headers.findIndex(h => h.toLowerCase().includes('address'));
-
-                          // Skip header row
-                          const dataRows = lines.slice(1);
-                          
-                          let xPosition = Math.random() * 300;
-                          let yPosition = Math.random() * 200;
-                          
-                          const newNodes = dataRows
-                            .filter(row => row.trim()) // Filter out empty rows
-                            .map((row, index) => {
-                              const columns = row.split(',').map(col => col.trim());
-                              
-                              const nodeData = {
-                                type: typeIndex >= 0 ? 
-                                  (columns[typeIndex]?.toLowerCase() as NodeType) || 'person' : 
-                                  'person',
-                                name: nameIndex >= 0 ? columns[nameIndex] : `Node ${index + 1}`,
-                                profileUrl: profileIndex >= 0 ? columns[profileIndex] : undefined,
-                                imageUrl: imageIndex >= 0 ? columns[imageIndex] : undefined,
-                                date: dateIndex >= 0 ? columns[dateIndex] : undefined,
-                                address: addressIndex >= 0 ? columns[addressIndex] : undefined,
-                                todos: [],
-                              };
-
-                              return {
-                                id: `node-${Date.now()}-${index}`,
-                                type: 'social',
-                                position: { 
-                                  x: xPosition + (index * 50), 
-                                  y: yPosition + (index * 30)
-                                },
-                                data: nodeData,
-                              };
-                            });
-
-                          // Update nodes state once with all new nodes
-                          setNodes(nds => [...nds, ...newNodes]);
-
-                          toast({
-                            title: "CSV imported",
-                            description: `Created ${newNodes.length} nodes from CSV`,
-                          });
-                        };
-                        reader.readAsText(file);
-                        // Reset the input
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Import CSV
-                  </Button>
-                </div>
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowTodos(!showTodos)} 
-                  className="flex items-center gap-2"
-                >
-                  <CheckSquare className="h-4 w-4" />
-                  Tasks
-                </Button>
-              </Panel>
-            </ReactFlow>
-
-            {showTodos && (
-              <div className="absolute right-0 top-0 h-full w-[400px] bg-background border-l shadow-lg p-6 overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold">Tasks</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => setShowTodos(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                {networks
-                  .filter(network => network.id === currentNetworkId)
-                  .map((network) => (
-                    network.nodes.map((node: any) => {
-                      if (!node.data.todos?.length) return null;
-                      return node.data.todos.map((todo: TodoItem) => (
-                        <Card key={todo.id} className="p-4 mb-4">
-                          <div className="flex items-start gap-3">
-                            <Checkbox
-                              checked={false}
-                              onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                            />
-                            <div className="flex-1">
-                              <div className="font-medium">{todo.text}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {node.data.name}
-                              </div>
-                              {todo.dueDate && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(todo.dueDate)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      ));
-                    })
-                  ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      <AddNodeDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        onSave={handleAddNode}
-      />
-
-      <TemplatesDialog
-        open={isTemplatesOpen}
-        onOpenChange={setIsTemplatesOpen}
-        onSelect={handleTemplateSelect}
-      />
-
-      <NetworkChat 
-        show={showChat}
-        onClose={() => setShowChat(false)}
-      />
-    </div>
-  );
-};
-
-export default Flow;
+                          <
