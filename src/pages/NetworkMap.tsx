@@ -1,3 +1,4 @@
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -40,6 +41,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarTrigger,
+  SidebarProvider,
 } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
@@ -76,7 +78,7 @@ const CustomEdge = ({
   style = {},
   markerEnd,
   data,
-}: EdgeProps<any>) => {
+}: EdgeProps<EdgeData>) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -377,79 +379,81 @@ export const Flow = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-background flex">
-      <Sidebar>
-        <SidebarContent className="w-[240px] p-4">
-          <div className="space-y-4">
-            <Button 
-              variant="secondary" 
-              className="w-full gap-2"
-              onClick={createNewNetwork}
-            >
-              <PlusIcon className="h-4 w-4" />
-              New Network
-            </Button>
-
-            <div className="space-y-2">
-              {networks.map((network) => (
-                <Button
-                  key={network.id}
-                  variant={network.id === currentNetworkId ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => setCurrentNetworkId(network.id)}
-                >
-                  {network.name}
-                </Button>
-              ))}
-            </div>
-
-            {currentNetworkId && (
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={handleDeleteNetwork}
+    <SidebarProvider>
+      <div className="h-screen w-full bg-background flex">
+        <Sidebar>
+          <SidebarContent className="w-[240px] p-4">
+            <div className="space-y-4">
+              <Button 
+                variant="secondary" 
+                className="w-full gap-2"
+                onClick={createNewNetwork}
               >
-                Delete Network
+                <PlusIcon className="h-4 w-4" />
+                New Network
               </Button>
-            )}
-          </div>
-        </SidebarContent>
-      </Sidebar>
 
-      <div className="flex-1">
-        <ReactFlowProvider>
-          <div className="h-full">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={{ social: SocialNode }}
-              edgeTypes={{ custom: CustomEdge }}
-              fitView
-            >
-              <Background />
-              <Controls />
-              <Panel position="top-right">
+              <div className="space-y-2">
+                {networks.map((network) => (
+                  <Button
+                    key={network.id}
+                    variant={network.id === currentNetworkId ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    onClick={() => setCurrentNetworkId(network.id)}
+                  >
+                    {network.name}
+                  </Button>
+                ))}
+              </div>
+
+              {currentNetworkId && (
                 <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsDialogOpen(true)}
+                  variant="destructive"
+                  className="w-full"
+                  onClick={handleDeleteNetwork}
                 >
-                  <PlusIcon className="h-4 w-4" />
+                  Delete Network
                 </Button>
-              </Panel>
-            </ReactFlow>
-            <AddNodeDialog
-              open={isDialogOpen}
-              onOpenChange={setIsDialogOpen}
-              onSave={handleAddNode}
-            />
-          </div>
-        </ReactFlowProvider>
+              )}
+            </div>
+          </SidebarContent>
+        </Sidebar>
+
+        <div className="flex-1">
+          <ReactFlowProvider>
+            <div className="h-full">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={{ social: SocialNode }}
+                edgeTypes={{ custom: CustomEdge }}
+                fitView
+              >
+                <Background />
+                <Controls />
+                <Panel position="top-right">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </Panel>
+              </ReactFlow>
+              <AddNodeDialog
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                onSave={handleAddNode}
+              />
+            </div>
+          </ReactFlowProvider>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
