@@ -1,3 +1,4 @@
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -54,6 +55,12 @@ type NodeData = {
   address?: string;
 };
 
+interface CustomEdgeData {
+  label?: string;
+  notes?: string;
+  labelPosition?: number;
+}
+
 const CustomEdge = ({
   id,
   sourceX,
@@ -65,7 +72,7 @@ const CustomEdge = ({
   style = {},
   markerEnd,
   data,
-}: EdgeProps) => {
+}: EdgeProps<CustomEdgeData>) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
