@@ -470,35 +470,68 @@ const LandingPage = () => {
                 <Link to="/network">Get Started</Link>
               </Button>
             </div>
-            <div className="bg-background p-8 rounded-lg shadow-sm border border-primary relative text-center flex-1">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-[#0A2463] text-white px-4 py-1 rounded-full text-sm">Most Popular</span>
+            <div className="flex flex-col md:flex-row gap-8 flex-1">
+              <div className="bg-background p-8 rounded-lg shadow-sm border border-primary relative text-center flex-1">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-[#0A2463] text-white px-4 py-1 rounded-full text-sm">Monthly</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Master Networker</h3>
+                <p className="text-3xl font-bold mb-6">$30<span className="text-base font-normal text-muted-foreground">/month</span></p>
+                <ul className="space-y-4 mb-8">
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span>Everything in Free</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span className="font-medium">Unlimited networks</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span className="font-medium">AI-powered network insights</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span>Advanced analytics</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span>Priority support</span>
+                  </li>
+                </ul>
+                <Button className="w-full bg-[#0A2463] hover:bg-[#0A2463]/90">Subscribe Now</Button>
               </div>
-              <h3 className="text-xl font-semibold mb-4">Master Networker</h3>
-              <p className="text-3xl font-bold mb-6">$10<span className="text-base font-normal text-muted-foreground">/month</span></p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-2 justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Everything in Free</span>
-                </li>
-                <li className="flex items-center gap-2 justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Unlimited networks</span>
-                </li>
-                <li className="flex items-center gap-2 justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span className="font-medium">AI-powered network insights</span>
-                </li>
-                <li className="flex items-center gap-2 justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Advanced analytics</span>
-                </li>
-                <li className="flex items-center gap-2 justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Priority support</span>
-                </li>
-              </ul>
-              <Button className="w-full bg-[#0A2463] hover:bg-[#0A2463]/90">Subscribe Now</Button>
+              <div className="bg-background p-8 rounded-lg shadow-sm border border-primary relative text-center flex-1">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-[#0A2463] text-white px-4 py-1 rounded-full text-sm">Annual (Save 60%)</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Master Networker</h3>
+                <p className="text-3xl font-bold mb-6">$12<span className="text-base font-normal text-muted-foreground">/month</span></p>
+                <p className="text-sm text-muted-foreground mb-4">Billed annually at $144</p>
+                <ul className="space-y-4 mb-8">
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span>Everything in Free</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span className="font-medium">Unlimited networks</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span className="font-medium">AI-powered network insights</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span>Advanced analytics</span>
+                  </li>
+                  <li className="flex items-center gap-2 justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span>Priority support</span>
+                  </li>
+                </ul>
+                <Button className="w-full bg-[#0A2463] hover:bg-[#0A2463]/90">Subscribe Annually</Button>
+              </div>
             </div>
           </div>
         </div>
