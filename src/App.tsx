@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import { Flow as NetworkMap } from "./pages/NetworkMap";
 import TodoDashboard from "./pages/TodoDashboard";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -21,8 +22,22 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/network" element={<NetworkMap />} />
-          <Route path="/todos" element={<TodoDashboard />} />
+          <Route
+            path="/network"
+            element={
+              <ProtectedRoute>
+                <NetworkMap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todos"
+            element={
+              <ProtectedRoute>
+                <TodoDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
