@@ -354,23 +354,25 @@ export const Flow = () => {
               </Button>
             </div>
 
-            <div className="flex-1 p-4 space-y-3 py-0">
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
-                <PlusIcon className="h-5 w-5" />
-                Create Network
-              </Button>
+            <div className="flex-1 p-4 flex flex-col h-full">
+              <div className="space-y-3">
+                <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
+                  <PlusIcon className="h-5 w-5" />
+                  Create Network
+                </Button>
 
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm rounded-lg font-medium">
-                <LayoutGrid className="h-5 w-5" />
-                Overview
-              </Button>
+                <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm rounded-lg font-medium">
+                  <LayoutGrid className="h-5 w-5" />
+                  Overview
+                </Button>
 
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg">
-                <MessageSquare className="h-5 w-5" />
-                AI Chat
-              </Button>
+                <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg">
+                  <MessageSquare className="h-5 w-5" />
+                  AI Chat
+                </Button>
+              </div>
 
-              <div className="pt-4 space-y-2">
+              <div className="pt-4 space-y-2 flex-1 overflow-y-auto">
                 {networks.map(network => <Button key={network.id} variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
                     <Grid className="h-5 w-5" />
                     {network.name}
