@@ -17,6 +17,128 @@ interface Template {
 
 const templates: Template[] = [
   {
+    id: "organizational-chart",
+    title: "Organizational Chart",
+    description: "Map your company's organizational structure and reporting relationships",
+    category: "Business Development",
+    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    nodes: [
+      {
+        id: '1',
+        type: 'social',
+        position: { x: 400, y: 0 },
+        data: { type: 'person', name: 'CEO', imageUrl: '', todos: [] }
+      },
+      {
+        id: '2',
+        type: 'social',
+        position: { x: 200, y: 100 },
+        data: { type: 'person', name: 'CTO', imageUrl: '', todos: [] }
+      },
+      {
+        id: '3',
+        type: 'social',
+        position: { x: 400, y: 100 },
+        data: { type: 'person', name: 'CFO', imageUrl: '', todos: [] }
+      },
+      {
+        id: '4',
+        type: 'social',
+        position: { x: 600, y: 100 },
+        data: { type: 'person', name: 'COO', imageUrl: '', todos: [] }
+      },
+      {
+        id: '5',
+        type: 'social',
+        position: { x: 100, y: 200 },
+        data: { type: 'person', name: 'Engineering Lead', imageUrl: '', todos: [] }
+      },
+      {
+        id: '6',
+        type: 'social',
+        position: { x: 300, y: 200 },
+        data: { type: 'person', name: 'Product Lead', imageUrl: '', todos: [] }
+      },
+      {
+        id: '7',
+        type: 'social',
+        position: { x: 400, y: 200 },
+        data: { type: 'person', name: 'Finance Manager', imageUrl: '', todos: [] }
+      },
+      {
+        id: '8',
+        type: 'social',
+        position: { x: 500, y: 200 },
+        data: { type: 'person', name: 'HR Director', imageUrl: '', todos: [] }
+      },
+      {
+        id: '9',
+        type: 'social',
+        position: { x: 600, y: 200 },
+        data: { type: 'person', name: 'Operations Manager', imageUrl: '', todos: [] }
+      },
+      {
+        id: '10',
+        type: 'social',
+        position: { x: 700, y: 200 },
+        data: { type: 'person', name: 'Sales Director', imageUrl: '', todos: [] }
+      },
+      {
+        id: '11',
+        type: 'social',
+        position: { x: 50, y: 300 },
+        data: { type: 'person', name: 'Frontend Developer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '12',
+        type: 'social',
+        position: { x: 150, y: 300 },
+        data: { type: 'person', name: 'Backend Developer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '13',
+        type: 'social',
+        position: { x: 250, y: 300 },
+        data: { type: 'person', name: 'DevOps Engineer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '14',
+        type: 'social',
+        position: { x: 350, y: 300 },
+        data: { type: 'person', name: 'Product Designer', imageUrl: '', todos: [] }
+      },
+      {
+        id: '15',
+        type: 'social',
+        position: { x: 450, y: 300 },
+        data: { type: 'person', name: 'Financial Analyst', imageUrl: '', todos: [] }
+      }
+    ],
+    edges: [
+      // CEO to C-level
+      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
+      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true },
+      { id: 'e1-4', source: '1', target: '4', type: 'custom', animated: true },
+      // CTO to Engineering & Product
+      { id: 'e2-5', source: '2', target: '5', type: 'custom', animated: true },
+      { id: 'e2-6', source: '2', target: '6', type: 'custom', animated: true },
+      // CFO to Finance
+      { id: 'e3-7', source: '3', target: '7', type: 'custom', animated: true },
+      // COO to Operations, HR, and Sales
+      { id: 'e4-8', source: '4', target: '8', type: 'custom', animated: true },
+      { id: 'e4-9', source: '4', target: '9', type: 'custom', animated: true },
+      { id: 'e4-10', source: '4', target: '10', type: 'custom', animated: true },
+      // Engineering Lead to Team
+      { id: 'e5-11', source: '5', target: '11', type: 'custom', animated: true },
+      { id: 'e5-12', source: '5', target: '12', type: 'custom', animated: true },
+      { id: 'e5-13', source: '5', target: '13', type: 'custom', animated: true },
+      // Product Lead to Designer
+      { id: 'e6-14', source: '6', target: '14', type: 'custom', animated: true },
+      // Finance Manager to Analyst
+      { id: 'e7-15', source: '7', target: '15', type: 'custom', animated: true }
+    ]
+  },
+  {
     id: "sales-pipeline",
     title: "Sales Pipeline",
     description: "Track leads, opportunities, and customer relationships",
