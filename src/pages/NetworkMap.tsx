@@ -620,8 +620,7 @@ export const Flow = () => {
     
     toast({
       title: "Network deleted",
-      description: `"${networkName}" has been removed`,
-    });
+      description: `"${networkName}" has been removed`,\n    });
   }, [networks, currentNetworkId, toast]);
 
   const handleStartEditingName = () => {
@@ -781,179 +780,178 @@ export const Flow = () => {
   };
 
   return (
-    <div className="w-screen h-screen bg-gray-50 flex">
-      <div className={`bg-background border-r transition-all duration-300 flex flex-col h-full ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
-        <div className="p-4 border-b flex items-center justify-between shrink-0">
-          {!isMenuMinimized && <h2 className="font-semibold">Your Networks</h2>}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setIsMenuMinimized(!isMenuMinimized)}
-            className="ml-auto"
-          >
-            {isMenuMinimized ? (
-              <ChevronRightIcon className="h-4 w-4" />
-            ) : (
-              <ChevronLeftIcon className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-        
-        <div className="p-4 border-b space-y-2 shrink-0">
-          <Button
-            onClick={createNewNetwork}
-            variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-          >
-            <PlusIcon className="h-4 w-4 shrink-0" />
-            {!isMenuMinimized && <span className="ml-2">Create Network</span>}
-          </Button>
-          <Button
-            variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${showOverview ? 'bg-accent text-accent-foreground' : ''}`}
-            onClick={() => setShowOverview(!showOverview)}
-          >
-            <ListChecks className="h-4 w-4 shrink-0" />
-            {!isMenuMinimized && <span className="ml-2">Overview</span>}
-          </Button>
-          <Button
-            variant="outline"
-            className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${showChat ? 'bg-accent text-accent-foreground' : ''}`}
-            onClick={() => setShowChat(!showChat)}
-          >
-            <MessageSquare className="h-4 w-4 shrink-0" />
-            {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
-          </Button>
-        </div>
-
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
-          {networks.map((network, index) => (
-            <div 
-              key={network.id} 
-              draggable={!isMenuMinimized}
-              onDragStart={(e) => handleDragStart(e, index, network.id)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
-              className={`flex items-center gap-2 ${
-                !isMenuMinimized ? 'cursor-move' : ''
-              } ${
-                draggedNetwork === network.id ? 'opacity-50' : ''
-              }`}
-              onClick={(e) => handleNetworkSelect(network.id, e)}
+    <ReactFlowProvider>
+      <div className="w-screen h-screen bg-gray-50 flex">
+        <div className={`bg-background border-r transition-all duration-300 flex flex-col h-full ${isMenuMinimized ? 'w-[60px]' : 'w-[300px]'}`}>
+          <div className="p-4 border-b flex items-center justify-between shrink-0">
+            {!isMenuMinimized && <h2 className="font-semibold">Your Networks</h2>}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setIsMenuMinimized(!isMenuMinimized)}
+              className="ml-auto"
             >
-              <Button
-                variant={currentNetworkId === network.id ? "default" : "ghost"}
-                className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
-                tabIndex={-1}
-              >
-                {!isMenuMinimized && (
-                  <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
-                )}
-                {!isMenuMinimized && network.name}
-                {isMenuMinimized && network.name.split(' ')[1]}
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        <div className="p-4 border-t mt-auto shrink-0">
-          {!isMenuMinimized && <h3 className="text-sm font-medium mb-2">Discover</h3>}
-          <div className="space-y-1">
-            <Button
-              variant="ghost"
-              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-              onClick={() => setIsTemplatesOpen(true)}
-            >
-              <BookOpen className="h-4 w-4 shrink-0" />
-              {!isMenuMinimized && <span className="ml-2">Templates</span>}
-            </Button>
-            <Button
-              variant="ghost"
-              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-              asChild
-            >
-              <a href="#resources">
-                <Globe className="h-4 w-4 shrink-0" />
-                {!isMenuMinimized && <span className="ml-2">Resources</span>}
-              </a>
-            </Button>
-            <Button
-              variant="ghost"
-              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
-              asChild
-            >
-              <a href="#community">
-                <Users className="h-4 w-4 shrink-0" />
-                {!isMenuMinimized && <span className="ml-2">Community</span>}
-              </a>
+              {isMenuMinimized ? (
+                <ChevronRightIcon className="h-4 w-4" />
+              ) : (
+                <ChevronLeftIcon className="h-4 w-4" />
+              )}
             </Button>
           </div>
+          
+          <div className="p-4 border-b space-y-2 shrink-0">
+            <Button
+              onClick={createNewNetwork}
+              variant="outline"
+              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+            >
+              <PlusIcon className="h-4 w-4 shrink-0" />
+              {!isMenuMinimized && <span className="ml-2">Create Network</span>}
+            </Button>
+            <Button
+              variant="outline"
+              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${showOverview ? 'bg-accent text-accent-foreground' : ''}`}
+              onClick={() => setShowOverview(!showOverview)}
+            >
+              <ListChecks className="h-4 w-4 shrink-0" />
+              {!isMenuMinimized && <span className="ml-2">Overview</span>}
+            </Button>
+            <Button
+              variant="outline"
+              className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'} ${showChat ? 'bg-accent text-accent-foreground' : ''}`}
+              onClick={() => setShowChat(!showChat)}
+            >
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              {!isMenuMinimized && <span className="ml-2">AI Chat</span>}
+            </Button>
+          </div>
+
+          <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
+            {networks.map((network, index) => (
+              <div 
+                key={network.id} 
+                draggable={!isMenuMinimized}
+                onDragStart={(e) => handleDragStart(e, index, network.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-2 ${
+                  !isMenuMinimized ? 'cursor-move' : ''
+                } ${
+                  draggedNetwork === network.id ? 'opacity-50' : ''
+                }`}
+                onClick={(e) => handleNetworkSelect(network.id, e)}
+              >
+                <Button
+                  variant={currentNetworkId === network.id ? "default" : "ghost"}
+                  className={`flex-1 justify-start ${isMenuMinimized ? 'px-2' : ''}`}
+                  tabIndex={-1}
+                >
+                  {!isMenuMinimized && (
+                    <GripVertical className="h-4 w-4 mr-2 text-muted-foreground" />
+                  )}
+                  {!isMenuMinimized && network.name}
+                  {isMenuMinimized && network.name.split(' ')[1]}
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 border-t mt-auto shrink-0">
+            {!isMenuMinimized && <h3 className="text-sm font-medium mb-2">Discover</h3>}
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+                onClick={() => setIsTemplatesOpen(true)}
+              >
+                <BookOpen className="h-4 w-4 shrink-0" />
+                {!isMenuMinimized && <span className="ml-2">Templates</span>}
+              </Button>
+              <Button
+                variant="ghost"
+                className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+                asChild
+              >
+                <a href="#resources">
+                  <Globe className="h-4 w-4 shrink-0" />
+                  {!isMenuMinimized && <span className="ml-2">Resources</span>}
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                className={`w-full flex items-center ${isMenuMinimized ? 'justify-center px-2' : 'justify-start'}`}
+                asChild
+              >
+                <a href="#community">
+                  <Users className="h-4 w-4 shrink-0" />
+                  {!isMenuMinimized && <span className="ml-2">Community</span>}
+                </a>
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 relative flex">
-        {showOverview ? (
-          <div className="h-full p-8 overflow-y-auto">
-            <div className="max-w-5xl mx-auto space-y-6">
-              <Tabs defaultValue="tasks" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
-                </TabsList>
+        <div className="flex-1 relative flex">
+          {showOverview ? (
+            <div className="h-full p-8 overflow-y-auto">
+              <div className="max-w-5xl mx-auto space-y-6">
+                <Tabs defaultValue="tasks" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                    <TabsTrigger value="calendar">Calendar</TabsTrigger>
+                    <TabsTrigger value="notes">Notes</TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="tasks" className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <ListChecks className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">All Tasks</h3>
-                  </div>
-                  {networks
-                    .filter(network => network.id !== 'overview')
-                    .map((network) => (
-                    <div key={network.id}>
-                      <h3 className="text-lg font-medium mb-4">{network.name}</h3>
-                      {network.nodes.map((node: any) => {
-                        if (!node.data.todos?.length) return null;
-                        return node.data.todos.map((todo: TodoItem) => (
-                          <Card key={todo.id} className="p-4 mb-4">
-                            <div className="flex items-start gap-3">
-                              <Checkbox
-                                checked={false}
-                                onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">{todo.text}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {network.name} / {node.data.name}
-                                </div>
-                                {todo.dueDate && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                                    <Calendar className="h-4 w-4" />
-                                    {formatDate(todo.dueDate)}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        ));
-                      })}
+                  <TabsContent value="tasks" className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="h-5 w-5" />
+                      <h3 className="text-lg font-semibold">All Tasks</h3>
                     </div>
-                  ))}
-                </TabsContent>
+                    {networks
+                      .filter(network => network.id !== 'overview')
+                      .map((network) => (
+                      <div key={network.id}>
+                        <h3 className="text-lg font-medium mb-4">{network.name}</h3>
+                        {network.nodes.map((node: any) => {
+                          if (!node.data.todos?.length) return null;
+                          return node.data.todos.map((todo: TodoItem) => (
+                            <Card key={todo.id} className="p-4 mb-4">
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  checked={false}
+                                  onCheckedChange={() => handleCompleteTodo(network.id, node.id, todo.id, todo.text)}
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium">{todo.text}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {network.name} / {node.data.name}
+                                  </div>
+                                  {todo.dueDate && (
+                                    <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                      <Calendar className="h-4 w-4" />
+                                      {formatDate(todo.dueDate)}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          ));
+                        })}
+                      </div>
+                    ))}
+                  </TabsContent>
 
-                <TabsContent value="calendar" className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">All Events & Venues</h3>
-                  </div>
-                  {networks
-                    .filter(network => network.id !== 'overview')
-                    .map((network) => (
-                    <div key={network.id}>
-                      <h3 className="text-lg font-medium mb-4">{network.name}</h3>
-                      {network.nodes
-                        .filter((node: { data: NodeData }) => 
-                          node.data.type === 'event' || node.data.type === 'venue'
-                        )
-                        .map
+                  <TabsContent value="calendar" className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      <h3 className="text-lg font-semibold">All Events & Venues</h3>
+                    </div>
+                    {networks
+                      .filter(network => network.id !== 'overview')
+                      .map((network) => (
+                      <div key={network.id}>
+                        <h3 className="text-lg font-medium mb-4">{network.name}</h3>
+                        {network.nodes
+                          .filter((node: { data: NodeData }) => 
+                            node.data.type === 'event' || node
