@@ -493,7 +493,7 @@ export const Flow = () => {
     
     toast({
       title: "Network deleted",
-      description: `"${networkName}" has been removed`,
+      description: `"${networkName}" has been removed`
     });
   }, [networks, currentNetworkId, toast]);
 
