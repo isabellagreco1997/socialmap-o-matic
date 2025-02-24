@@ -12,6 +12,8 @@ import { Link } from "react-router-dom";
 const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,7 +27,11 @@ const RegisterPage = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/network`
+          emailRedirectTo: `${window.location.origin}/network`,
+          data: {
+            full_name: fullName,
+            username: username,
+          }
         }
       });
 
@@ -96,6 +102,28 @@ const RegisterPage = () => {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="johndoe"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
