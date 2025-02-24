@@ -356,17 +356,17 @@ export const Flow = () => {
 
             <div className="p-4">
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
+                <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
                   <PlusIcon className="h-5 w-5" />
                   Create Network
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm rounded-lg font-medium">
+                <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm rounded-lg font-medium">
                   <LayoutGrid className="h-5 w-5" />
                   Overview
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg">
+                <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg">
                   <MessageSquare className="h-5 w-5" />
                   AI Chat
                 </Button>
@@ -377,7 +377,7 @@ export const Flow = () => {
                   <div key={network.id} className="group relative">
                     <Button 
                       variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                      className={`w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
+                      className={`w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
                       onClick={() => setCurrentNetworkId(network.id)}
                     >
                       <Grid className="h-5 w-5" />
@@ -406,17 +406,13 @@ export const Flow = () => {
 
             <div className="border-t mt-auto p-2 space-y-1">
               <h3 className="text-sm font-bold px-4 mb-2">Discover</h3>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10 text-sm font-medium">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium">
                 <Library className="h-5 w-5" />
                 Templates
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10 text-sm font-medium">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium">
                 <Globe className="h-5 w-5" />
                 Resources
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10 text-sm font-medium">
-                <Users className="h-5 w-5" />
-                Community
               </Button>
             </div>
           </SidebarContent>
