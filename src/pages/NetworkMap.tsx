@@ -1,3 +1,4 @@
+
 import {
   AlertCircle,
   Network,
@@ -5,8 +6,6 @@ import {
   Plus as PlusIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,15 +13,24 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { SidebarProvider, Sidebar, SidebarContent } from "@/components/ui/sidebar";
 
-export default function NetworkMap() {
-  const [selectedNetwork, setSelectedNetwork] = useState<any>(null);
-  const [isEdgeDialogOpen, setIsEdgeDialogOpen] = useState(false);
+interface Network {
+  id: string;
+  name: string;
+}
 
-  const { data, isLoading, error, refetch } = useQuery(api.networks.getNetworks);
+export default function NetworkMap() {
+  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null);
+  const [isEdgeDialogOpen, setIsEdgeDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<Network[]>([]);
 
   const createNewNetwork = async () => {
-    // await api.networks.createNetwork({ name: "New Network" });
-    // refetch();
+    const newNetwork: Network = {
+      id: Math.random().toString(),
+      name: "New Network"
+    };
+    setData([...data, newNetwork]);
   };
 
   useEffect(() => {
@@ -43,16 +51,16 @@ export default function NetworkMap() {
             </div>
 
             <div className="flex-1 p-4 space-y-3 py-0">
-              <Button variant="outline" className="w-full justify-start gap-3 h-10 text-base font-medium rounded-lg" onClick={createNewNetwork}>
+              <Button variant="outline" className="w-full justify-start gap-3 h-8 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
                 <PlusIcon className="h-4 w-4" />
                 Create Network
               </Button>
 
               {isLoading ? (
                 <div className="space-y-2">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
                 </div>
               ) : null}
 
@@ -62,7 +70,7 @@ export default function NetworkMap() {
                   title="Error loading networks"
                   description="An error occurred while loading your networks."
                   action={
-                    <Button variant="outline" onClick={() => refetch()}>
+                    <Button variant="outline" onClick={() => setError(null)}>
                       Try again
                     </Button>
                   }
@@ -86,7 +94,7 @@ export default function NetworkMap() {
                 <Button
                   key={network.id}
                   variant={selectedNetwork?.id === network.id ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-3 h-10 text-base font-medium rounded-lg"
+                  className="w-full justify-start gap-3 h-8 text-sm font-medium rounded-lg"
                   onClick={() => setSelectedNetwork(network)}
                 >
                   <Network className="h-4 w-4" />
