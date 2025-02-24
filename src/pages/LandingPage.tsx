@@ -58,8 +58,8 @@ const LandingPage = () => {
         </div>
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
-            <span>Connect with</span>
-            <span><span className="text-[#0A2463]">Anyone</span> in the World</span>
+            <span>Map & Visualize your</span>
+            <span>Social <span className="text-[#0A2463]">Connections</span></span>
           </h1>
           <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">
             Map and visualize your network connections. Discover how you're connected to anyone through six degrees of separation.
