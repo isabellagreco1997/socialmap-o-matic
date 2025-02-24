@@ -1,3 +1,4 @@
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -21,11 +22,18 @@ import { Button } from "@/components/ui/button";
 import { 
   PlusIcon,
   ChevronLeft,
+  MoreVertical,
   LayoutGrid,
   MessageSquare,
   FileSpreadsheet,
-  ClipboardList
+  ClipboardList,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -70,7 +78,7 @@ const CustomEdge = ({
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-      {data && 'label' in data && (
+      {data && typeof data === 'object' && 'label' in data && (
         <EdgeLabelRenderer>
           <div
             style={{
@@ -360,19 +368,18 @@ export const Flow = () => {
     <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
-          <SidebarContent className="w-[240px] border-r">
-            <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Your Networks</h2>
-                <Button variant="ghost" size="icon">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              </div>
+          <SidebarContent className="w-[240px] border-r bg-white">
+            <div className="py-3 px-4 border-b flex items-center justify-between">
+              <h2 className="text-base font-semibold">Your Networks</h2>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </div>
 
+            <div className="p-3">
               <Button 
                 variant="outline" 
-                className="w-full justify-start gap-2"
-                onClick={createNewNetwork}
+                className="w-full justify-start gap-2 mb-2 font-normal"
               >
                 <PlusIcon className="h-4 w-4" />
                 Create Network
@@ -380,43 +387,35 @@ export const Flow = () => {
 
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-2"
+                className="w-full justify-start gap-2 font-normal"
               >
                 <LayoutGrid className="h-4 w-4" />
                 Overview
               </Button>
-
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2"
-              >
-                <MessageSquare className="h-4 w-4" />
-                AI Chat
-              </Button>
-
-              <div className="space-y-1 pt-4">
-                {networks.map((network) => (
-                  <Button
-                    key={network.id}
-                    variant={network.id === currentNetworkId ? "secondary" : "ghost"}
-                    className="w-full justify-start gap-2"
-                    onClick={() => setCurrentNetworkId(network.id)}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                    {network.name}
-                  </Button>
-                ))}
-              </div>
             </div>
 
-            <div className="mt-auto p-4 space-y-4">
-              <div className="text-sm font-medium text-muted-foreground">Discover</div>
+            <div className="px-3">
+              {networks.map((network) => (
+                <Button
+                  key={network.id}
+                  variant={network.id === currentNetworkId ? "secondary" : "ghost"}
+                  className="w-full justify-start gap-2 mb-1 font-normal"
+                  onClick={() => setCurrentNetworkId(network.id)}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  {network.name}
+                </Button>
+              ))}
+            </div>
+
+            <div className="mt-auto p-3 border-t">
+              <div className="text-sm font-medium text-muted-foreground mb-2">Discover</div>
               <div className="space-y-1">
-                <Button variant="ghost" className="w-full justify-start gap-2">
+                <Button variant="ghost" className="w-full justify-start gap-2 font-normal">
                   <FileSpreadsheet className="h-4 w-4" />
                   Templates
                 </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2">
+                <Button variant="ghost" className="w-full justify-start gap-2 font-normal">
                   <ClipboardList className="h-4 w-4" />
                   Resources
                 </Button>
@@ -425,24 +424,36 @@ export const Flow = () => {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b flex items-center justify-between">
+        <div className="flex-1 flex flex-col bg-white">
+          <div className="h-14 border-b flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-medium">
-                {networks.find(n => n.id === currentNetworkId)?.name || 'Select Network'}
+              <h1 className="text-base font-medium flex items-center gap-2">
+                {networks.find(n => n.id === currentNetworkId)?.name || 'Network 1'}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="text-destructive" onClick={handleDeleteNetwork}>
+                      Delete Network
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <PlusIcon className="h-4 w-4 mr-2" />
+              <Button variant="default" className="gap-2" onClick={() => setIsDialogOpen(true)}>
+                <PlusIcon className="h-4 w-4" />
                 Add Node
               </Button>
-              <Button variant="outline">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
                 Import CSV
               </Button>
-              <Button variant="outline">
-                <ClipboardList className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="gap-2">
+                <ClipboardList className="h-4 w-4" />
                 Tasks
               </Button>
             </div>
