@@ -27,7 +27,9 @@ import {
   Library,
   Globe,
   Users,
-  Grid
+  Grid,
+  FileText,
+  ListTodo
 } from 'lucide-react';
 import {
   Sidebar,
@@ -445,11 +447,11 @@ export const Flow = () => {
                 Add Node
               </Button>
               <Button variant="outline">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 mr-2" />
                 Import CSV
               </Button>
               <Button variant="outline">
-                <ClipboardList className="h-4 w-4 mr-2" />
+                <ListTodo className="h-4 w-4 mr-2" />
                 Tasks
               </Button>
             </div>
