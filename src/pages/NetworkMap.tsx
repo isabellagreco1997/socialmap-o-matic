@@ -118,7 +118,7 @@ const CustomEdge = ({
         style={{
           ...style,
           strokeDasharray: 5,
-          animation: 'flow 30s linear infinite',
+          animation: 'flow 15s linear infinite',
         }} 
       />
       <EdgeLabelRenderer>
@@ -131,7 +131,7 @@ const CustomEdge = ({
           className="flex items-center gap-1"
         >
           <div className="bg-white px-2 py-1 rounded-md shadow-sm border flex items-center gap-2">
-            <span className="text-sm">{data?.label}</span>
+            <span className="text-sm">{data?.label || ''}</span>
             <div className="flex items-center gap-1">
               <button 
                 className="p-1 hover:bg-gray-100 rounded"
