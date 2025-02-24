@@ -1,4 +1,3 @@
-
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -21,25 +20,17 @@ import AddNodeDialog from '@/components/AddNodeDialog';
 import { Button } from "@/components/ui/button";
 import { 
   PlusIcon,
-  MessageSquare,
-  LayoutGrid,
-  Building2,
-  Users,
-  Network,
   ChevronLeft,
+  LayoutGrid,
+  MessageSquare,
+  FileSpreadsheet,
+  ClipboardList
 } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
@@ -55,10 +46,6 @@ type NodeData = {
   address?: string;
 };
 
-interface EdgeData {
-  label?: string;
-}
-
 const CustomEdge = ({
   id,
   sourceX,
@@ -70,7 +57,7 @@ const CustomEdge = ({
   style = {},
   markerEnd,
   data,
-}: EdgeProps<EdgeData>) => {
+}: EdgeProps) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -83,7 +70,7 @@ const CustomEdge = ({
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-      {data?.label && (
+      {data && 'label' in data && (
         <EdgeLabelRenderer>
           <div
             style={{
@@ -101,24 +88,6 @@ const CustomEdge = ({
     </>
   );
 };
-
-const NetworkTemplates = [
-  {
-    title: "Business Ecosystem",
-    description: "Map your business partnerships and collaborations",
-    icon: Building2,
-  },
-  {
-    title: "Partnership Mapping",
-    description: "Visualize strategic partnerships and alliances",
-    icon: Network,
-  },
-  {
-    title: "Referral Program",
-    description: "Track and nurture your referral network",
-    icon: Users,
-  },
-];
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -400,22 +369,30 @@ export const Flow = () => {
                 </Button>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Tasks
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  AI Chat
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-2"
+                onClick={createNewNetwork}
+              >
+                <PlusIcon className="h-4 w-4" />
+                Create Network
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Overview
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+              >
+                <MessageSquare className="h-4 w-4" />
+                AI Chat
+              </Button>
 
               <div className="space-y-1 pt-4">
                 {networks.map((network) => (
@@ -430,69 +407,65 @@ export const Flow = () => {
                   </Button>
                 ))}
               </div>
+            </div>
 
-              {currentNetworkId && (
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleDeleteNetwork}
-                >
-                  Delete Network
+            <div className="mt-auto p-4 space-y-4">
+              <div className="text-sm font-medium text-muted-foreground">Discover</div>
+              <div className="space-y-1">
+                <Button variant="ghost" className="w-full justify-start gap-2">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Templates
                 </Button>
-              )}
+                <Button variant="ghost" className="w-full justify-start gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Resources
+                </Button>
+              </div>
             </div>
           </SidebarContent>
         </Sidebar>
 
         <div className="flex-1 flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Business Development</h1>
-            
-            <div className="grid grid-cols-3 gap-6">
-              {NetworkTemplates.map((template) => (
-                <Card key={template.title} className="cursor-pointer hover:bg-accent transition-colors">
-                  <CardHeader>
-                    {currentNetworkId ? (
-                      <div className="mb-2">
-                        <ReactFlowProvider>
-                          <div className="h-[150px] border rounded-lg overflow-hidden bg-background/50">
-                            <ReactFlow
-                              nodes={nodes}
-                              edges={edges}
-                              nodeTypes={{ social: SocialNode }}
-                              edgeTypes={{ custom: CustomEdge }}
-                              onNodesChange={onNodesChange}
-                              onEdgesChange={onEdgesChange}
-                              onConnect={onConnect}
-                              fitView
-                            >
-                              <Background />
-                            </ReactFlow>
-                          </div>
-                        </ReactFlowProvider>
-                      </div>
-                    ) : (
-                      <div className="h-[150px] border rounded-lg overflow-hidden bg-background/50 flex items-center justify-center">
-                        <template.icon className="h-10 w-10 text-muted-foreground" />
-                      </div>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="text-lg mb-2">{template.title}</CardTitle>
-                    <CardDescription>{template.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="p-4 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-medium">
+                {networks.find(n => n.id === currentNetworkId)?.name || 'Select Network'}
+              </h1>
             </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Add Node
+              </Button>
+              <Button variant="outline">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Import CSV
+              </Button>
+              <Button variant="outline">
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Tasks
+              </Button>
+            </div>
+          </div>
 
-            {currentNetworkId && (
-              <div className="mt-6">
-                <Button onClick={() => setIsDialogOpen(true)}>
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Add Node
-                </Button>
+          <div className="flex-1">
+            <ReactFlowProvider>
+              <div className="h-full">
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  nodeTypes={{ social: SocialNode }}
+                  edgeTypes={{ custom: CustomEdge }}
+                  fitView
+                >
+                  <Background />
+                  <Controls />
+                </ReactFlow>
               </div>
-            )}
+            </ReactFlowProvider>
           </div>
 
           <AddNodeDialog
