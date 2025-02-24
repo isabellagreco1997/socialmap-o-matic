@@ -62,8 +62,8 @@ const LandingPage = () => {
             <span>Social <span className="text-[#0A2463]">Connections</span></span>
           </h1>
           <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950 flex flex-col gap-2">
-            <span>Uncover opportunities, find clients, track referrals,</span>
-            <span>and strengthen your network.</span>
+            <span>Chart your own maps to help you uncover opportunities,</span>
+            <span>find clients, track referrals, and strengthen your network.</span>
           </p>
           <div className="flex gap-4 justify-center pt-4">
             <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90 text-lg h-14 px-10" asChild>
