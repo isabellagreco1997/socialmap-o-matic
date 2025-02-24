@@ -1,3 +1,4 @@
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -954,4 +955,138 @@ export const Flow = () => {
                           onClick={handleDeleteNetwork2}
                           className="text-destructive focus:text-destructive"
                         >
-                          <
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Network
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
+              </Panel>
+
+              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
+                <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
+                  <PlusIcon className="h-4 w-4" />
+                  Add Node
+                </Button>
+                <div className="relative">
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const csvText = event.target?.result as string;
+                          const lines = csvText.split('\n');
+                          const headers = lines[0].split(',').map(header => header.trim());
+                          const rows = lines
+                            .slice(1)
+                            .filter(row => row.trim())
+                            .map(row => row.split(',').map(cell => cell.trim()));
+                          
+                          setCsvData({
+                            headers,
+                            rows,
+                          });
+                          setCsvPreviewOpen(true);
+                        };
+                        reader.readAsText(file);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Import CSV
+                  </Button>
+                </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowTodos(!showTodos)} 
+                  className="flex items-center gap-2"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  Tasks
+                </Button>
+              </Panel>
+            </ReactFlow>
+
+            <CsvPreviewDialog
+              open={csvPreviewOpen}
+              onOpenChange={setCsvPreviewOpen}
+              headers={csvData?.headers || []}
+              rows={csvData?.rows || []}
+              onConfirm={(mapping) => {
+                if (!csvData) return;
+
+                const { headers, rows } = csvData;
+                const getColumnIndex = (columnName?: string) => 
+                  columnName ? headers.indexOf(columnName) : -1;
+
+                const nameIndex = getColumnIndex(mapping.name);
+                const typeIndex = getColumnIndex(mapping.type);
+                const profileIndex = getColumnIndex(mapping.profile);
+                const imageIndex = getColumnIndex(mapping.image);
+                const dateIndex = getColumnIndex(mapping.date);
+                const addressIndex = getColumnIndex(mapping.address);
+
+                let xPosition = Math.random() * 300;
+                let yPosition = Math.random() * 200;
+
+                const newNodes = rows.map((row, index) => {
+                  const nodeData = {
+                    type: typeIndex >= 0 ? 
+                      (row[typeIndex]?.toLowerCase() as NodeType) || 'person' : 
+                      'person',
+                    name: nameIndex >= 0 ? row[nameIndex] : `Node ${index + 1}`,
+                    profileUrl: profileIndex >= 0 ? row[profileIndex] : undefined,
+                    imageUrl: imageIndex >= 0 ? row[imageIndex] : undefined,
+                    date: dateIndex >= 0 ? row[dateIndex] : undefined,
+                    address: addressIndex >= 0 ? row[addressIndex] : undefined,
+                    todos: [],
+                  };
+
+                  return {
+                    id: `node-${Date.now()}-${index}`,
+                    type: 'social',
+                    position: { 
+                      x: xPosition + (index * 50), 
+                      y: yPosition + (index * 30)
+                    },
+                    data: nodeData,
+                  };
+                });
+
+                setNodes(nds => [...nds, ...newNodes]);
+                toast({
+                  title: "CSV imported",
+                  description: `Created ${newNodes.length} nodes from CSV`,
+                });
+              }}
+            />
+
+            {showChat && <NetworkChat />}
+            
+            <AddNodeDialog
+              open={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+              onSubmit={handleAddNode}
+            />
+
+            <TemplatesDialog 
+              open={isTemplatesOpen}
+              onOpenChange={setIsTemplatesOpen}
+              onSelect={handleTemplateSelect}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Flow;
