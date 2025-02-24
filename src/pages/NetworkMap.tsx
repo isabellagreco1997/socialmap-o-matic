@@ -11,7 +11,6 @@ import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-
 type Network = Database['public']['Tables']['networks']['Row'];
 type NodeData = {
   type: "person" | "organization" | "event" | "venue";
@@ -21,7 +20,6 @@ type NodeData = {
   date?: string;
   address?: string;
 };
-
 const CustomEdge = ({
   id,
   sourceX,
@@ -111,7 +109,6 @@ const CustomEdge = ({
       </Dialog>
     </>;
 };
-
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [currentNetworkId, setCurrentNetworkId] = useState<string | null>(null);
@@ -122,7 +119,6 @@ export const Flow = () => {
     toast
   } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
@@ -148,7 +144,6 @@ export const Flow = () => {
     };
     fetchNetworks();
   }, [currentNetworkId, toast]);
-
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
@@ -198,7 +193,6 @@ export const Flow = () => {
     };
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
-
   const onConnect = useCallback(async (connection: Connection) => {
     if (!currentNetworkId || !connection.source || !connection.target) return;
     try {
@@ -235,7 +229,6 @@ export const Flow = () => {
       });
     }
   }, [currentNetworkId, setEdges, toast]);
-
   const createNewNetwork = async () => {
     try {
       const {
@@ -267,7 +260,6 @@ export const Flow = () => {
       });
     }
   };
-
   const handleDeleteNetwork = async () => {
     if (!currentNetworkId) return;
     try {
@@ -295,7 +287,6 @@ export const Flow = () => {
       });
     }
   };
-
   const handleAddNode = async (nodeData: {
     data: NodeData;
   }) => {
@@ -342,11 +333,10 @@ export const Flow = () => {
       });
     }
   };
-
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
-          <SidebarContent className="w-[350px] border-r bg-white flex flex-col">
+          <SidebarContent className="w-[240px] border-r bg-white flex flex-col">
             <div className="p-6 flex items-center justify-between border-b">
               <h2 className="font-bold text-sm">Your Networks</h2>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -439,5 +429,4 @@ export const Flow = () => {
       </div>
     </SidebarProvider>;
 };
-
 export default Flow;
