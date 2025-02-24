@@ -9,308 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      cois: {
-        Row: {
-          contact_info: string | null
-          created_at: string
-          id: string
-          industry: string | null
-          last_contact: string | null
-          name: string
-          notes: string | null
-          type: string
-          user_id: string | null
-        }
-        Insert: {
-          contact_info?: string | null
-          created_at?: string
-          id?: string
-          industry?: string | null
-          last_contact?: string | null
-          name: string
-          notes?: string | null
-          type: string
-          user_id?: string | null
-        }
-        Update: {
-          contact_info?: string | null
-          created_at?: string
-          id?: string
-          industry?: string | null
-          last_contact?: string | null
-          name?: string
-          notes?: string | null
-          type?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      forum_comments: {
-        Row: {
-          author_id: string | null
-          content: string
-          created_at: string
-          id: string
-          post_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          content: string
-          created_at?: string
-          id?: string
-          post_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          content?: string
-          created_at?: string
-          id?: string
-          post_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_comments_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_posts: {
-        Row: {
-          author_id: string | null
-          category: string
-          content: string
-          created_at: string
-          id: string
-          likes: number | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          category: string
-          content: string
-          created_at?: string
-          id?: string
-          likes?: number | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          category?: string
-          content?: string
-          created_at?: string
-          id?: string
-          likes?: number | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_posts_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hotspots: {
-        Row: {
-          contact_info: string | null
-          created_at: string
-          description: string | null
-          id: string
-          location: string | null
-          name: string
-          notes: string | null
-          type: string
-          user_id: string | null
-          website: string | null
-        }
-        Insert: {
-          contact_info?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          location?: string | null
-          name: string
-          notes?: string | null
-          type: string
-          user_id?: string | null
-          website?: string | null
-        }
-        Update: {
-          contact_info?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          location?: string | null
-          name?: string
-          notes?: string | null
-          type?: string
-          user_id?: string | null
-          website?: string | null
-        }
-        Relationships: []
-      }
-      lead_hotspots: {
-        Row: {
-          created_at: string
-          hotspot_id: string | null
-          id: string
-          lead_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          hotspot_id?: string | null
-          id?: string
-          lead_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          hotspot_id?: string | null
-          id?: string
-          lead_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lead_hotspots_hotspot_id_fkey"
-            columns: ["hotspot_id"]
-            isOneToOne: false
-            referencedRelation: "hotspots"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_hotspots_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       leads: {
         Row: {
-          city: string | null
-          contact: string | null
-          country: string | null
+          agreed_to_terms: boolean
           created_at: string
-          estimated_wealth: number | null
+          email: string
           first_name: string
-          frequented_hotspots: number | null
           id: string
-          last_contact: string | null
+          investment_value: number
           last_name: string
-          misc: string | null
-          notes: string | null
-          user_id: string | null
+          phone: string
+          postcode: string
+          updated_at: string
         }
         Insert: {
-          city?: string | null
-          contact?: string | null
-          country?: string | null
+          agreed_to_terms?: boolean
           created_at?: string
-          estimated_wealth?: number | null
+          email: string
           first_name: string
-          frequented_hotspots?: number | null
           id?: string
-          last_contact?: string | null
+          investment_value: number
           last_name: string
-          misc?: string | null
-          notes?: string | null
-          user_id?: string | null
+          phone: string
+          postcode: string
+          updated_at?: string
         }
         Update: {
-          city?: string | null
-          contact?: string | null
-          country?: string | null
+          agreed_to_terms?: boolean
           created_at?: string
-          estimated_wealth?: number | null
+          email?: string
           first_name?: string
-          frequented_hotspots?: number | null
           id?: string
-          last_contact?: string | null
+          investment_value?: number
           last_name?: string
-          misc?: string | null
-          notes?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      "Private Members' Club": {
-        Row: {
-          contact_email: string | null
-          contact_phone: string | null
-          created_at: string
-          id: number
-          location: string | null
-          membership_fee: number | null
-          name: string | null
-          type: string | null
-          website: string | null
-        }
-        Insert: {
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          id?: number
-          location?: string | null
-          membership_fee?: number | null
-          name?: string | null
-          type?: string | null
-          website?: string | null
-        }
-        Update: {
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          id?: number
-          location?: string | null
-          membership_fee?: number | null
-          name?: string | null
-          type?: string | null
-          website?: string | null
-        }
-        Relationships: []
-      }
-      private_messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          read_at: string | null
-          recipient_id: string | null
-          sender_id: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          read_at?: string | null
-          recipient_id?: string | null
-          sender_id?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          read_at?: string | null
-          recipient_id?: string | null
-          sender_id?: string | null
+          phone?: string
+          postcode?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -318,92 +52,29 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
-          created_at: string
-          full_name: string | null
+          created_at: string | null
           id: string
-          industry: string | null
+          interests: string[] | null
           location: string | null
-          updated_at: string
-          username: string | null
+          name: string
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
-          created_at?: string
-          full_name?: string | null
+          created_at?: string | null
           id: string
-          industry?: string | null
+          interests?: string[] | null
           location?: string | null
-          updated_at?: string
-          username?: string | null
+          name: string
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
-          created_at?: string
-          full_name?: string | null
+          created_at?: string | null
           id?: string
-          industry?: string | null
+          interests?: string[] | null
           location?: string | null
-          updated_at?: string
-          username?: string | null
-        }
-        Relationships: []
-      }
-      research_entries: {
-        Row: {
-          content: string | null
-          created_at: string
-          headline: string
-          id: string
-          source: string | null
-          tags: string[] | null
-          url: string | null
-          user_id: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string
-          headline: string
-          id?: string
-          source?: string | null
-          tags?: string[] | null
-          url?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string
-          headline?: string
-          id?: string
-          source?: string | null
-          tags?: string[] | null
-          url?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      research_reports: {
-        Row: {
-          created_at: string
-          file_path: string
-          id: string
-          thumbnail_path: string | null
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          file_path: string
-          id?: string
-          thumbnail_path?: string | null
-          title: string
-        }
-        Update: {
-          created_at?: string
-          file_path?: string
-          id?: string
-          thumbnail_path?: string | null
-          title?: string
+          name?: string
         }
         Relationships: []
       }
