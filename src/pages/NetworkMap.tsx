@@ -373,10 +373,34 @@ export const Flow = () => {
               </div>
 
               <div className="h-[calc(100vh-450px)] overflow-y-auto mt-4 space-y-2">
-                {networks.map(network => <Button key={network.id} variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
-                    <Grid className="h-5 w-5" />
-                    {network.name}
-                  </Button>)}
+                {networks.map(network => (
+                  <div key={network.id} className="group relative">
+                    <Button 
+                      variant={network.id === currentNetworkId ? "default" : "ghost"} 
+                      className={`w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
+                      onClick={() => setCurrentNetworkId(network.id)}
+                    >
+                      <Grid className="h-5 w-5" />
+                      {network.name}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (network.id === currentNetworkId) {
+                          handleDeleteNetwork();
+                        } else {
+                          setCurrentNetworkId(network.id);
+                          handleDeleteNetwork();
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
 
