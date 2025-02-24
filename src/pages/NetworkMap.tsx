@@ -346,7 +346,7 @@ export const Flow = () => {
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
-          <SidebarContent className="w-[260px] border-r bg-white flex flex-col">
+          <SidebarContent className="w-[260px] border-r bg-white flex flex-col h-screen overflow-hidden">
             <div className="p-6 flex items-center justify-between border-b">
               <h2 className="font-bold text-sm">Your Networks</h2>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -354,7 +354,7 @@ export const Flow = () => {
               </Button>
             </div>
 
-            <div className="flex-1 p-4 flex flex-col h-full">
+            <div className="p-4">
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
                   <PlusIcon className="h-5 w-5" />
@@ -372,7 +372,7 @@ export const Flow = () => {
                 </Button>
               </div>
 
-              <div className="pt-4 space-y-2 flex-1 overflow-y-auto">
+              <div className="h-[calc(100vh-450px)] overflow-y-auto mt-4 space-y-2">
                 {networks.map(network => <Button key={network.id} variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
                     <Grid className="h-5 w-5" />
                     {network.name}
@@ -380,7 +380,7 @@ export const Flow = () => {
               </div>
             </div>
 
-            <div className="border-t p-6 space-y-2 px-[24px] py-[10px]">
+            <div className="border-t mt-auto p-6 space-y-2 px-[24px] py-[10px]">
               <h3 className="text-sm font-bold mb-4">Discover</h3>
               <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
                 <Library className="h-5 w-5" />
