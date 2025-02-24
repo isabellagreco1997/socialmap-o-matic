@@ -12,11 +12,8 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getBezierPath,
-  useReactFlow,
   EdgeProps,
   Position,
-  Edge,
-  Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -26,6 +23,9 @@ import {
   PlusIcon,
   MessageSquare,
   LayoutGrid,
+  Building2,
+  Users,
+  Network,
   ChevronLeft,
 } from 'lucide-react';
 import {
@@ -33,14 +33,19 @@ import {
   SidebarContent,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Network = Database['public']['Tables']['networks']['Row'];
-type NetworkNode = Database['public']['Tables']['nodes']['Row'];
-type NetworkEdge = Database['public']['Tables']['edges']['Row'];
 type NodeData = {
   type: "person" | "organization" | "event" | "venue";
   name: string;
@@ -49,6 +54,10 @@ type NodeData = {
   date?: string;
   address?: string;
 };
+
+interface EdgeData {
+  label?: string;
+}
 
 const CustomEdge = ({
   id,
@@ -61,7 +70,7 @@ const CustomEdge = ({
   style = {},
   markerEnd,
   data,
-}: EdgeProps) => {
+}: EdgeProps<EdgeData>) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -92,6 +101,24 @@ const CustomEdge = ({
     </>
   );
 };
+
+const NetworkTemplates = [
+  {
+    title: "Business Ecosystem",
+    description: "Map your business partnerships and collaborations",
+    icon: Building2,
+  },
+  {
+    title: "Partnership Mapping",
+    description: "Visualize strategic partnerships and alliances",
+    icon: Network,
+  },
+  {
+    title: "Referral Program",
+    description: "Track and nurture your referral network",
+    icon: Users,
+  },
+];
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -373,15 +400,6 @@ export const Flow = () => {
                 </Button>
               </div>
 
-              <Button 
-                variant="secondary" 
-                className="w-full gap-2"
-                onClick={createNewNetwork}
-              >
-                <PlusIcon className="h-4 w-4" />
-                Create Network
-              </Button>
-
               <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
@@ -427,42 +445,61 @@ export const Flow = () => {
         </Sidebar>
 
         <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h1 className="text-xl font-semibold">
-              {networks.find(n => n.id === currentNetworkId)?.name || 'Select Network'}
-            </h1>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Add Node
-            </Button>
+          <div className="p-6">
+            <h1 className="text-2xl font-bold mb-6">Business Development</h1>
+            
+            <div className="grid grid-cols-3 gap-6">
+              {NetworkTemplates.map((template) => (
+                <Card key={template.title} className="cursor-pointer hover:bg-accent transition-colors">
+                  <CardHeader>
+                    {currentNetworkId ? (
+                      <div className="mb-2">
+                        <ReactFlowProvider>
+                          <div className="h-[150px] border rounded-lg overflow-hidden bg-background/50">
+                            <ReactFlow
+                              nodes={nodes}
+                              edges={edges}
+                              nodeTypes={{ social: SocialNode }}
+                              edgeTypes={{ custom: CustomEdge }}
+                              onNodesChange={onNodesChange}
+                              onEdgesChange={onEdgesChange}
+                              onConnect={onConnect}
+                              fitView
+                            >
+                              <Background />
+                            </ReactFlow>
+                          </div>
+                        </ReactFlowProvider>
+                      </div>
+                    ) : (
+                      <div className="h-[150px] border rounded-lg overflow-hidden bg-background/50 flex items-center justify-center">
+                        <template.icon className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <CardTitle className="text-lg mb-2">{template.title}</CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {currentNetworkId && (
+              <div className="mt-6">
+                <Button onClick={() => setIsDialogOpen(true)}>
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add Node
+                </Button>
+              </div>
+            )}
           </div>
 
-          <div className="flex-1">
-            <ReactFlowProvider>
-              <div className="h-full">
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  nodeTypes={{ social: SocialNode }}
-                  edgeTypes={{ custom: CustomEdge }}
-                  fitView
-                >
-                  <Background />
-                  <Controls />
-                </ReactFlow>
-                <AddNodeDialog
-                  open={isDialogOpen}
-                  onOpenChange={setIsDialogOpen}
-                  onSave={handleAddNode}
-                />
-              </div>
-            </ReactFlowProvider>
-          </div>
+          <AddNodeDialog
+            open={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            onSave={handleAddNode}
+          />
         </div>
       </div>
     </SidebarProvider>
