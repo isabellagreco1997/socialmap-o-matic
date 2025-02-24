@@ -1,4 +1,3 @@
-
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -1069,12 +1068,17 @@ export const Flow = () => {
               }}
             />
 
-            {showChat && <NetworkChat />}
+            {showChat && (
+              <NetworkChat 
+                show={showChat} 
+                onClose={() => setShowChat(false)}
+              />
+            )}
             
             <AddNodeDialog
               open={isDialogOpen}
               onOpenChange={setIsDialogOpen}
-              onSubmit={handleAddNode}
+              onSave={handleAddNode}
             />
 
             <TemplatesDialog 
