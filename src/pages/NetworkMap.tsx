@@ -355,10 +355,13 @@ export const Flow = () => {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-      const headers = lines[0].split(',').map(header => header.trim());
+      const headers = lines[0].split('\t').map(header => header.trim());
       const dataRows = lines.slice(1)
-        .map(row => row.split(',').map(cell => cell.trim()))
+        .map(row => row.split('\t').map(cell => cell.trim()))
         .filter(row => row.length === headers.length);
+      
+      console.log('Parsed Headers:', headers);
+      console.log('Parsed Data Rows:', dataRows);
       
       setCsvHeaders(headers);
       setCsvRows(dataRows);
@@ -382,60 +385,71 @@ export const Flow = () => {
       console.log('CSV Headers:', csvHeaders);
       console.log('CSV Rows:', csvRows);
 
+      if (!columnMapping.name) {
+        toast({
+          variant: "destructive",
+          title: "Import Error",
+          description: "Please map the Name column"
+        });
+        return;
+      }
+
       const nodesToAdd = csvRows.map((row, index) => {
-        const nameIdx = columnMapping.name ? csvHeaders.indexOf(columnMapping.name) : -1;
+        const nameIdx = csvHeaders.indexOf(columnMapping.name!);
         const typeIdx = columnMapping.type ? csvHeaders.indexOf(columnMapping.type) : -1;
         const profileIdx = columnMapping.profile ? csvHeaders.indexOf(columnMapping.profile) : -1;
         const imageIdx = columnMapping.image ? csvHeaders.indexOf(columnMapping.image) : -1;
         const dateIdx = columnMapping.date ? csvHeaders.indexOf(columnMapping.date) : -1;
         const addressIdx = columnMapping.address ? csvHeaders.indexOf(columnMapping.address) : -1;
 
+        const gridCols = Math.ceil(Math.sqrt(csvRows.length));
+        const xPos = (index % gridCols) * 200 + 100;
+        const yPos = Math.floor(index / gridCols) * 200 + 100;
+
         return {
           network_id: currentNetworkId,
-          name: nameIdx >= 0 ? row[nameIdx] : `Node ${index + 1}`,
-          type: typeIdx >= 0 ? row[typeIdx] : 'person',
+          name: row[nameIdx],
+          type: typeIdx >= 0 ? row[typeIdx].toLowerCase() : 'person',
           profile_url: profileIdx >= 0 ? row[profileIdx] : null,
           image_url: imageIdx >= 0 ? row[imageIdx] : null,
           date: dateIdx >= 0 ? row[dateIdx] : null,
           address: addressIdx >= 0 ? row[addressIdx] : null,
-          x_position: Math.random() * 800,
-          y_position: Math.random() * 600
+          x_position: xPos,
+          y_position: yPos
         };
       });
 
       console.log('Preparing to insert nodes:', nodesToAdd);
 
-      for (const nodeData of nodesToAdd) {
-        const { data: newNode, error } = await supabase
-          .from('nodes')
-          .insert([nodeData])
-          .select()
-          .single();
+      const { data: newNodes, error } = await supabase
+        .from('nodes')
+        .insert(nodesToAdd)
+        .select();
 
-        if (error) {
-          console.error('Error inserting node:', error);
-          continue;
-        }
+      if (error) {
+        throw error;
+      }
 
-        console.log('Successfully inserted node:', newNode);
-
-        setNodes(prev => [...prev, {
-          id: newNode.id,
+      if (newNodes) {
+        const formattedNodes = newNodes.map(node => ({
+          id: node.id,
           type: 'social',
           position: {
-            x: newNode.x_position,
-            y: newNode.y_position
+            x: node.x_position,
+            y: node.y_position
           },
           data: {
-            type: newNode.type,
-            name: newNode.name,
-            profileUrl: newNode.profile_url,
-            imageUrl: newNode.image_url,
-            date: newNode.date,
-            address: newNode.address,
+            type: node.type,
+            name: node.name,
+            profileUrl: node.profile_url,
+            imageUrl: node.image_url,
+            date: node.date,
+            address: node.address,
             todos: []
           }
-        }]);
+        }));
+
+        setNodes(prev => [...prev, ...formattedNodes]);
       }
 
       toast({
