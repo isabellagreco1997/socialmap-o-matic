@@ -123,3 +123,31 @@
 [data-sidebar="trigger"][data-state="collapsed"] svg {
   @apply rotate-180;
 }
+
+[data-sidebar="menu"] {
+  @apply space-y-0.5;
+}
+
+[data-sidebar="menu-button"] {
+  @apply text-[13px] font-medium;
+}
+
+[data-sidebar="group"] {
+  @apply p-1.5;
+}
+
+[data-sidebar="group-label"] {
+  @apply px-2 py-1.5 text-[11px] font-semibold tracking-wide uppercase text-muted-foreground;
+}
+
+[data-sidebar="menu-button"] svg {
+  @apply w-[18px] h-[18px] opacity-70;
+}
+
+[data-sidebar="menu-button"]:hover svg {
+  @apply opacity-100;
+}
+
+[data-sidebar="sidebar"] {
+  @apply bg-background text-foreground;
+}
