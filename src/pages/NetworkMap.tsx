@@ -354,7 +354,7 @@ export const Flow = () => {
               </Button>
             </div>
 
-            <div className="p-4">
+            <div className="p-4 space-y-4">
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
                   <PlusIcon className="h-5 w-5" />
@@ -372,8 +372,8 @@ export const Flow = () => {
                 </Button>
               </div>
 
-              <div className="border-t mt-4 pt-4 -mx-4 px-4">
-                <div className="h-[calc(100vh-450px)] overflow-y-auto space-y-2">
+              <div className="border-t -mx-4 px-4">
+                <div className="pt-4 h-[calc(100vh-450px)] overflow-y-auto space-y-2">
                   {networks.map(network => (
                     <div key={network.id} className="group relative">
                       <Button 
