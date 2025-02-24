@@ -965,6 +965,83 @@ export const Flow = () => {
                   <PlusIcon className="h-4 w-4" />
                   Add Node
                 </Button>
+                <label htmlFor="csv-upload" className="flex items-center gap-2">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Import CSV
+                  </Button>
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const csvText = event.target?.result as string;
+                          const lines = csvText.split('\n');
+                          const headers = lines[0].split(',').map(header => header.trim());
+                          
+                          const nameIndex = headers.findIndex(h => 
+                            h.toLowerCase().includes('name') || 
+                            h.toLowerCase().includes('title')
+                          );
+                          const typeIndex = headers.findIndex(h => h.toLowerCase().includes('type'));
+                          const profileIndex = headers.findIndex(h => h.toLowerCase().includes('profile'));
+                          const imageIndex = headers.findIndex(h => h.toLowerCase().includes('image'));
+                          const dateIndex = headers.findIndex(h => h.toLowerCase().includes('date'));
+                          const addressIndex = headers.findIndex(h => h.toLowerCase().includes('address'));
+
+                          // Skip header row
+                          const dataRows = lines.slice(1);
+                          
+                          let xPosition = Math.random() * 300;
+                          let yPosition = Math.random() * 200;
+                          
+                          dataRows.forEach((row, index) => {
+                            if (!row.trim()) return; // Skip empty rows
+                            
+                            const columns = row.split(',').map(col => col.trim());
+                            
+                            const nodeData = {
+                              type: typeIndex >= 0 ? 
+                                (columns[typeIndex].toLowerCase() as NodeType) || 'person' : 
+                                'person',
+                              name: nameIndex >= 0 ? columns[nameIndex] : `Node ${index + 1}`,
+                              profileUrl: profileIndex >= 0 ? columns[profileIndex] : undefined,
+                              imageUrl: imageIndex >= 0 ? columns[imageIndex] : undefined,
+                              date: dateIndex >= 0 ? columns[dateIndex] : undefined,
+                              address: addressIndex >= 0 ? columns[addressIndex] : undefined,
+                            };
+
+                            // Create node with offset position for each row
+                            const newNode = {
+                              id: `node-${Date.now()}-${index}`,
+                              type: 'social',
+                              position: { 
+                                x: xPosition + (index * 50), 
+                                y: yPosition + (index * 30)
+                              },
+                              data: nodeData,
+                            };
+
+                            setNodes((nds) => [...nds, newNode]);
+                          });
+
+                          toast({
+                            title: "CSV imported",
+                            description: `Created ${dataRows.length} nodes from CSV`,
+                          });
+                        };
+                        reader.readAsText(file);
+                        // Reset the input
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </label>
                 <Button 
                   variant="outline"
                   onClick={() => setShowTodos(!showTodos)} 
