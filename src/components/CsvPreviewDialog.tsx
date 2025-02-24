@@ -44,6 +44,27 @@ export function CsvPreviewDialog({
         </DialogHeader>
 
         <div className="space-y-6">
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {headers.map((header) => (
+                    <TableHead key={header}>{header}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.slice(0, 5).map((row, i) => (
+                  <TableRow key={i}>
+                    {row.map((cell, j) => (
+                      <TableCell key={j}>{cell}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Name Column</label>
@@ -158,27 +179,6 @@ export function CsvPreviewDialog({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headers.map((header) => (
-                    <TableHead key={header}>{header}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.slice(0, 5).map((row, i) => (
-                  <TableRow key={i}>
-                    {row.map((cell, j) => (
-                      <TableCell key={j}>{cell}</TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </div>
 
           <div className="flex justify-end gap-2">
