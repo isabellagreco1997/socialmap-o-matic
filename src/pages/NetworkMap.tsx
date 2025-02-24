@@ -1000,39 +1000,40 @@ export const Flow = () => {
                           let xPosition = Math.random() * 300;
                           let yPosition = Math.random() * 200;
                           
-                          dataRows.forEach((row, index) => {
-                            if (!row.trim()) return; // Skip empty rows
-                            
-                            const columns = row.split(',').map(col => col.trim());
-                            
-                            const nodeData = {
-                              type: typeIndex >= 0 ? 
-                                (columns[typeIndex].toLowerCase() as NodeType) || 'person' : 
-                                'person',
-                              name: nameIndex >= 0 ? columns[nameIndex] : `Node ${index + 1}`,
-                              profileUrl: profileIndex >= 0 ? columns[profileIndex] : undefined,
-                              imageUrl: imageIndex >= 0 ? columns[imageIndex] : undefined,
-                              date: dateIndex >= 0 ? columns[dateIndex] : undefined,
-                              address: addressIndex >= 0 ? columns[addressIndex] : undefined,
-                            };
+                          const newNodes = dataRows
+                            .filter(row => row.trim()) // Filter out empty rows
+                            .map((row, index) => {
+                              const columns = row.split(',').map(col => col.trim());
+                              
+                              const nodeData = {
+                                type: typeIndex >= 0 ? 
+                                  (columns[typeIndex]?.toLowerCase() as NodeType) || 'person' : 
+                                  'person',
+                                name: nameIndex >= 0 ? columns[nameIndex] : `Node ${index + 1}`,
+                                profileUrl: profileIndex >= 0 ? columns[profileIndex] : undefined,
+                                imageUrl: imageIndex >= 0 ? columns[imageIndex] : undefined,
+                                date: dateIndex >= 0 ? columns[dateIndex] : undefined,
+                                address: addressIndex >= 0 ? columns[addressIndex] : undefined,
+                                todos: [],
+                              };
 
-                            // Create node with offset position for each row
-                            const newNode = {
-                              id: `node-${Date.now()}-${index}`,
-                              type: 'social',
-                              position: { 
-                                x: xPosition + (index * 50), 
-                                y: yPosition + (index * 30)
-                              },
-                              data: nodeData,
-                            };
+                              return {
+                                id: `node-${Date.now()}-${index}`,
+                                type: 'social',
+                                position: { 
+                                  x: xPosition + (index * 50), 
+                                  y: yPosition + (index * 30)
+                                },
+                                data: nodeData,
+                              };
+                            });
 
-                            setNodes((nds) => [...nds, newNode]);
-                          });
+                          // Update nodes state once with all new nodes
+                          setNodes(nds => [...nds, ...newNodes]);
 
                           toast({
                             title: "CSV imported",
-                            description: `Created ${dataRows.length} nodes from CSV`,
+                            description: `Created ${newNodes.length} nodes from CSV`,
                           });
                         };
                         reader.readAsText(file);
