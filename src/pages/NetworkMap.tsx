@@ -336,7 +336,7 @@ export const Flow = () => {
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
-          <SidebarContent className="w-[240px] border-r bg-white flex flex-col">
+          <SidebarContent className="w-[260px] border-r bg-white flex flex-col">
             <div className="p-6 flex items-center justify-between border-b">
               <h2 className="font-bold text-sm">Your Networks</h2>
               <Button variant="ghost" size="icon" className="h-8 w-8">
