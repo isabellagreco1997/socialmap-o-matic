@@ -11,6 +11,7 @@ import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+
 type Network = Database['public']['Tables']['networks']['Row'];
 type NodeData = {
   type: "person" | "organization" | "event" | "venue";
@@ -20,6 +21,7 @@ type NodeData = {
   date?: string;
   address?: string;
 };
+
 const CustomEdge = ({
   id,
   sourceX,
@@ -109,6 +111,7 @@ const CustomEdge = ({
       </Dialog>
     </>;
 };
+
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [currentNetworkId, setCurrentNetworkId] = useState<string | null>(null);
@@ -119,6 +122,7 @@ export const Flow = () => {
     toast
   } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
@@ -144,6 +148,7 @@ export const Flow = () => {
     };
     fetchNetworks();
   }, [currentNetworkId, toast]);
+
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
@@ -193,6 +198,7 @@ export const Flow = () => {
     };
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
+
   const onConnect = useCallback(async (connection: Connection) => {
     if (!currentNetworkId || !connection.source || !connection.target) return;
     try {
@@ -229,6 +235,7 @@ export const Flow = () => {
       });
     }
   }, [currentNetworkId, setEdges, toast]);
+
   const createNewNetwork = async () => {
     try {
       const {
@@ -260,6 +267,7 @@ export const Flow = () => {
       });
     }
   };
+
   const handleDeleteNetwork = async () => {
     if (!currentNetworkId) return;
     try {
@@ -287,6 +295,7 @@ export const Flow = () => {
       });
     }
   };
+
   const handleAddNode = async (nodeData: {
     data: NodeData;
   }) => {
@@ -333,35 +342,36 @@ export const Flow = () => {
       });
     }
   };
+
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
           <SidebarContent className="w-[350px] border-r bg-white flex flex-col">
             <div className="p-6 flex items-center justify-between border-b">
-              <h2 className="font-bold text-base">Your Networks</h2>
+              <h2 className="font-bold text-sm">Your Networks</h2>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </div>
 
             <div className="flex-1 p-4 space-y-3 py-0">
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base font-medium rounded-lg" onClick={createNewNetwork}>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
                 <PlusIcon className="h-5 w-5" />
                 Create Network
               </Button>
 
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base rounded-lg font-medium">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm rounded-lg font-medium">
                 <LayoutGrid className="h-5 w-5" />
                 Overview
               </Button>
 
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base font-medium rounded-lg">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg">
                 <MessageSquare className="h-5 w-5" />
                 AI Chat
               </Button>
 
               <div className="pt-4 space-y-2">
-                {networks.map(network => <Button key={network.id} variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-12 text-base font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
+                {networks.map(network => <Button key={network.id} variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-12 text-sm font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
                     <Grid className="h-5 w-5" />
                     {network.name}
                   </Button>)}
@@ -369,16 +379,16 @@ export const Flow = () => {
             </div>
 
             <div className="border-t p-6 space-y-3 px-[24px] py-[10px]">
-              <h3 className="text-2xl font-bold mb-4">Discover</h3>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-base font-medium">
+              <h3 className="text-sm font-bold mb-4">Discover</h3>
+              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
                 <Library className="h-5 w-5" />
                 Templates
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-base font-medium">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
                 <Globe className="h-5 w-5" />
                 Resources
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-base font-medium">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
                 <Users className="h-5 w-5" />
                 Community
               </Button>
@@ -429,4 +439,5 @@ export const Flow = () => {
       </div>
     </SidebarProvider>;
 };
+
 export default Flow;
