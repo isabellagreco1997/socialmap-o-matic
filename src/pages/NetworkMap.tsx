@@ -965,16 +965,12 @@ export const Flow = () => {
                   <PlusIcon className="h-4 w-4" />
                   Add Node
                 </Button>
-                <label htmlFor="csv-upload" className="flex items-center gap-2">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Import CSV
-                  </Button>
+                <div className="relative">
                   <input
                     id="csv-upload"
                     type="file"
                     accept=".csv"
-                    className="hidden"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
@@ -1042,7 +1038,11 @@ export const Flow = () => {
                       }
                     }}
                   />
-                </label>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Import CSV
+                  </Button>
+                </div>
                 <Button 
                   variant="outline"
                   onClick={() => setShowTodos(!showTodos)} 
