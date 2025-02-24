@@ -1,3 +1,4 @@
+<lov-code>
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -36,11 +37,12 @@ import {
   ListChecks,
   MapPin,
   FileText,
-  Calendar,
+  Calendar as CalendarIcon,
   BookOpen,
   Globe,
   Users,
   X,
+  List,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -74,6 +76,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { Link } from 'react-router-dom';
 import { CsvPreviewDialog } from "@/components/CsvPreviewDialog";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 import type { AddNodeDialogProps } from '@/components/AddNodeDialog';
 
@@ -99,6 +103,7 @@ interface NodeData {
   date?: string;
   address?: string;
   todos?: TodoItem[];
+  notes?: string;
 }
 
 const CustomEdge = ({
@@ -284,6 +289,128 @@ interface FilteredTodoItem extends TodoItem {
   nodeName: string;
 }
 
+interface SidePanelProps {
+  currentNetwork: Network;
+  onClose: () => void;
+}
+
+const SidePanel = ({ currentNetwork, onClose }: SidePanelProps) => {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [tab, setTab] = useState<'tasks' | 'calendar' | 'notes'>('tasks');
+
+  return (
+    <div className="w-[400px] border-l bg-background/95 backdrop-blur p-4 flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-lg">{currentNetwork.name} Overview</h2>
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="border-b pb-2 mb-4">
+        <div className="flex gap-2">
+          <Button 
+            variant={tab === 'tasks' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setTab('tasks')}
+            className="flex gap-2"
+          >
+            <List className="h-4 w-4" />
+            Tasks
+          </Button>
+          <Button 
+            variant={tab === 'calendar' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setTab('calendar')}
+            className="flex gap-2"
+          >
+            <CalendarIcon className="h-4 w-4" />
+            Calendar
+          </Button>
+          <Button 
+            variant={tab === 'notes' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setTab('notes')}
+            className="flex gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Notes
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        {tab === 'tasks' && (
+          <div className="space-y-4">
+            {currentNetwork.nodes.map((node) => {
+              if (!node.data.todos?.length) return null;
+              return (
+                <Card key={node.id} className="p-4">
+                  <h3 className="font-medium mb-2">{node.data.name}</h3>
+                  <div className="space-y-2">
+                    {node.data.todos.map((todo) => (
+                      <div key={todo.id} className="flex items-start gap-2">
+                        <Checkbox id={todo.id} />
+                        <div className="flex-1">
+                          <label htmlFor={todo.id} className="text-sm">{todo.text}</label>
+                          {todo.dueDate && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <CalendarIcon className="h-3 w-3" />
+                              {format(new Date(todo.dueDate), 'PP')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {tab === 'calendar' && (
+          <div className="space-y-4">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className={cn("rounded-md border w-full")}
+            />
+            <div className="space-y-2">
+              {currentNetwork.nodes
+                .filter(node => node.data.date)
+                .map(node => (
+                  <Card key={node.id} className="p-4">
+                    <div className="font-medium">{node.data.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {format(new Date(node.data.date!), 'PPP')}
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {tab === 'notes' && (
+          <div className="space-y-4">
+            {currentNetwork.nodes
+              .filter(node => node.data.notes)
+              .map(node => (
+                <Card key={node.id} className="p-4">
+                  <div className="font-medium mb-2">{node.data.name}</div>
+                  <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {node.data.notes}
+                  </div>
+                </Card>
+              ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>(() => {
     const savedNetworks = localStorage.getItem('networks');
@@ -328,6 +455,7 @@ export const Flow = () => {
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'overdue'>('all');
   const [csvPreviewOpen, setCsvPreviewOpen] = useState(false);
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: string[][] } | null>(null);
+  const [showSidePanel, setShowSidePanel] = useState(false);
 
   const isSwitchingNetwork = useRef(false);
 
@@ -765,7 +893,7 @@ export const Flow = () => {
         </div>
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative flex">
         {showOverview ? (
           <div className="h-full p-8 overflow-y-auto">
             <div className="max-w-5xl mx-auto space-y-6">
@@ -829,268 +957,3 @@ export const Flow = () => {
                         .filter((node: { data: NodeData }) => 
                           node.data.type === 'event' || node.data.type === 'venue'
                         )
-                        .map((node: { id: string; data: NodeData }) => (
-                          <Card key={node.id} className="p-4 mb-4">
-                            <div className="flex items-start gap-3">
-                              {node.data.type === 'event' ? (
-                                <Calendar className="h-5 w-5 mt-1 text-muted-foreground" />
-                              ) : (
-                                <MapPin className="h-5 w-5 mt-1 text-muted-foreground" />
-                              )}
-                              <div className="flex-1 space-y-1">
-                                <div className="font-medium">{node.data.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {network.name}
-                                </div>
-                                {node.data.date && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="h-4 w-4" />
-                                    {formatDate(node.data.date)}
-                                  </div>
-                                )}
-                                {node.data.address && (
-                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <MapPin className="h-4 w-4" />
-                                    {node.data.address}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                    </div>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="notes" className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold">All Notes</h3>
-                  </div>
-                  {networks
-                    .filter(network => network.id !== 'overview')
-                    .map((network) => (
-                    <div key={network.id}>
-                      <h3 className="text-lg font-medium mb-4">{network.name}</h3>
-                      {network.nodes.map((node: any) => {
-                        if (!node.data.notes) return null;
-                        return (
-                          <Card key={node.id} className="p-4 mb-4">
-                            <div className="space-y-2">
-                              <div className="font-medium">{node.data.name}</div>
-                              <div className="text-sm text-muted-foreground mb-1">
-                                {network.name}
-                              </div>
-                              <div className="text-sm">{node.data.notes}</div>
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        ) : (
-          <>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              edgeTypes={edgeTypes}
-              fitView
-              minZoom={0.1}
-              maxZoom={4}
-              className="bg-dot-pattern"
-              elementsSelectable={true}
-              selectNodesOnDrag={false}
-              proOptions={{ hideAttribution: true }}
-              defaultEdgeOptions={{
-                type: 'custom',
-                zIndex: 0,
-                interactionWidth: 20,
-              }}
-            >
-              <Background />
-              <Controls />
-              
-              <Panel position="top-left" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex items-center gap-2 m-4">
-                {isEditingNetworkName ? (
-                  <form 
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSaveNetworkName();
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Input
-                      value={tempNetworkName}
-                      onChange={(e) => setTempNetworkName(e.target.value)}
-                      className="h-8 text-sm"
-                      autoFocus
-                      onBlur={handleSaveNetworkName}
-                    />
-                  </form>
-                ) : (
-                  <>
-                    <span className="font-semibold">{getCurrentNetwork()?.name || 'Network'}</span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onClick={handleStartEditingName}>
-                          <Edit2Icon className="mr-2 h-4 w-4" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={handleDeleteNetwork2}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Network
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
-              </Panel>
-
-              <Panel position="top-right" className="bg-background/95 p-2 rounded-lg shadow-lg backdrop-blur flex gap-2">
-                <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
-                  <PlusIcon className="h-4 w-4" />
-                  Add Node
-                </Button>
-                <div className="relative">
-                  <input
-                    id="csv-upload"
-                    type="file"
-                    accept=".csv"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const csvText = event.target?.result as string;
-                          const lines = csvText.split('\n');
-                          const headers = lines[0].split(',').map(header => header.trim());
-                          const rows = lines
-                            .slice(1)
-                            .filter(row => row.trim())
-                            .map(row => row.split(',').map(cell => cell.trim()));
-                          
-                          setCsvData({
-                            headers,
-                            rows,
-                          });
-                          setCsvPreviewOpen(true);
-                        };
-                        reader.readAsText(file);
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Import CSV
-                  </Button>
-                </div>
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowTodos(!showTodos)} 
-                  className="flex items-center gap-2"
-                >
-                  <CheckSquare className="h-4 w-4" />
-                  Tasks
-                </Button>
-              </Panel>
-            </ReactFlow>
-
-            <CsvPreviewDialog
-              open={csvPreviewOpen}
-              onOpenChange={setCsvPreviewOpen}
-              headers={csvData?.headers || []}
-              rows={csvData?.rows || []}
-              onConfirm={(mapping) => {
-                if (!csvData) return;
-
-                const { headers, rows } = csvData;
-                const getColumnIndex = (columnName?: string) => 
-                  columnName ? headers.indexOf(columnName) : -1;
-
-                const nameIndex = getColumnIndex(mapping.name);
-                const typeIndex = getColumnIndex(mapping.type);
-                const profileIndex = getColumnIndex(mapping.profile);
-                const imageIndex = getColumnIndex(mapping.image);
-                const dateIndex = getColumnIndex(mapping.date);
-                const addressIndex = getColumnIndex(mapping.address);
-
-                let xPosition = Math.random() * 300;
-                let yPosition = Math.random() * 200;
-
-                const newNodes = rows.map((row, index) => {
-                  const nodeData = {
-                    type: typeIndex >= 0 ? 
-                      (row[typeIndex]?.toLowerCase() as NodeType) || 'person' : 
-                      'person',
-                    name: nameIndex >= 0 ? row[nameIndex] : `Node ${index + 1}`,
-                    profileUrl: profileIndex >= 0 ? row[profileIndex] : undefined,
-                    imageUrl: imageIndex >= 0 ? row[imageIndex] : undefined,
-                    date: dateIndex >= 0 ? row[dateIndex] : undefined,
-                    address: addressIndex >= 0 ? row[addressIndex] : undefined,
-                    todos: [],
-                  };
-
-                  return {
-                    id: `node-${Date.now()}-${index}`,
-                    type: 'social',
-                    position: { 
-                      x: xPosition + (index * 50), 
-                      y: yPosition + (index * 30)
-                    },
-                    data: nodeData,
-                  };
-                });
-
-                setNodes(nds => [...nds, ...newNodes]);
-                toast({
-                  title: "CSV imported",
-                  description: `Created ${newNodes.length} nodes from CSV`,
-                });
-              }}
-            />
-
-            {showChat && (
-              <NetworkChat 
-                show={showChat} 
-                onClose={() => setShowChat(false)}
-              />
-            )}
-            
-            <AddNodeDialog
-              open={isDialogOpen}
-              onOpenChange={setIsDialogOpen}
-              onSave={handleAddNode}
-            />
-
-            <TemplatesDialog 
-              open={isTemplatesOpen}
-              onOpenChange={setIsTemplatesOpen}
-              onSelect={handleTemplateSelect}
-            />
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Flow;
