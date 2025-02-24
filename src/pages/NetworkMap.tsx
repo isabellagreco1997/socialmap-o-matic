@@ -385,17 +385,56 @@ export const Flow = () => {
           date: columnMapping.date ? row[csvHeaders.indexOf(columnMapping.date)] : undefined,
           address: columnMapping.address ? row[csvHeaders.indexOf(columnMapping.address)] : undefined,
         };
-        return nodeData;
+        return {
+          data: nodeData,
+          x_position: Math.random() * 800,
+          y_position: Math.random() * 600
+        };
       });
 
-      for (const nodeData of nodes) {
-        await handleAddNode({ data: nodeData });
+      for (const node of nodes) {
+        try {
+          const { data: newNode, error } = await supabase.from('nodes').insert([{
+            network_id: currentNetworkId,
+            type: node.data.type,
+            name: node.data.name,
+            profile_url: node.data.profileUrl,
+            image_url: node.data.imageUrl,
+            date: node.data.date,
+            address: node.data.address,
+            x_position: node.x_position,
+            y_position: node.y_position
+          }]).select().single();
+
+          if (error) throw error;
+
+          setNodes(prev => [...prev, {
+            id: newNode.id,
+            type: 'social',
+            position: {
+              x: newNode.x_position,
+              y: newNode.y_position
+            },
+            data: {
+              type: newNode.type,
+              name: newNode.name,
+              profileUrl: newNode.profile_url,
+              imageUrl: newNode.image_url,
+              date: newNode.date,
+              address: newNode.address,
+              todos: []
+            }
+          }]);
+        } catch (error) {
+          console.error('Error adding node:', error);
+        }
       }
 
       toast({
         title: "CSV Import Successful",
         description: `Imported ${nodes.length} nodes`,
       });
+      setIsCsvDialogOpen(false);
     } catch (error) {
       console.error('Error importing CSV:', error);
       toast({
