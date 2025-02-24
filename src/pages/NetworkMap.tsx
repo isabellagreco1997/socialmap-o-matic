@@ -19,28 +19,18 @@ import {
   Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
-import EdgeLabelDialog from '@/components/EdgeLabelDialog';
-import NetworkChat from '@/components/NetworkChat';
 import { Button } from "@/components/ui/button";
 import { 
-  PlusIcon, 
-  ChevronLeftIcon, 
-  ChevronRightIcon,
+  PlusIcon,
   MessageSquare,
-  MoreVertical,
+  LayoutGrid,
+  ChevronLeft,
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
-  SidebarTrigger,
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
@@ -51,7 +41,6 @@ import type { Database } from "@/integrations/supabase/types";
 type Network = Database['public']['Tables']['networks']['Row'];
 type NetworkNode = Database['public']['Tables']['nodes']['Row'];
 type NetworkEdge = Database['public']['Tables']['edges']['Row'];
-type NetworkTodo = Database['public']['Tables']['todos']['Row'];
 type NodeData = {
   type: "person" | "organization" | "event" | "venue";
   name: string;
@@ -60,12 +49,6 @@ type NodeData = {
   date?: string;
   address?: string;
 };
-
-interface EdgeData {
-  label?: string;
-  notes?: string;
-  labelPosition?: number;
-}
 
 const CustomEdge = ({
   id,
@@ -78,7 +61,7 @@ const CustomEdge = ({
   style = {},
   markerEnd,
   data,
-}: EdgeProps<EdgeData>) => {
+}: EdgeProps) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -116,7 +99,6 @@ export const Flow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -219,37 +201,6 @@ export const Flow = () => {
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
 
-  const createNewNetwork = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
-
-      const { data: network, error } = await supabase
-        .from('networks')
-        .insert([
-          { name: `Network ${networks.length + 1}`, user_id: user.id }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setNetworks(prev => [...prev, network]);
-      setCurrentNetworkId(network.id);
-      toast({
-        title: "Network created",
-        description: `Created ${network.name}`,
-      });
-    } catch (error) {
-      console.error('Error creating network:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create network",
-      });
-    }
-  };
-
   const onConnect = useCallback(
     async (connection: Connection) => {
       if (!currentNetworkId || !connection.source || !connection.target) return;
@@ -294,6 +245,37 @@ export const Flow = () => {
     },
     [currentNetworkId, setEdges, toast]
   );
+
+  const createNewNetwork = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data: network, error } = await supabase
+        .from('networks')
+        .insert([
+          { name: `Network ${networks.length + 1}`, user_id: user.id }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setNetworks(prev => [...prev, network]);
+      setCurrentNetworkId(network.id);
+      toast({
+        title: "Network created",
+        description: `Created ${network.name}`,
+      });
+    } catch (error) {
+      console.error('Error creating network:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create network",
+      });
+    }
+  };
 
   const handleDeleteNetwork = async () => {
     if (!currentNetworkId) return;
@@ -382,25 +364,50 @@ export const Flow = () => {
     <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
-          <SidebarContent className="w-[240px] p-4">
-            <div className="space-y-4">
+          <SidebarContent className="w-[240px] border-r">
+            <div className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Your Networks</h2>
+                <Button variant="ghost" size="icon">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </div>
+
               <Button 
                 variant="secondary" 
                 className="w-full gap-2"
                 onClick={createNewNetwork}
               >
                 <PlusIcon className="h-4 w-4" />
-                New Network
+                Create Network
               </Button>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  Tasks
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  AI Chat
+                </Button>
+              </div>
+
+              <div className="space-y-1 pt-4">
                 {networks.map((network) => (
                   <Button
                     key={network.id}
-                    variant={network.id === currentNetworkId ? "default" : "ghost"}
-                    className="w-full justify-start"
+                    variant={network.id === currentNetworkId ? "secondary" : "ghost"}
+                    className="w-full justify-start gap-2"
                     onClick={() => setCurrentNetworkId(network.id)}
                   >
+                    <LayoutGrid className="h-4 w-4" />
                     {network.name}
                   </Button>
                 ))}
@@ -419,38 +426,43 @@ export const Flow = () => {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex-1">
-          <ReactFlowProvider>
-            <div className="h-full">
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                nodeTypes={{ social: SocialNode }}
-                edgeTypes={{ custom: CustomEdge }}
-                fitView
-              >
-                <Background />
-                <Controls />
-                <Panel position="top-right">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setIsDialogOpen(true)}
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
-                </Panel>
-              </ReactFlow>
-              <AddNodeDialog
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                onSave={handleAddNode}
-              />
-            </div>
-          </ReactFlowProvider>
+        <div className="flex-1 flex flex-col">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h1 className="text-xl font-semibold">
+              {networks.find(n => n.id === currentNetworkId)?.name || 'Select Network'}
+            </h1>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Add Node
+            </Button>
+          </div>
+
+          <div className="flex-1">
+            <ReactFlowProvider>
+              <div className="h-full">
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  nodeTypes={{ social: SocialNode }}
+                  edgeTypes={{ custom: CustomEdge }}
+                  fitView
+                >
+                  <Background />
+                  <Controls />
+                </ReactFlow>
+                <AddNodeDialog
+                  open={isDialogOpen}
+                  onOpenChange={setIsDialogOpen}
+                  onSave={handleAddNode}
+                />
+              </div>
+            </ReactFlowProvider>
+          </div>
         </div>
       </div>
     </SidebarProvider>
