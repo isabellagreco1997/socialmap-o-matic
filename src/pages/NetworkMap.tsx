@@ -350,7 +350,7 @@ export const Flow = () => {
                 Create Network
               </Button>
 
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base font-medium rounded-lg">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base rounded-lg font-medium">
                 <LayoutGrid className="h-5 w-5" />
                 Overview
               </Button>
