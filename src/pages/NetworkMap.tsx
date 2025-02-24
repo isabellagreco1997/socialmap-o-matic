@@ -11,7 +11,6 @@ import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-
 type Network = Database['public']['Tables']['networks']['Row'];
 type NodeData = {
   type: "person" | "organization" | "event" | "venue";
@@ -21,7 +20,6 @@ type NodeData = {
   date?: string;
   address?: string;
 };
-
 const CustomEdge = ({
   id,
   sourceX,
@@ -111,7 +109,6 @@ const CustomEdge = ({
       </Dialog>
     </>;
 };
-
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [currentNetworkId, setCurrentNetworkId] = useState<string | null>(null);
@@ -122,7 +119,6 @@ export const Flow = () => {
     toast
   } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
@@ -148,7 +144,6 @@ export const Flow = () => {
     };
     fetchNetworks();
   }, [currentNetworkId, toast]);
-
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
@@ -198,7 +193,6 @@ export const Flow = () => {
     };
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
-
   const onConnect = useCallback(async (connection: Connection) => {
     if (!currentNetworkId || !connection.source || !connection.target) return;
     try {
@@ -235,7 +229,6 @@ export const Flow = () => {
       });
     }
   }, [currentNetworkId, setEdges, toast]);
-
   const createNewNetwork = async () => {
     try {
       const {
@@ -267,7 +260,6 @@ export const Flow = () => {
       });
     }
   };
-
   const handleDeleteNetwork = async () => {
     if (!currentNetworkId) return;
     try {
@@ -295,7 +287,6 @@ export const Flow = () => {
       });
     }
   };
-
   const handleAddNode = async (nodeData: {
     data: NodeData;
   }) => {
@@ -342,7 +333,6 @@ export const Flow = () => {
       });
     }
   };
-
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
@@ -354,7 +344,7 @@ export const Flow = () => {
               </Button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 py-[20px]">
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
                   <PlusIcon className="h-5 w-5" />
@@ -374,34 +364,23 @@ export const Flow = () => {
 
               <div className="border-t -mx-4 px-4">
                 <div className="pt-4 h-[calc(100vh-450px)] overflow-y-auto space-y-2">
-                  {networks.map(network => (
-                    <div key={network.id} className="group relative">
-                      <Button 
-                        variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                        className={`w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
-                        onClick={() => setCurrentNetworkId(network.id)}
-                      >
+                  {networks.map(network => <div key={network.id} className="group relative">
+                      <Button variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
                         <Grid className="h-5 w-5" />
                         {network.name}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-red-100 hover:text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (network.id === currentNetworkId) {
-                            handleDeleteNetwork();
-                          } else {
-                            setCurrentNetworkId(network.id);
-                            handleDeleteNetwork();
-                          }
-                        }}
-                      >
+                      <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-red-100 hover:text-red-600" onClick={e => {
+                    e.stopPropagation();
+                    if (network.id === currentNetworkId) {
+                      handleDeleteNetwork();
+                    } else {
+                      setCurrentNetworkId(network.id);
+                      handleDeleteNetwork();
+                    }
+                  }}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </div>
@@ -463,5 +442,4 @@ export const Flow = () => {
       </div>
     </SidebarProvider>;
 };
-
 export default Flow;
