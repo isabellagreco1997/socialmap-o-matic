@@ -1,4 +1,3 @@
-<lov-code>
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -957,3 +956,4 @@ export const Flow = () => {
                         .filter((node: { data: NodeData }) => 
                           node.data.type === 'event' || node.data.type === 'venue'
                         )
+                        .map
