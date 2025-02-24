@@ -134,9 +134,19 @@ const SocialNode = ({ id, data }: { id: string; data: NodeData }) => {
 
   return (
     <>
-      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur">
-        <Handle type="target" position={Position.Left} className="!bg-primary !w-3 !h-3" />
+      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur relative">
+        {/* Add handles on all sides */}
+        <Handle type="target" position={Position.Top} className="!bg-primary !w-3 !h-3" />
+        <Handle type="source" position={Position.Top} className="!bg-primary !w-3 !h-3" />
+        
+        <Handle type="target" position={Position.Right} className="!bg-primary !w-3 !h-3" />
         <Handle type="source" position={Position.Right} className="!bg-primary !w-3 !h-3" />
+        
+        <Handle type="target" position={Position.Bottom} className="!bg-primary !w-3 !h-3" />
+        <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3" />
+        
+        <Handle type="target" position={Position.Left} className="!bg-primary !w-3 !h-3" />
+        <Handle type="source" position={Position.Left} className="!bg-primary !w-3 !h-3" />
         
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
