@@ -354,9 +354,11 @@ export const Flow = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
-      const headers = rows[0];
-      const dataRows = rows.slice(1).filter(row => row.length === headers.length);
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      const headers = lines[0].split(',').map(header => header.trim());
+      const dataRows = lines.slice(1)
+        .map(row => row.split(',').map(cell => cell.trim()))
+        .filter(row => row.length === headers.length);
       
       setCsvHeaders(headers);
       setCsvRows(dataRows);
@@ -376,63 +378,69 @@ export const Flow = () => {
     if (!currentNetworkId) return;
 
     try {
-      const nodes = csvRows.map(row => {
-        const nodeData: NodeData = {
-          type: (columnMapping.type ? row[csvHeaders.indexOf(columnMapping.type)] : 'person') as NodeData['type'],
-          name: columnMapping.name ? row[csvHeaders.indexOf(columnMapping.name)] : 'Unnamed',
-          profileUrl: columnMapping.profile ? row[csvHeaders.indexOf(columnMapping.profile)] : undefined,
-          imageUrl: columnMapping.image ? row[csvHeaders.indexOf(columnMapping.image)] : undefined,
-          date: columnMapping.date ? row[csvHeaders.indexOf(columnMapping.date)] : undefined,
-          address: columnMapping.address ? row[csvHeaders.indexOf(columnMapping.address)] : undefined,
-        };
+      console.log('Starting CSV import with mapping:', columnMapping);
+      console.log('CSV Headers:', csvHeaders);
+      console.log('CSV Rows:', csvRows);
+
+      const nodesToAdd = csvRows.map((row, index) => {
+        const nameIdx = columnMapping.name ? csvHeaders.indexOf(columnMapping.name) : -1;
+        const typeIdx = columnMapping.type ? csvHeaders.indexOf(columnMapping.type) : -1;
+        const profileIdx = columnMapping.profile ? csvHeaders.indexOf(columnMapping.profile) : -1;
+        const imageIdx = columnMapping.image ? csvHeaders.indexOf(columnMapping.image) : -1;
+        const dateIdx = columnMapping.date ? csvHeaders.indexOf(columnMapping.date) : -1;
+        const addressIdx = columnMapping.address ? csvHeaders.indexOf(columnMapping.address) : -1;
+
         return {
-          data: nodeData,
+          network_id: currentNetworkId,
+          name: nameIdx >= 0 ? row[nameIdx] : `Node ${index + 1}`,
+          type: typeIdx >= 0 ? row[typeIdx] : 'person',
+          profile_url: profileIdx >= 0 ? row[profileIdx] : null,
+          image_url: imageIdx >= 0 ? row[imageIdx] : null,
+          date: dateIdx >= 0 ? row[dateIdx] : null,
+          address: addressIdx >= 0 ? row[addressIdx] : null,
           x_position: Math.random() * 800,
           y_position: Math.random() * 600
         };
       });
 
-      for (const node of nodes) {
-        try {
-          const { data: newNode, error } = await supabase.from('nodes').insert([{
-            network_id: currentNetworkId,
-            type: node.data.type,
-            name: node.data.name,
-            profile_url: node.data.profileUrl,
-            image_url: node.data.imageUrl,
-            date: node.data.date,
-            address: node.data.address,
-            x_position: node.x_position,
-            y_position: node.y_position
-          }]).select().single();
+      console.log('Preparing to insert nodes:', nodesToAdd);
 
-          if (error) throw error;
+      for (const nodeData of nodesToAdd) {
+        const { data: newNode, error } = await supabase
+          .from('nodes')
+          .insert([nodeData])
+          .select()
+          .single();
 
-          setNodes(prev => [...prev, {
-            id: newNode.id,
-            type: 'social',
-            position: {
-              x: newNode.x_position,
-              y: newNode.y_position
-            },
-            data: {
-              type: newNode.type,
-              name: newNode.name,
-              profileUrl: newNode.profile_url,
-              imageUrl: newNode.image_url,
-              date: newNode.date,
-              address: newNode.address,
-              todos: []
-            }
-          }]);
-        } catch (error) {
-          console.error('Error adding node:', error);
+        if (error) {
+          console.error('Error inserting node:', error);
+          continue;
         }
+
+        console.log('Successfully inserted node:', newNode);
+
+        setNodes(prev => [...prev, {
+          id: newNode.id,
+          type: 'social',
+          position: {
+            x: newNode.x_position,
+            y: newNode.y_position
+          },
+          data: {
+            type: newNode.type,
+            name: newNode.name,
+            profileUrl: newNode.profile_url,
+            imageUrl: newNode.image_url,
+            date: newNode.date,
+            address: newNode.address,
+            todos: []
+          }
+        }]);
       }
 
       toast({
         title: "CSV Import Successful",
-        description: `Imported ${nodes.length} nodes`,
+        description: `Imported ${nodesToAdd.length} nodes`
       });
       setIsCsvDialogOpen(false);
     } catch (error) {
@@ -440,7 +448,7 @@ export const Flow = () => {
       toast({
         variant: "destructive",
         title: "Import Failed",
-        description: "Failed to import CSV data",
+        description: "Failed to import CSV data"
       });
     }
   };
