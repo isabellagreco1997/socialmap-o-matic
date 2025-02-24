@@ -475,11 +475,22 @@ export const Flow = () => {
         <div className="flex-1">
           <ReactFlowProvider>
             <div className="h-full">
-              <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={{
-              social: SocialNode
-            }} edgeTypes={{
-              custom: CustomEdge
-            }} fitView>
+              <ReactFlow 
+                nodes={nodes} 
+                edges={edges} 
+                onNodesChange={onNodesChange} 
+                onEdgesChange={onEdgesChange} 
+                onConnect={onConnect} 
+                nodeTypes={{
+                  social: SocialNode
+                }} 
+                edgeTypes={{
+                  custom: CustomEdge
+                }}
+                minZoom={0.1}
+                maxZoom={2}
+                fitView
+              >
                 <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2">
                   <span className="text-lg font-medium">
                     {networks.find(n => n.id === currentNetworkId)?.name || 'Network 1'}
