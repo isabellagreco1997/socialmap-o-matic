@@ -368,7 +368,7 @@ export const Flow = () => {
               </div>
             </div>
 
-            <div className="border-t p-6 space-y-3">
+            <div className="border-t p-6 space-y-3 px-[24px] py-[10px]">
               <h3 className="text-2xl font-bold mb-4">Discover</h3>
               <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-base font-medium">
                 <Library className="h-5 w-5" />
