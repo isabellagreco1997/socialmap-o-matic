@@ -404,17 +404,17 @@ export const Flow = () => {
               </div>
             </div>
 
-            <div className="border-t mt-auto p-6 space-y-2 px-[24px] py-[10px]">
-              <h3 className="text-sm font-bold mb-4">Discover</h3>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
+            <div className="border-t mt-auto p-2 space-y-1">
+              <h3 className="text-sm font-bold px-4 mb-2">Discover</h3>
+              <Button variant="ghost" className="w-full justify-start gap-3 h-10 text-sm font-medium">
                 <Library className="h-5 w-5" />
                 Templates
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-10 text-sm font-medium">
                 <Globe className="h-5 w-5" />
                 Resources
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-12 text-sm font-medium">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-10 text-sm font-medium">
                 <Users className="h-5 w-5" />
                 Community
               </Button>
