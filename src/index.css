@@ -110,3 +110,16 @@
   stroke-dasharray: 5;
   animation: flow 3s linear infinite;
 }
+
+/* Sidebar Custom Styles */
+[data-sidebar="header"] {
+  @apply text-sm font-medium;
+}
+
+[data-sidebar="trigger"] svg {
+  @apply transition-transform duration-200;
+}
+
+[data-sidebar="trigger"][data-state="collapsed"] svg {
+  @apply rotate-180;
+}
