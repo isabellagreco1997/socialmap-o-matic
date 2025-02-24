@@ -1,4 +1,3 @@
-
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -46,6 +45,57 @@ type Network = Database['public']['Tables']['networks']['Row'];
 type NetworkNode = Database['public']['Tables']['nodes']['Row'];
 type NetworkEdge = Database['public']['Tables']['edges']['Row'];
 type NetworkTodo = Database['public']['Tables']['todos']['Row'];
+type NodeData = {
+  type: "person" | "organization" | "event" | "venue";
+  name: string;
+  profileUrl?: string;
+  imageUrl?: string;
+  date?: string;
+  address?: string;
+};
+
+const CustomEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  data,
+}: EdgeProps) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      {data?.label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              fontSize: 12,
+              pointerEvents: 'all',
+            }}
+            className="nodrag nopan bg-white px-2 py-1 rounded shadow-sm border"
+          >
+            {data.label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+};
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -266,6 +316,55 @@ export const Flow = () => {
     }
   };
 
+  const handleAddNode = async (nodeData: { data: NodeData }) => {
+    if (!currentNetworkId) return;
+
+    try {
+      const { data: node, error } = await supabase
+        .from('nodes')
+        .insert([
+          {
+            network_id: currentNetworkId,
+            type: nodeData.data.type,
+            name: nodeData.data.name,
+            profile_url: nodeData.data.profileUrl,
+            image_url: nodeData.data.imageUrl,
+            date: nodeData.data.date,
+            address: nodeData.data.address,
+            x_position: Math.random() * 500,
+            y_position: Math.random() * 300,
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newNode = {
+        id: node.id,
+        type: 'social',
+        position: { x: node.x_position, y: node.y_position },
+        data: {
+          ...nodeData.data,
+          todos: [],
+        },
+      };
+
+      setNodes(nds => [...nds, newNode]);
+      toast({
+        title: "Node added",
+        description: `Added ${nodeData.data.name} to the network`,
+      });
+    } catch (error) {
+      console.error('Error adding node:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add node",
+      });
+    }
+  };
+
   return (
     <div className="h-screen w-full bg-background">
       <ReactFlowProvider>
@@ -323,7 +422,7 @@ export const Flow = () => {
           <AddNodeDialog
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
-            onAdd={handleAddNode}
+            onSave={handleAddNode}
           />
         </div>
       </ReactFlowProvider>
