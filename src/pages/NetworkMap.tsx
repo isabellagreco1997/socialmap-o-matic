@@ -1,9 +1,9 @@
-
 import { ReactFlow, ReactFlowProvider, addEdge, Background, Controls, Connection, useNodesState, useEdgesState, Panel, BaseEdge, EdgeLabelRenderer, getBezierPath, EdgeProps, Position, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
+import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -126,6 +126,7 @@ export const Flow = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isTemplatesDialogOpen, setIsTemplatesDialogOpen] = useState(false);
 
   const filteredNetworks = networks.filter(network => 
     network.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -592,6 +593,67 @@ export const Flow = () => {
     }
   };
 
+    // Add new function to handle template selection
+    const handleTemplateSelect = async (template: any) => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No user found');
+  
+        const { data: network, error: networkError } = await supabase
+          .from('networks')
+          .insert([{
+            name: template.name,
+            user_id: user.id
+          }])
+          .select()
+          .single();
+  
+        if (networkError) throw networkError;
+  
+        // Create nodes from template
+        const nodesPromises = template.nodes.map((node: any, index: number) => 
+          supabase.from('nodes').insert({
+            network_id: network.id,
+            name: node.name,
+            type: node.type,
+            x_position: node.x_position,
+            y_position: node.y_position
+          }).select()
+        );
+  
+        const nodesResults = await Promise.all(nodesPromises);
+        const createdNodes = nodesResults.map(result => result.data?.[0]);
+  
+        // Create edges from template
+        const edgesPromises = template.edges.map((edge: any) => 
+          supabase.from('edges').insert({
+            network_id: network.id,
+            source_id: createdNodes[edge.source].id,
+            target_id: createdNodes[edge.target].id,
+            label: edge.label
+          })
+        );
+  
+        await Promise.all(edgesPromises);
+  
+        setNetworks(prev => [...prev, network]);
+        setCurrentNetworkId(network.id);
+        setIsTemplatesDialogOpen(false);
+  
+        toast({
+          title: "Template Applied",
+          description: `Created new network from ${template.name} template`
+        });
+      } catch (error) {
+        console.error('Error applying template:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to apply template"
+        });
+      }
+    };
+
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
@@ -669,7 +731,11 @@ export const Flow = () => {
 
             <div className="border-t mt-auto p-2 space-y-1">
               <h3 className="text-sm font-bold px-2 mb-1">Discover</h3>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-8 text-sm font-medium">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-3 h-8 text-sm font-medium"
+                onClick={() => setIsTemplatesDialogOpen(true)}
+              >
                 <Library className="h-4 w-4" />
                 Templates
               </Button>
@@ -808,6 +874,12 @@ export const Flow = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        <TemplatesDialog
+          open={isTemplatesDialogOpen}
+          onOpenChange={setIsTemplatesDialogOpen}
+          onTemplateSelect={handleTemplateSelect}
+        />
       </div>
     </SidebarProvider>;
 };

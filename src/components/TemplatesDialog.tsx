@@ -1,579 +1,96 @@
-import { useState } from 'react';
+
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
-interface Template {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  previewImage?: string;
-  nodes: any[];
-  edges: any[];
-}
-
-const templates: Template[] = [
+const templates = [
   {
-    id: "organizational-chart",
-    title: "Organizational Chart",
-    description: "Map your company's organizational structure and reporting relationships",
-    category: "Business Development",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 400, y: 0 },
-        data: { type: 'person', name: 'CEO', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 200, y: 100 },
-        data: { type: 'person', name: 'CTO', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'CFO', imageUrl: '', todos: [] }
-      },
-      {
-        id: '4',
-        type: 'social',
-        position: { x: 600, y: 100 },
-        data: { type: 'person', name: 'COO', imageUrl: '', todos: [] }
-      },
-      {
-        id: '5',
-        type: 'social',
-        position: { x: 100, y: 200 },
-        data: { type: 'person', name: 'Engineering Lead', imageUrl: '', todos: [] }
-      },
-      {
-        id: '6',
-        type: 'social',
-        position: { x: 300, y: 200 },
-        data: { type: 'person', name: 'Product Lead', imageUrl: '', todos: [] }
-      },
-      {
-        id: '7',
-        type: 'social',
-        position: { x: 400, y: 200 },
-        data: { type: 'person', name: 'Finance Manager', imageUrl: '', todos: [] }
-      },
-      {
-        id: '8',
-        type: 'social',
-        position: { x: 500, y: 200 },
-        data: { type: 'person', name: 'HR Director', imageUrl: '', todos: [] }
-      },
-      {
-        id: '9',
-        type: 'social',
-        position: { x: 600, y: 200 },
-        data: { type: 'person', name: 'Operations Manager', imageUrl: '', todos: [] }
-      },
-      {
-        id: '10',
-        type: 'social',
-        position: { x: 700, y: 200 },
-        data: { type: 'person', name: 'Sales Director', imageUrl: '', todos: [] }
-      },
-      {
-        id: '11',
-        type: 'social',
-        position: { x: 50, y: 300 },
-        data: { type: 'person', name: 'Frontend Developer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '12',
-        type: 'social',
-        position: { x: 150, y: 300 },
-        data: { type: 'person', name: 'Backend Developer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '13',
-        type: 'social',
-        position: { x: 250, y: 300 },
-        data: { type: 'person', name: 'DevOps Engineer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '14',
-        type: 'social',
-        position: { x: 350, y: 300 },
-        data: { type: 'person', name: 'Product Designer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '15',
-        type: 'social',
-        position: { x: 450, y: 300 },
-        data: { type: 'person', name: 'Financial Analyst', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      // CEO to C-level
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true },
-      { id: 'e1-4', source: '1', target: '4', type: 'custom', animated: true },
-      // CTO to Engineering & Product
-      { id: 'e2-5', source: '2', target: '5', type: 'custom', animated: true },
-      { id: 'e2-6', source: '2', target: '6', type: 'custom', animated: true },
-      // CFO to Finance
-      { id: 'e3-7', source: '3', target: '7', type: 'custom', animated: true },
-      // COO to Operations, HR, and Sales
-      { id: 'e4-8', source: '4', target: '8', type: 'custom', animated: true },
-      { id: 'e4-9', source: '4', target: '9', type: 'custom', animated: true },
-      { id: 'e4-10', source: '4', target: '10', type: 'custom', animated: true },
-      // Engineering Lead to Team
-      { id: 'e5-11', source: '5', target: '11', type: 'custom', animated: true },
-      { id: 'e5-12', source: '5', target: '12', type: 'custom', animated: true },
-      { id: 'e5-13', source: '5', target: '13', type: 'custom', animated: true },
-      // Product Lead to Designer
-      { id: 'e6-14', source: '6', target: '14', type: 'custom', animated: true },
-      // Finance Manager to Analyst
-      { id: 'e7-15', source: '7', target: '15', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "sales-pipeline",
-    title: "Sales Pipeline",
+    id: "sales",
+    name: "Sales Pipeline",
     description: "Track leads, opportunities, and customer relationships",
-    category: "Sales",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
     nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Lead Company', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Sales Rep', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Decision Maker', imageUrl: '', todos: [] }
-      },
-      {
-        id: '4',
-        type: 'social',
-        position: { x: 150, y: 200 },
-        data: { type: 'person', name: 'Technical Lead', imageUrl: '', todos: [] }
-      },
-      {
-        id: '5',
-        type: 'social',
-        position: { x: 350, y: 200 },
-        data: { type: 'person', name: 'Finance Director', imageUrl: '', todos: [] }
-      }
+      { name: "Lead Generation", type: "organization", x_position: 100, y_position: 100 },
+      { name: "Sales Qualification", type: "organization", x_position: 300, y_position: 100 },
+      { name: "Proposal", type: "organization", x_position: 500, y_position: 100 },
+      { name: "Negotiation", type: "organization", x_position: 700, y_position: 100 },
+      { name: "Closed Won", type: "organization", x_position: 900, y_position: 100 }
     ],
     edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true },
-      { id: 'e3-4', source: '3', target: '4', type: 'custom', animated: true },
-      { id: 'e3-5', source: '3', target: '5', type: 'custom', animated: true }
+      { source: 0, target: 1, label: "Qualified" },
+      { source: 1, target: 2, label: "Interested" },
+      { source: 2, target: 3, label: "Reviewing" },
+      { source: 3, target: 4, label: "Agreement" }
     ]
   },
   {
-    id: "networking-event",
-    title: "Networking Event",
-    description: "Map connections made at conferences and events",
-    category: "Networking",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    id: "business-dev",
+    name: "Business Development",
+    description: "Map partnerships and business opportunities",
     nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'event', name: 'Industry Conference', date: '2024-05-15', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Keynote Speaker', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Sponsor Company', imageUrl: '', todos: [] }
-      },
-      {
-        id: '4',
-        type: 'social',
-        position: { x: 0, y: 200 },
-        data: { type: 'person', name: 'Attendee 1', imageUrl: '', todos: [] }
-      },
-      {
-        id: '5',
-        type: 'social',
-        position: { x: 200, y: 200 },
-        data: { type: 'person', name: 'Attendee 2', imageUrl: '', todos: [] }
-      },
-      {
-        id: '6',
-        type: 'social',
-        position: { x: 400, y: 200 },
-        data: { type: 'person', name: 'Attendee 3', imageUrl: '', todos: [] }
-      }
+      { name: "Market Research", type: "organization", x_position: 100, y_position: 100 },
+      { name: "Lead Identification", type: "organization", x_position: 300, y_position: 100 },
+      { name: "Partnership Strategy", type: "organization", x_position: 500, y_position: 100 },
+      { name: "Deal Structure", type: "organization", x_position: 700, y_position: 100 }
     ],
     edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true },
-      { id: 'e2-4', source: '2', target: '4', type: 'custom', animated: true },
-      { id: 'e2-5', source: '2', target: '5', type: 'custom', animated: true },
-      { id: 'e3-6', source: '3', target: '6', type: 'custom', animated: true }
+      { source: 0, target: 1, label: "Potential Partners" },
+      { source: 1, target: 2, label: "Strategic Fit" },
+      { source: 2, target: 3, label: "Terms" }
     ]
   },
   {
-    id: "business-ecosystem",
-    title: "Business Ecosystem",
-    description: "Map your business partnerships and collaborations",
-    category: "Business Development",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    id: "finance",
+    name: "Financial Planning",
+    description: "Visualize financial processes and investments",
     nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Your Company', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'organization', name: 'Partner Company', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Supplier', imageUrl: '', todos: [] }
-      }
+      { name: "Revenue Streams", type: "organization", x_position: 100, y_position: 100 },
+      { name: "Cost Structure", type: "organization", x_position: 300, y_position: 100 },
+      { name: "Investments", type: "organization", x_position: 500, y_position: 100 },
+      { name: "Cash Flow", type: "organization", x_position: 700, y_position: 100 }
     ],
     edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
+      { source: 0, target: 3, label: "Inflow" },
+      { source: 1, target: 3, label: "Outflow" },
+      { source: 2, target: 3, label: "Returns" }
     ]
   },
   {
-    id: "client-relationships",
-    title: "Client Relationships",
-    description: "Visualize key stakeholders and decision makers",
-    category: "Account Management",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    id: "marketing",
+    name: "Marketing Campaign",
+    description: "Plan and track marketing initiatives",
     nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Client Organization', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Account Manager', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Client Stakeholder', imageUrl: '', todos: [] }
-      }
+      { name: "Campaign Planning", type: "organization", x_position: 100, y_position: 100 },
+      { name: "Content Creation", type: "organization", x_position: 300, y_position: 100 },
+      { name: "Channel Distribution", type: "organization", x_position: 500, y_position: 100 },
+      { name: "Performance Analysis", type: "organization", x_position: 700, y_position: 100 }
     ],
     edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
+      { source: 0, target: 1, label: "Brief" },
+      { source: 1, target: 2, label: "Assets" },
+      { source: 2, target: 3, label: "Metrics" }
     ]
   },
   {
-    id: "influencer-network",
-    title: "Influencer Network",
-    description: "Track relationships with industry influencers",
-    category: "Marketing",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
+    id: "org-chart",
+    name: "Organizational Chart",
+    description: "Create company structure and reporting lines",
     nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'person', name: 'Key Influencer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'organization', name: 'Brand', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Marketing Manager', imageUrl: '', todos: [] }
-      }
+      { name: "CEO", type: "person", x_position: 400, y_position: 50 },
+      { name: "CTO", type: "person", x_position: 200, y_position: 150 },
+      { name: "CFO", type: "person", x_position: 400, y_position: 150 },
+      { name: "CMO", type: "person", x_position: 600, y_position: 150 },
+      { name: "Engineering", type: "organization", x_position: 200, y_position: 250 },
+      { name: "Finance", type: "organization", x_position: 400, y_position: 250 },
+      { name: "Marketing", type: "organization", x_position: 600, y_position: 250 }
     ],
     edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "investor-relations",
-    title: "Investor Relations",
-    description: "Map relationships with investors and stakeholders",
-    category: "Finance",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Investment Firm', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Lead Investor', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'CFO', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "partnership-mapping",
-    title: "Partnership Mapping",
-    description: "Visualize strategic partnerships and alliances",
-    category: "Business Development",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Strategic Partner', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Partnership Manager', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Technology Provider', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "channel-partners",
-    title: "Channel Partners",
-    description: "Organize relationships with distributors and resellers",
-    category: "Sales",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Channel Partner', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Channel Manager', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'End Client', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "customer-success",
-    title: "Customer Success",
-    description: "Track customer relationships and success stories",
-    category: "Account Management",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'Customer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Success Manager', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Product Specialist', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "alumni-network",
-    title: "Alumni Network",
-    description: "Connect with and leverage your alumni relationships",
-    category: "Networking",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'organization', name: 'University', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Alumni Officer', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Alumni Member', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "referral-program",
-    title: "Referral Program",
-    description: "Track and nurture your referral network",
-    category: "Business Development",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'person', name: 'Referral Partner', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Referred Lead', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Your Company', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "events-strategy",
-    title: "Events Strategy",
-    description: "Plan and track networking events and outcomes",
-    category: "Events",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'event', name: 'Annual Conference', date: '2024-09-15', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'person', name: 'Event Planner', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'organization', name: 'Sponsor', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
-    ]
-  },
-  {
-    id: "centers-of-influence",
-    title: "Centers of Influence",
-    description: "Map key industry influencers and thought leaders",
-    category: "Networking",
-    previewImage: "/lovable-uploads/74109c32-fa40-42f2-8103-56eb6fde395e.png",
-    nodes: [
-      {
-        id: '1',
-        type: 'social',
-        position: { x: 250, y: 0 },
-        data: { type: 'person', name: 'Industry Expert', imageUrl: '', todos: [] }
-      },
-      {
-        id: '2',
-        type: 'social',
-        position: { x: 100, y: 100 },
-        data: { type: 'organization', name: 'Professional Association', imageUrl: '', todos: [] }
-      },
-      {
-        id: '3',
-        type: 'social',
-        position: { x: 400, y: 100 },
-        data: { type: 'person', name: 'Community Leader', imageUrl: '', todos: [] }
-      }
-    ],
-    edges: [
-      { id: 'e1-2', source: '1', target: '2', type: 'custom', animated: true },
-      { id: 'e1-3', source: '1', target: '3', type: 'custom', animated: true }
+      { source: 0, target: 1, label: "Reports to" },
+      { source: 0, target: 2, label: "Reports to" },
+      { source: 0, target: 3, label: "Reports to" },
+      { source: 1, target: 4, label: "Manages" },
+      { source: 2, target: 5, label: "Manages" },
+      { source: 3, target: 6, label: "Manages" }
     ]
   }
 ];
@@ -581,77 +98,35 @@ const templates: Template[] = [
 interface TemplatesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (template: Template) => void;
+  onTemplateSelect: (template: any) => void;
 }
 
 export function TemplatesDialog({
   open,
   onOpenChange,
-  onSelect
+  onTemplateSelect
 }: TemplatesDialogProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const filteredTemplates = templates.filter(template =>
-    template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const categories = Array.from(new Set(templates.map(t => t.category)));
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1200px] h-[800px] flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Templates</DialogTitle>
+          <DialogTitle>Choose a Template</DialogTitle>
         </DialogHeader>
-        
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search all templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="grid grid-cols-2 gap-4 py-4">
+          {templates.map((template) => (
+            <Button
+              key={template.id}
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-start gap-2"
+              onClick={() => onTemplateSelect(template)}
+            >
+              <div className="font-medium">{template.name}</div>
+              <div className="text-sm text-muted-foreground text-left">
+                {template.description}
+              </div>
+            </Button>
+          ))}
         </div>
-
-        <ScrollArea className="flex-1">
-          <div className="pr-4 space-y-8">
-            {categories.map(category => {
-              const categoryTemplates = filteredTemplates.filter(t => t.category === category);
-              if (categoryTemplates.length === 0) return null;
-
-              return (
-                <div key={category}>
-                  <h3 className="text-lg font-semibold mb-4">{category}</h3>
-                  <div className="grid grid-cols-3 gap-6">
-                    {categoryTemplates.map(template => (
-                      <Card
-                        key={template.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-                        onClick={() => onSelect(template)}
-                      >
-                        {template.previewImage && (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center"
-                            style={{ 
-                              backgroundImage: `url(${template.previewImage})`,
-                            }}
-                          />
-                        )}
-                        <div className="p-6">
-                          <h4 className="text-lg font-medium mb-2">{template.title}</h4>
-                          <p className="text-sm text-muted-foreground">{template.description}</p>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
