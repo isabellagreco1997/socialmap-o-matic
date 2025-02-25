@@ -5,6 +5,114 @@ import { useToast } from "@/components/ui/use-toast";
 
 const templates = [
   {
+    id: "renewable-energy",
+    name: "Renewable Energy Network",
+    description: "Network of renewable energy experts and organizations in California",
+    nodes: [
+      // Central Organizations
+      { name: "California Energy Commission", type: "organization", x_position: 600, y_position: 300 },
+      { name: "CAISO (Grid Operator)", type: "organization", x_position: 800, y_position: 300 },
+      { name: "CPUC", type: "organization", x_position: 400, y_position: 300 },
+      
+      // Solar Energy Sector
+      { name: "Solar Energy Association", type: "organization", x_position: 400, y_position: 100 },
+      { name: "Leading Solar Manufacturer", type: "organization", x_position: 200, y_position: 50 },
+      { name: "Solar Installation Company", type: "organization", x_position: 600, y_position: 50 },
+      { name: "Solar Research Lab", type: "organization", x_position: 400, y_position: 0 },
+      { name: "Solar Policy Expert", type: "person", x_position: 300, y_position: 150 },
+      
+      // Wind Energy Sector
+      { name: "Wind Energy Association", type: "organization", x_position: 800, y_position: 100 },
+      { name: "Offshore Wind Developer", type: "organization", x_position: 1000, y_position: 50 },
+      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 600, y_position: 150 },
+      { name: "Wind Resource Analyst", type: "person", x_position: 900, y_position: 150 },
+      
+      // Storage & Grid
+      { name: "Battery Storage Company", type: "organization", x_position: 200, y_position: 400 },
+      { name: "Grid Technology Provider", type: "organization", x_position: 1000, y_position: 400 },
+      { name: "Energy Storage Association", type: "organization", x_position: 600, y_position: 450 },
+      { name: "Grid Modernization Expert", type: "person", x_position: 800, y_position: 450 },
+      
+      // Research & Education
+      { name: "UC Berkeley Energy Lab", type: "organization", x_position: 300, y_position: 550 },
+      { name: "Stanford Energy Program", type: "organization", x_position: 500, y_position: 550 },
+      { name: "CalTech Energy Institute", type: "organization", x_position: 700, y_position: 550 },
+      { name: "Leading Energy Researcher", type: "person", x_position: 500, y_position: 650 },
+      
+      // Policy & Government
+      { name: "State Energy Office", type: "organization", x_position: 200, y_position: 200 },
+      { name: "Environmental Policy Group", type: "organization", x_position: 1000, y_position: 200 },
+      { name: "Clean Energy Advocate", type: "person", x_position: 600, y_position: 200 },
+      
+      // Utilities & Implementation
+      { name: "PG&E", type: "organization", x_position: 300, y_position: 350 },
+      { name: "Southern California Edison", type: "organization", x_position: 900, y_position: 350 },
+      { name: "Municipal Utility Director", type: "person", x_position: 600, y_position: 350 },
+      
+      // Industry Events & Venues
+      { name: "RE+ Conference", type: "event", x_position: 400, y_position: 450 },
+      { name: "Energy Storage Summit", type: "event", x_position: 800, y_position: 250 },
+      { name: "Moscone Center", type: "venue", x_position: 400, y_position: 250 },
+      
+      // Financial & Investment
+      { name: "Clean Energy Fund", type: "organization", x_position: 200, y_position: 500 },
+      { name: "Energy VC Firm", type: "organization", x_position: 1000, y_position: 500 },
+      { name: "Project Finance Expert", type: "person", x_position: 600, y_position: 500 }
+    ],
+    edges: [
+      // Central Organization Connections
+      { source: 0, target: 1, label: "Grid Management" },
+      { source: 0, target: 2, label: "Policy Coordination" },
+      
+      // Solar Sector Connections
+      { source: 3, target: 4, label: "Supply Chain" },
+      { source: 3, target: 5, label: "Implementation" },
+      { source: 3, target: 6, label: "R&D" },
+      { source: 3, target: 7, label: "Policy Advisory" },
+      
+      // Wind Sector Connections
+      { source: 8, target: 9, label: "Development" },
+      { source: 8, target: 10, label: "Equipment" },
+      { source: 8, target: 11, label: "Analysis" },
+      
+      // Storage & Grid Connections
+      { source: 12, target: 14, label: "Industry Group" },
+      { source: 13, target: 14, label: "Technology" },
+      { source: 14, target: 15, label: "Expert Guidance" },
+      
+      // Research Connections
+      { source: 16, target: 19, label: "Research" },
+      { source: 17, target: 19, label: "Studies" },
+      { source: 18, target: 19, label: "Innovation" },
+      
+      // Policy Connections
+      { source: 20, target: 21, label: "Policy Making" },
+      { source: 21, target: 22, label: "Advocacy" },
+      
+      // Utility Connections
+      { source: 23, target: 25, label: "Operations" },
+      { source: 24, target: 25, label: "Management" },
+      
+      // Event Connections
+      { source: 26, target: 28, label: "Venue" },
+      { source: 27, target: 14, label: "Industry Event" },
+      
+      // Financial Connections
+      { source: 29, target: 31, label: "Investment" },
+      { source: 30, target: 31, label: "Funding" },
+      
+      // Cross-sector Connections
+      { source: 0, target: 3, label: "Solar Policy" },
+      { source: 0, target: 8, label: "Wind Policy" },
+      { source: 0, target: 14, label: "Storage Policy" },
+      { source: 1, target: 13, label: "Grid Tech" },
+      { source: 2, target: 22, label: "Advocacy" },
+      { source: 19, target: 22, label: "Research Input" },
+      { source: 31, target: 22, label: "Financial Advisory" },
+      { source: 25, target: 15, label: "Grid Expertise" }
+    ]
+  },
+  {
     id: "uhnw-networking",
     name: "UHNW & Billionaire Network",
     description: "Build relationships with ultra-high-net-worth individuals and billionaires",
