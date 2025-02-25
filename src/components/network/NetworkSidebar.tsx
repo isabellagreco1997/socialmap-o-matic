@@ -12,6 +12,7 @@ interface NetworkSidebarProps {
   onSearchChange: (value: string) => void;
   onNetworkSelect: (id: string) => void;
   onEditNetwork: (network: Network) => void;
+  onOpenTemplates: () => void;
 }
 
 const NetworkSidebar = ({
@@ -20,7 +21,8 @@ const NetworkSidebar = ({
   searchQuery,
   onSearchChange,
   onNetworkSelect,
-  onEditNetwork
+  onEditNetwork,
+  onOpenTemplates
 }: NetworkSidebarProps) => {
   return (
     <div className="p-3 space-y-3 py-3">
@@ -75,7 +77,11 @@ const NetworkSidebar = ({
 
       <div className="border-t mt-auto p-2 space-y-1">
         <h3 className="text-sm font-bold px-2 mb-1">Discover</h3>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-8 text-sm font-medium">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start gap-3 h-8 text-sm font-medium"
+          onClick={onOpenTemplates}
+        >
           <Library className="h-4 w-4" />
           Templates
         </Button>

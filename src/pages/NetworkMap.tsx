@@ -1,3 +1,4 @@
+
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -207,6 +208,7 @@ export const Flow = () => {
               onSearchChange={setSearchQuery}
               onNetworkSelect={setCurrentNetworkId}
               onEditNetwork={setEditingNetwork}
+              onOpenTemplates={() => setIsTemplatesDialogOpen(true)}
             />
           </SidebarContent>
         </Sidebar>
