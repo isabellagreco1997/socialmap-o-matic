@@ -1,4 +1,3 @@
-
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -71,6 +70,40 @@ export const Flow = () => {
     fetchNetworks();
   }, [currentNetworkId, toast]);
 
+  const handleNodesChange = useCallback(async (changes: any) => {
+    onNodesChange(changes);
+    
+    // Only handle position changes
+    const positionChanges = changes.filter(
+      (change: any) => change.type === 'position' && change.dragging === false
+    );
+
+    if (positionChanges.length > 0 && currentNetworkId) {
+      try {
+        // Update positions in Supabase for each changed node
+        await Promise.all(
+          positionChanges.map((change: any) => 
+            supabase
+              .from('nodes')
+              .update({
+                x_position: change.position.x,
+                y_position: change.position.y
+              })
+              .eq('id', change.id)
+              .eq('network_id', currentNetworkId)
+          )
+        );
+      } catch (error) {
+        console.error('Error updating node positions:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save node positions"
+        });
+      }
+    }
+  }, [currentNetworkId, onNodesChange, toast]);
+
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
@@ -93,8 +126,8 @@ export const Flow = () => {
           id: node.id,
           type: 'social',
           position: {
-            x: node.x_position,
-            y: node.y_position
+            x: node.x_position || Math.random() * 500,
+            y: node.y_position || Math.random() * 500
           },
           data: {
             type: node.type,
@@ -185,7 +218,7 @@ export const Flow = () => {
               edges={edges}
               networks={networks}
               currentNetworkId={currentNetworkId}
-              onNodesChange={onNodesChange}
+              onNodesChange={handleNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onAddNode={() => setIsDialogOpen(true)}
