@@ -1,3 +1,4 @@
+
 import { ReactFlow, ReactFlowProvider, addEdge, Background, Controls, Connection, useNodesState, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -15,6 +16,8 @@ import type { Network, NodeData } from '@/types/network';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, Search } from 'lucide-react';
+import type { Database } from "@/integrations/supabase/types";
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
