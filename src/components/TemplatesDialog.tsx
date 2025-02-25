@@ -5,206 +5,224 @@ import { useToast } from "@/components/ui/use-toast";
 
 const templates = [
   {
-    id: "david-lammy-network",
-    name: "David Lammy Network",
-    description: "Strategic network map to connect with David Lammy, British Shadow Foreign Secretary",
+    id: "london-vc-network",
+    name: "London VC Network",
+    description: "Map of London's venture capital ecosystem and startup community connections",
     nodes: [
-      // Core Target
+      // Core Target - You
       { 
-        name: "David Lammy", 
-        type: "person", 
+        name: "Your Startup", 
+        type: "organization", 
         x_position: 600, 
         y_position: 300,
-        image_url: "https://members-api.parliament.uk/api/Members/1601/Portrait?cropType=ThreeFour",
-        notes: "Shadow Foreign Secretary, Labour MP for Tottenham since 2000"
+        notes: "Your company and immediate team"
       },
       
-      // Political Organizations
+      // Tier 1 VCs
       { 
-        name: "Labour Party HQ", 
+        name: "Index Ventures", 
         type: "organization", 
         x_position: 400, 
-        y_position: 200,
-        notes: "Main opposition party headquarters"
+        y_position: 100,
+        notes: "Major European VC, London office",
+        address: "16 Great Portland Street, London"
       },
       { 
-        name: "Tottenham Labour Party", 
+        name: "Atomico", 
         type: "organization", 
-        x_position: 300, 
-        y_position: 250,
-        notes: "Local constituency party"
+        x_position: 600, 
+        y_position: 50,
+        notes: "Founded by Skype co-founder",
+        address: "The Stables, 2 Accelerator Building, London"
       },
-      
-      // Parliamentary Bodies
       { 
-        name: "House of Commons", 
+        name: "Balderton Capital", 
         type: "organization", 
         x_position: 800, 
-        y_position: 200,
-        notes: "Main chamber of UK Parliament",
-        address: "Westminster, London SW1A 0AA"
-      },
-      { 
-        name: "Foreign Affairs Committee", 
-        type: "organization", 
-        x_position: 700, 
-        y_position: 150,
-        notes: "Parliamentary committee overseeing foreign policy"
+        y_position: 100,
+        notes: "Series A specialist",
+        address: "20 Balderton St, London"
       },
       
-      // Media Organizations
+      // Seed VCs
       { 
-        name: "BBC Politics", 
+        name: "LocalGlobe", 
+        type: "organization", 
+        x_position: 300, 
+        y_position: 200,
+        notes: "Seed-stage focus",
+        address: "Phoenix Court, London"
+      },
+      { 
+        name: "Seedcamp", 
+        type: "organization", 
+        x_position: 900, 
+        y_position: 200,
+        notes: "Pre-seed and seed specialist",
+        address: "5 Bonhill Street, London"
+      },
+      
+      // Angel Networks
+      { 
+        name: "Angel Investment Network", 
         type: "organization", 
         x_position: 200, 
         y_position: 300,
-        notes: "Regular media appearances"
+        notes: "Large angel investor platform"
       },
       { 
-        name: "The Guardian", 
+        name: "Cambridge Angels", 
         type: "organization", 
-        x_position: 250, 
-        y_position: 400,
-        notes: "Frequent contributor"
-      },
-      
-      // Educational Institutions
-      { 
-        name: "Harvard Law School", 
-        type: "organization", 
-        x_position: 900, 
-        y_position: 400,
-        notes: "Lammy's alma mater"
-      },
-      { 
-        name: "SOAS University", 
-        type: "organization", 
-        x_position: 850, 
+        x_position: 1000, 
         y_position: 300,
-        notes: "Regular speaker on international affairs"
+        notes: "Tech-focused angel group"
       },
       
-      // Think Tanks & Policy
+      // Accelerators
       { 
-        name: "Chatham House", 
+        name: "Entrepreneur First", 
         type: "organization", 
-        x_position: 500, 
-        y_position: 500,
-        notes: "International affairs think tank"
+        x_position: 400, 
+        y_position: 400,
+        notes: "Talent-first accelerator",
+        address: "Block L, The Biscuit Factory, London"
       },
       { 
-        name: "Royal United Services Institute", 
+        name: "TechStars London", 
         type: "organization", 
-        x_position: 700, 
+        x_position: 800, 
+        y_position: 400,
+        notes: "Global accelerator network",
+        address: "41 Luke St, London"
+      },
+      
+      // Key Events
+      { 
+        name: "London Tech Week", 
+        type: "event", 
+        x_position: 300, 
         y_position: 500,
-        notes: "Defense and security think tank"
+        date: "2024-06-10",
+        notes: "Major tech conference"
+      },
+      { 
+        name: "SaaStock", 
+        type: "event", 
+        x_position: 900, 
+        y_position: 500,
+        date: "2024-10-15",
+        notes: "SaaS-focused conference"
+      },
+      
+      // Co-Working Spaces
+      { 
+        name: "Second Home", 
+        type: "venue", 
+        x_position: 500, 
+        y_position: 200,
+        address: "68-80 Hanbury St, London",
+        notes: "Popular with VCs and founders"
+      },
+      { 
+        name: "Google Campus", 
+        type: "venue", 
+        x_position: 700, 
+        y_position: 200,
+        address: "4-5 Bonhill St, London",
+        notes: "Startup hub and event space"
       },
       
       // Community Organizations
       { 
-        name: "Tottenham Community Groups", 
+        name: "Tech Nation", 
+        type: "organization", 
+        x_position: 600, 
+        y_position: 500,
+        notes: "UK tech ecosystem support"
+      },
+      { 
+        name: "Silicon Roundabout", 
+        type: "organization", 
+        x_position: 400, 
+        y_position: 600,
+        notes: "Tech community hub"
+      },
+      
+      // Key People
+      { 
+        name: "Successful Founders", 
+        type: "person", 
+        x_position: 200, 
+        y_position: 400,
+        notes: "Previous successful exits"
+      },
+      { 
+        name: "Angel Investors", 
+        type: "person", 
+        x_position: 1000, 
+        y_position: 400,
+        notes: "Active individual investors"
+      },
+      
+      // Support Services
+      { 
+        name: "Tech Law Firms", 
         type: "organization", 
         x_position: 300, 
-        y_position: 350,
-        notes: "Local constituency organizations"
-      },
-      
-      // Events & Venues
-      { 
-        name: "Labour Party Conference", 
-        type: "event", 
-        x_position: 400, 
-        y_position: 100,
-        date: "2024-09-22",
-        address: "Liverpool, UK"
-      },
-      { 
-        name: "Foreign Policy Forum", 
-        type: "event", 
-        x_position: 600, 
-        y_position: 50,
-        date: "2024-07-15",
-        address: "Central Hall Westminster"
-      },
-      { 
-        name: "Constituency Surgery", 
-        type: "event", 
-        x_position: 350, 
-        y_position: 450,
-        notes: "Regular constituent meetings",
-        date: "2024-06-01"
-      },
-      
-      // Key Staff & Contacts
-      { 
-        name: "Parliamentary Office", 
-        type: "organization", 
-        x_position: 750, 
-        y_position: 250,
-        notes: "David Lammy's Westminster office"
-      },
-      { 
-        name: "Constituency Office", 
-        type: "organization", 
-        x_position: 450, 
-        y_position: 350,
-        notes: "Tottenham office",
-        address: "639 High Road, London N17"
-      },
-      
-      // International Organizations
-      { 
-        name: "United Nations", 
-        type: "organization", 
-        x_position: 1000, 
         y_position: 300,
-        notes: "Regular speaker on international development"
+        notes: "Specialist startup lawyers"
       },
       { 
-        name: "European Parliament", 
+        name: "Startup Accountants", 
         type: "organization", 
-        x_position: 950, 
-        y_position: 200,
-        notes: "Post-Brexit relations"
+        x_position: 900, 
+        y_position: 300,
+        notes: "Financial/tax advisors"
       }
     ],
     edges: [
-      // Political Party Connections
-      { source: 0, target: 1, label: "Senior Leadership" },
-      { source: 0, target: 2, label: "Constituency MP" },
-      { source: 1, target: 12, label: "Annual Conference" },
+      // VC Connections
+      { source: 0, target: 1, label: "Series A+" },
+      { source: 0, target: 2, label: "Growth Stage" },
+      { source: 0, target: 3, label: "Series A" },
+      { source: 0, target: 4, label: "Seed Round" },
+      { source: 0, target: 5, label: "Pre-seed" },
       
-      // Parliamentary Connections
-      { source: 0, target: 3, label: "Member of Parliament" },
-      { source: 0, target: 4, label: "Shadow Foreign Secretary" },
-      { source: 3, target: 15, label: "Office Location" },
+      // Angel Network Connections
+      { source: 0, target: 6, label: "Early Investment" },
+      { source: 0, target: 7, label: "Angel Rounds" },
       
-      // Media Relations
-      { source: 0, target: 5, label: "Regular Appearances" },
-      { source: 0, target: 6, label: "Opinion Pieces" },
-      { source: 5, target: 13, label: "Event Coverage" },
+      // Accelerator Relations
+      { source: 0, target: 8, label: "Acceleration" },
+      { source: 0, target: 9, label: "Mentorship" },
       
-      // Educational & Think Tank
-      { source: 0, target: 7, label: "Alumni" },
-      { source: 0, target: 8, label: "Guest Speaker" },
-      { source: 0, target: 9, label: "Policy Forums" },
-      { source: 0, target: 10, label: "Defense Policy" },
+      // Event Participation
+      { source: 0, target: 10, label: "Networking" },
+      { source: 0, target: 11, label: "Conference" },
       
-      // Community Engagement
-      { source: 0, target: 11, label: "Community Leader" },
-      { source: 11, target: 14, label: "Regular Meetings" },
-      { source: 0, target: 16, label: "Local Office" },
+      // Space & Community
+      { source: 0, target: 12, label: "Workspace" },
+      { source: 0, target: 13, label: "Events" },
+      { source: 0, target: 14, label: "Support" },
+      { source: 0, target: 15, label: "Community" },
       
-      // International Relations
-      { source: 0, target: 17, label: "International Development" },
-      { source: 0, target: 18, label: "European Relations" },
+      // People Connections
+      { source: 0, target: 16, label: "Mentorship" },
+      { source: 0, target: 17, label: "Investment" },
       
-      // Cross-connections
-      { source: 4, target: 13, label: "Policy Announcements" },
-      { source: 9, target: 13, label: "Expert Input" },
-      { source: 15, target: 16, label: "Office Coordination" },
-      { source: 17, target: 18, label: "International Forums" },
-      { source: 6, target: 13, label: "Media Coverage" }
+      // Service Connections
+      { source: 0, target: 18, label: "Legal" },
+      { source: 0, target: 19, label: "Finance" },
+      
+      // Cross Connections
+      { source: 8, target: 16, label: "Alumni Network" },
+      { source: 9, target: 17, label: "Investor Network" },
+      { source: 10, target: 14, label: "Organization" },
+      { source: 12, target: 17, label: "Community" },
+      { source: 13, target: 15, label: "Tech Hub" },
+      { source: 1, target: 16, label: "Portfolio" },
+      { source: 4, target: 8, label: "Pipeline" },
+      { source: 5, target: 9, label: "Partnership" }
     ]
   },
   {
