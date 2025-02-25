@@ -1,3 +1,4 @@
+
 import { ReactFlow, ReactFlowProvider, addEdge, Background, Controls, Connection, useNodesState, useEdgesState, Panel, BaseEdge, EdgeLabelRenderer, getBezierPath, EdgeProps, Position, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -6,7 +7,7 @@ import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Settings, Copy, Trash2, Search } from 'lucide-react';
+import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Settings, Copy, Trash2, Search, MoreHorizontal, FileText, ListTodo, Pencil } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
