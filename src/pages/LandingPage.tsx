@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -12,7 +11,7 @@ const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-16 items-center relative">
-          <span className="text-xl font-semibold pl-8">Science of Six</span>
+          <span className="text-xl font-semibold pl-8">SocialMapr</span>
           <div className="flex-1 flex justify-center">
             <div className="hidden md:flex items-center gap-6">
               <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
@@ -121,7 +120,7 @@ const LandingPage = () => {
           <div className="text-center space-y-6 mb-12">
             <h2 className="text-4xl font-bold text-[#0A2463]">Connect with Influential Figures</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              On average, you are only 6 introductions away from your ideal connection. Map this out using Science of Six.
+              On average, you are only 6 introductions away from your ideal connection. Map this out using SocialMapr.
             </p>
           </div>
         </div>
@@ -351,7 +350,7 @@ const LandingPage = () => {
                 In the digital age, this phenomenon has become even more relevant. Recent studies, including those by Microsoft and Facebook, have shown that the average degree of separation between any two people has decreased to approximately 3.5 connections, making our world more interconnected than ever.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Science of Six leverages this principle to help you visualize and navigate your extended social and professional networks, making it easier than ever to discover and utilize these powerful connections.
+                SocialMapr leverages this principle to help you visualize and navigate your extended social and professional networks, making it easier than ever to discover and utilize these powerful connections.
               </p>
             </div>
             <div className="space-y-8">
@@ -380,7 +379,7 @@ const LandingPage = () => {
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />)}
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  "Science of Six has completely transformed how I approach networking. I've made connections I never thought possible, leading to several successful business partnerships."
+                  "SocialMapr has completely transformed how I approach networking. I've made connections I never thought possible, leading to several successful business partnerships."
                 </p>
                 <div className="flex items-center gap-4">
                   <Avatar>
@@ -422,7 +421,7 @@ const LandingPage = () => {
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-[#0A2463] text-[#0A2463]" />)}
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  "As a recruiter, Science of Six has become an invaluable tool. It's helped me find perfect candidates through unexpected connections and referrals."
+                  "As a recruiter, SocialMapr has become an invaluable tool. It's helped me find perfect candidates through unexpected connections and referrals."
                 </p>
                 <div className="flex items-center gap-4">
                   <Avatar>
@@ -543,9 +542,9 @@ const LandingPage = () => {
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger>How does Science of Six work?</AccordionTrigger>
+              <AccordionTrigger>How does SocialMapr work?</AccordionTrigger>
               <AccordionContent>
-                Science of Six helps you map and visualize your professional and social connections. You can add people you know directly, and our platform will help you discover paths to connect with others through your network.
+                SocialMapr helps you map and visualize your professional and social connections. You can add people you know directly, and our platform will help you discover paths to connect with others through your network.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
@@ -574,7 +573,7 @@ const LandingPage = () => {
       <footer className="border-t py-12 bg-background">
         <div className="container grid gap-8 md:grid-cols-4">
           <div>
-            <h3 className="font-semibold mb-4">Science of Six</h3>
+            <h3 className="font-semibold mb-4">SocialMapr</h3>
             <p className="text-sm text-muted-foreground">
               Mapping the connections that shape our world.
             </p>
@@ -606,7 +605,7 @@ const LandingPage = () => {
         </div>
         <div className="container mt-8 pt-8 border-t">
           <p className="text-center text-sm text-muted-foreground">
-            © 2024 Science of Six. All rights reserved.
+            © 2024 SocialMapr. All rights reserved.
           </p>
         </div>
       </footer>
