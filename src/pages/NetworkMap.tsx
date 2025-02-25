@@ -645,22 +645,20 @@ export const Flow = () => {
                     >
                       <Button 
                         variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                        className={`w-full justify-start h-9 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
+                        className={`w-full justify-start h-9 text-sm font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
                         onClick={() => setCurrentNetworkId(network.id)}
                       >
+                        <div 
+                          className="mr-2 p-1 rounded hover:bg-white/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingNetwork(network);
+                            setNetworkName(network.name);
+                          }}
+                        >
+                          <Settings className="h-3.5 w-3.5" />
+                        </div>
                         {network.name}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-7 w-7" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingNetwork(network);
-                          setNetworkName(network.name);
-                        }}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ))}
