@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,71 +5,86 @@ import { useToast } from "@/components/ui/use-toast";
 
 const templates = [
   {
-    id: "real-estate-networking",
-    name: "Real Estate Agent Network",
-    description: "Build and maintain relationships with real estate professionals",
+    id: "gym-networking",
+    name: "Gym Owner Network",
+    description: "Build relationships with gym owners and fitness industry professionals",
     nodes: [
       // Center - You
       { name: "You", type: "person", x_position: 600, y_position: 300 },
       
-      // Core Professional Circle (Closer to center)
-      { name: "Local Brokers", type: "organization", x_position: 300, y_position: 200 },
-      { name: "Property Managers", type: "organization", x_position: 900, y_position: 200 },
-      { name: "Title Companies", type: "organization", x_position: 600, y_position: 100 },
+      // Core Fitness Industry (Inner Circle)
+      { name: "Independent Gym Owners", type: "organization", x_position: 300, y_position: 200 },
+      { name: "Franchise Gyms", type: "organization", x_position: 900, y_position: 200 },
+      { name: "Boutique Studios", type: "organization", x_position: 600, y_position: 100 },
       
-      // Professional Organizations (Top Layer)
-      { name: "Real Estate Board", type: "organization", x_position: 100, y_position: 150 },
-      { name: "Networking Events", type: "event", x_position: 400, y_position: 50 },
-      { name: "Industry Conferences", type: "event", x_position: 800, y_position: 50 },
+      // Equipment & Suppliers (Top Layer)
+      { name: "Equipment Suppliers", type: "organization", x_position: 100, y_position: 150 },
+      { name: "Software Providers", type: "organization", x_position: 400, y_position: 50 },
+      { name: "Supplement Companies", type: "organization", x_position: 800, y_position: 50 },
+      { name: "Apparel Brands", type: "organization", x_position: 1100, y_position: 150 },
       
-      // Support Network (Left Side)
-      { name: "Home Inspectors", type: "organization", x_position: 150, y_position: 400 },
-      { name: "Mortgage Brokers", type: "organization", x_position: 300, y_position: 500 },
-      { name: "Real Estate Attorneys", type: "organization", x_position: 150, y_position: 600 },
+      // Professional Development (Left Side)
+      { name: "Fitness Associations", type: "organization", x_position: 150, y_position: 400 },
+      { name: "Industry Conferences", type: "event", x_position: 300, y_position: 500 },
+      { name: "Certification Bodies", type: "organization", x_position: 150, y_position: 600 },
       
-      // Digital Presence (Right Side)
-      { name: "Social Media", type: "organization", x_position: 1050, y_position: 400 },
-      { name: "Real Estate Platforms", type: "organization", x_position: 900, y_position: 500 },
-      { name: "Local Forums", type: "organization", x_position: 1050, y_position: 600 },
+      // Staff & Training (Right Side)
+      { name: "Personal Trainers", type: "person", x_position: 1050, y_position: 400 },
+      { name: "Group Instructors", type: "person", x_position: 900, y_position: 500 },
+      { name: "Fitness Educators", type: "person", x_position: 1050, y_position: 600 },
       
-      // Meeting Venues (Bottom Layer)
-      { name: "Local Coffee Shops", type: "venue", x_position: 400, y_position: 550 },
-      { name: "Co-working Spaces", type: "venue", x_position: 600, y_position: 500 },
-      { name: "Community Centers", type: "venue", x_position: 800, y_position: 550 }
+      // Marketing & Growth (Bottom Layer)
+      { name: "Social Media Influencers", type: "person", x_position: 400, y_position: 550 },
+      { name: "Local Athletes", type: "person", x_position: 600, y_position: 500 },
+      { name: "Sports Teams", type: "organization", x_position: 800, y_position: 550 },
+      
+      // Support Services
+      { name: "Insurance Providers", type: "organization", x_position: 200, y_position: 300 },
+      { name: "Payment Processors", type: "organization", x_position: 1000, y_position: 300 },
+      { name: "Legal Services", type: "organization", x_position: 700, y_position: 650 }
     ],
     edges: [
-      // Core Professional Connections
-      { source: 0, target: 1, label: "Join Agencies" },
-      { source: 0, target: 2, label: "Partner With" },
-      { source: 0, target: 3, label: "Work With" },
+      // Core Industry Connections
+      { source: 0, target: 1, label: "Collaborate" },
+      { source: 0, target: 2, label: "Partnership" },
+      { source: 0, target: 3, label: "Cross Promotion" },
       
-      // Professional Development
-      { source: 0, target: 4, label: "Member" },
-      { source: 0, target: 5, label: "Attend Monthly" },
-      { source: 0, target: 6, label: "Annual Events" },
+      // Equipment & Supplier Relations
+      { source: 0, target: 4, label: "Bulk Deals" },
+      { source: 0, target: 5, label: "Tech Solutions" },
+      { source: 0, target: 6, label: "Wholesale" },
+      { source: 0, target: 7, label: "Merchandise" },
       
-      // Support Network Connections
-      { source: 0, target: 7, label: "Trusted Partners" },
-      { source: 0, target: 8, label: "Referral Network" },
-      { source: 0, target: 9, label: "Legal Support" },
+      // Professional Growth
+      { source: 0, target: 8, label: "Membership" },
+      { source: 0, target: 9, label: "Annual Events" },
+      { source: 0, target: 10, label: "Certifications" },
       
-      // Digital Presence
-      { source: 0, target: 10, label: "Regular Posts" },
-      { source: 0, target: 11, label: "Active Profile" },
-      { source: 0, target: 12, label: "Community Engagement" },
+      // Staff Network
+      { source: 0, target: 11, label: "Hire/Train" },
+      { source: 0, target: 12, label: "Classes" },
+      { source: 0, target: 13, label: "Workshops" },
       
-      // Meeting Locations
-      { source: 0, target: 13, label: "Weekly Meetings" },
-      { source: 0, target: 14, label: "Work Sessions" },
-      { source: 0, target: 15, label: "Community Events" },
+      // Marketing Channels
+      { source: 0, target: 14, label: "Promotions" },
+      { source: 0, target: 15, label: "Sponsorship" },
+      { source: 0, target: 16, label: "Partnerships" },
+      
+      // Support Network
+      { source: 0, target: 17, label: "Coverage" },
+      { source: 0, target: 18, label: "Transactions" },
+      { source: 0, target: 19, label: "Contracts" },
       
       // Cross-Network Connections
-      { source: 1, target: 5, label: "Agency Events" },
-      { source: 2, target: 8, label: "Property Financing" },
-      { source: 3, target: 9, label: "Legal Processing" },
-      { source: 4, target: 6, label: "Industry Updates" },
-      { source: 7, target: 11, label: "Reviews" },
-      { source: 10, target: 12, label: "Cross Promotion" }
+      { source: 1, target: 4, label: "Equipment Needs" },
+      { source: 2, target: 5, label: "Management Systems" },
+      { source: 3, target: 14, label: "Marketing" },
+      { source: 8, target: 9, label: "Event Organization" },
+      { source: 11, target: 13, label: "Training" },
+      { source: 15, target: 16, label: "Local Events" },
+      { source: 6, target: 14, label: "Product Placement" },
+      { source: 7, target: 15, label: "Sponsorships" },
+      { source: 17, target: 19, label: "Risk Management" }
     ]
   },
   {
