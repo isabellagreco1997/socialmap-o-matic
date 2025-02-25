@@ -1,9 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Network } from "@/types/network";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Menu } from 'lucide-react';
+import { PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Menu, GripVertical } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -13,6 +13,7 @@ interface NetworkSidebarProps {
   onNetworkSelect: (id: string) => void;
   onEditNetwork: (network: Network) => void;
   onOpenTemplates: () => void;
+  onNetworksReorder: (networks: Network[]) => void;
 }
 
 const NetworkSidebar = ({
@@ -22,8 +23,25 @@ const NetworkSidebar = ({
   onSearchChange,
   onNetworkSelect,
   onEditNetwork,
-  onOpenTemplates
+  onOpenTemplates,
+  onNetworksReorder
 }: NetworkSidebarProps) => {
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(networks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update the order property for each network
+    const updatedNetworks = items.map((network, index) => ({
+      ...network,
+      order: index
+    }));
+
+    onNetworksReorder(updatedNetworks);
+  };
+
   return (
     <div className="p-3 space-y-3 py-3">
       <div className="space-y-2">
@@ -48,31 +66,59 @@ const NetworkSidebar = ({
       </div>
 
       <div className="border-t -mx-3 px-3">
-        <div className="pt-3 h-[calc(100vh-350px)] overflow-y-auto space-y-1">
-          {networks.map(network => (
-            <div 
-              key={network.id} 
-              className="group relative"
-            >
-              <Button 
-                variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                className={`w-full justify-start h-9 text-sm font-medium rounded-lg ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
-                onClick={() => onNetworkSelect(network.id)}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="networks">
+            {(provided) => (
+              <div 
+                className="pt-3 h-[calc(100vh-350px)] overflow-y-auto space-y-1"
+                {...provided.droppableProps}
+                ref={provided.innerRef}
               >
-                <div 
-                  className="mr-2 p-1 rounded hover:bg-white/10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditNetwork(network);
-                  }}
-                >
-                  <Menu className="h-3.5 w-3.5" />
-                </div>
-                {network.name}
-              </Button>
-            </div>
-          ))}
-        </div>
+                {networks.map((network, index) => (
+                  <Draggable 
+                    key={network.id} 
+                    draggableId={network.id} 
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`group relative ${snapshot.isDragging ? 'z-50' : ''}`}
+                      >
+                        <Button 
+                          variant={network.id === currentNetworkId ? "default" : "ghost"} 
+                          className={`w-full justify-start h-9 text-sm font-medium rounded-lg ${
+                            network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''
+                          }`}
+                          onClick={() => onNetworkSelect(network.id)}
+                        >
+                          <div 
+                            {...provided.dragHandleProps}
+                            className="mr-2 p-1 rounded hover:bg-white/10 cursor-grab active:cursor-grabbing"
+                          >
+                            <GripVertical className="h-3.5 w-3.5" />
+                          </div>
+                          <div 
+                            className="mr-2 p-1 rounded hover:bg-white/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditNetwork(network);
+                            }}
+                          >
+                            <Menu className="h-3.5 w-3.5" />
+                          </div>
+                          {network.name}
+                        </Button>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
 
       <div className="border-t mt-auto p-2 space-y-1">

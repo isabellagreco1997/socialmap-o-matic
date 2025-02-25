@@ -288,6 +288,33 @@ export const useNetworkHandlers = (
     }
   };
 
+  const handleNetworksReorder = async (reorderedNetworks: Network[]) => {
+    try {
+      setNetworks(reorderedNetworks);
+
+      const updatePromises = reorderedNetworks.map((network) =>
+        supabase
+          .from('networks')
+          .update({ order: network.order })
+          .eq('id', network.id)
+      );
+
+      await Promise.all(updatePromises);
+
+      toast({
+        title: "Networks reordered",
+        description: "Network order has been updated"
+      });
+    } catch (error) {
+      console.error('Error updating network order:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update network order"
+      });
+    }
+  };
+
   return {
     handleAddNode,
     handleEditNetwork,
@@ -295,5 +322,6 @@ export const useNetworkHandlers = (
     handleTemplateSelect,
     handleCsvImport,
     handleDeleteNetwork,
+    handleNetworksReorder,
   };
 };

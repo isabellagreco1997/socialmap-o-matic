@@ -1,4 +1,3 @@
-
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -39,12 +38,13 @@ export const Flow = () => {
     handleDuplicateNetwork,
     handleTemplateSelect,
     handleCsvImport,
-    handleDeleteNetwork
+    handleDeleteNetwork,
+    handleNetworksReorder
   } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks);
 
-  const filteredNetworks = networks.filter(network => 
-    network.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNetworks = networks
+    .filter(network => network.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -210,6 +210,7 @@ export const Flow = () => {
               onNetworkSelect={setCurrentNetworkId}
               onEditNetwork={setEditingNetwork}
               onOpenTemplates={() => setIsTemplatesDialogOpen(true)}
+              onNetworksReorder={handleNetworksReorder}
             />
           </SidebarContent>
         </Sidebar>
