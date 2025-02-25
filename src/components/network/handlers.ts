@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Network, NodeData } from "@/types/network";
@@ -110,9 +111,11 @@ export const useNetworkHandlers = (
   
       if (networkError) throw networkError;
   
-      const spacing = 200;
+      // Increased spacing between nodes
+      const spacing = 300; // Increased from 200
       const gridSize = Math.ceil(Math.sqrt(template.nodes.length));
       
+      // Calculate the center position to place nodes around
       const centerX = (gridSize * spacing) / 2;
       const centerY = (gridSize * spacing) / 2;
 
@@ -120,7 +123,8 @@ export const useNetworkHandlers = (
         const row = Math.floor(index / gridSize);
         const col = index % gridSize;
         
-        const randomOffset = () => (Math.random() - 0.5) * 50;
+        // Add some random offset to avoid perfect grid alignment
+        const randomOffset = () => (Math.random() - 0.5) * 100; // Increased randomness
         
         const x_position = (col * spacing) - centerX + randomOffset();
         const y_position = (row * spacing) - centerY + randomOffset();
