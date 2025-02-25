@@ -6,7 +6,7 @@ import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2, GripVertical, Search, Copy } from 'lucide-react';
+import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Settings, Copy, Trash2, Search } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
