@@ -1,4 +1,6 @@
 
+import type { Database } from "@/integrations/supabase/types";
+
 export type Network = Database['public']['Tables']['networks']['Row'];
 
 export type NodeType = "person" | "organization" | "event" | "venue";
