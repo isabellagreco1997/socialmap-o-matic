@@ -52,7 +52,7 @@ const LandingPage = () => {
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
             <span>Map & Visualize your</span>
-            <span>Social <span className="text-[#0A2463]">Connections</span></span>
+            <span>Professional <span className="text-[#0A2463]">Network</span></span>
           </h1>
           <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">
             Designed to help Entrepreneurs, Executives, and Salespeople build their personal networks
