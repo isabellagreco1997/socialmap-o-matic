@@ -6,7 +6,7 @@ import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2, GripVertical } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
@@ -467,6 +467,63 @@ export const Flow = () => {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, network: Database['public']['Tables']['networks']['Row']) => {
+    e.dataTransfer.setData('networkId', network.id);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const target = e.currentTarget;
+    target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.style.boxShadow = 'none';
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetNetwork: Database['public']['Tables']['networks']['Row']) => {
+    e.preventDefault();
+    const draggedNetworkId = e.dataTransfer.getData('networkId');
+    const targetNetworkId = targetNetwork.id;
+    
+    if (draggedNetworkId === targetNetworkId) return;
+
+    const draggedIndex = networks.findIndex(n => n.id === draggedNetworkId);
+    const targetIndex = networks.findIndex(n => n.id === targetNetworkId);
+    
+    const newNetworks = [...networks];
+    const [draggedNetwork] = newNetworks.splice(draggedIndex, 1);
+    newNetworks.splice(targetIndex, 0, draggedNetwork);
+
+    try {
+      setNetworks(newNetworks);
+
+      const updates = newNetworks.map((network, index) => ({
+        id: network.id,
+        order: index
+      }));
+
+      const { error } = await supabase
+        .from('networks')
+        .upsert(updates, { onConflict: 'id' });
+
+      if (error) throw error;
+
+      toast({
+        title: "Network Reordered",
+        description: "Network order updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating network order:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update network order"
+      });
+      setNetworks(networks);
+    }
+  };
+
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
@@ -498,23 +555,43 @@ export const Flow = () => {
 
               <div className="border-t -mx-4 px-4">
                 <div className="pt-4 h-[calc(100vh-450px)] overflow-y-auto space-y-2">
-                  {networks.map(network => <div key={network.id} className="group relative">
-                      <Button variant={network.id === currentNetworkId ? "default" : "ghost"} className={`w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} onClick={() => setCurrentNetworkId(network.id)}>
+                  {networks.map(network => (
+                    <div 
+                      key={network.id} 
+                      className="group relative"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, network)}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, network)}
+                    >
+                      <Button 
+                        variant={network.id === currentNetworkId ? "default" : "ghost"} 
+                        className={`w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
+                        onClick={() => setCurrentNetworkId(network.id)}
+                      >
+                        <GripVertical className="h-4 w-4 cursor-grab active:cursor-grabbing mr-1" />
                         <Grid className="h-5 w-5" />
                         {network.name}
                       </Button>
-                      <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-red-100 hover:text-red-600" onClick={e => {
-                    e.stopPropagation();
-                    if (network.id === currentNetworkId) {
-                      handleDeleteNetwork();
-                    } else {
-                      setCurrentNetworkId(network.id);
-                      handleDeleteNetwork();
-                    }
-                  }}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-red-100 hover:text-red-600" 
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (network.id === currentNetworkId) {
+                            handleDeleteNetwork();
+                          } else {
+                            setCurrentNetworkId(network.id);
+                            handleDeleteNetwork();
+                          }
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
