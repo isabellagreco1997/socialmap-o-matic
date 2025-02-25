@@ -6,7 +6,7 @@ import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2, GripVertical, Search } from 'lucide-react';
+import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2, GripVertical, Search, Copy } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
@@ -129,6 +129,10 @@ export const Flow = () => {
   const filteredNetworks = networks.filter(network => 
     network.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
+  const [networkName, setNetworkName] = useState("");
+  const [networkDescription, setNetworkDescription] = useState("");
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -526,6 +530,67 @@ export const Flow = () => {
     }
   };
 
+  const handleEditNetwork = async () => {
+    if (!editingNetwork) return;
+    try {
+      const { error } = await supabase
+        .from('networks')
+        .update({ name: networkName })
+        .eq('id', editingNetwork.id);
+      
+      if (error) throw error;
+
+      setNetworks(networks.map(network => 
+        network.id === editingNetwork.id 
+          ? { ...network, name: networkName }
+          : network
+      ));
+      
+      setEditingNetwork(null);
+      toast({
+        title: "Network updated",
+        description: `Updated ${networkName}`
+      });
+    } catch (error) {
+      console.error('Error updating network:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update network"
+      });
+    }
+  };
+
+  const handleDuplicateNetwork = async () => {
+    if (!editingNetwork) return;
+    try {
+      const { data: network, error } = await supabase
+        .from('networks')
+        .insert([{ 
+          name: `${editingNetwork.name} (Copy)`,
+          user_id: editingNetwork.user_id 
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setNetworks(prev => [...prev, network]);
+      setEditingNetwork(null);
+      toast({
+        title: "Network duplicated",
+        description: `Created ${network.name}`
+      });
+    } catch (error) {
+      console.error('Error duplicating network:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to duplicate network"
+      });
+    }
+  };
+
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
@@ -580,28 +645,22 @@ export const Flow = () => {
                     >
                       <Button 
                         variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                        className={`w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
+                        className={`w-full justify-start h-9 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
                         onClick={() => setCurrentNetworkId(network.id)}
                       >
-                        <GripVertical className="h-4 w-4 cursor-grab active:cursor-grabbing mr-1" />
-                        <Grid className="h-4 w-4" />
                         {network.name}
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-7 w-7 hover:bg-red-100 hover:text-red-600" 
-                        onClick={e => {
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-7 w-7" 
+                        onClick={(e) => {
                           e.stopPropagation();
-                          if (network.id === currentNetworkId) {
-                            handleDeleteNetwork();
-                          } else {
-                            setCurrentNetworkId(network.id);
-                            handleDeleteNetwork();
-                          }
+                          setEditingNetwork(network);
+                          setNetworkName(network.name);
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ))}
@@ -688,6 +747,68 @@ export const Flow = () => {
             onConfirm={handleCsvImport}
           />
         </div>
+
+        <Dialog open={editingNetwork !== null} onOpenChange={() => setEditingNetwork(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Network</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Network Name</label>
+                <Input
+                  value={networkName}
+                  onChange={(e) => setNetworkName(e.target.value)}
+                  placeholder="Enter network name"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Input
+                  value={networkDescription}
+                  onChange={(e) => setNetworkDescription(e.target.value)}
+                  placeholder="Add a description (optional)"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex sm:justify-between">
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={handleDuplicateNetwork}
+                  className="flex gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Duplicate
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    if (editingNetwork) {
+                      setCurrentNetworkId(editingNetwork.id);
+                      handleDeleteNetwork();
+                    }
+                  }}
+                  className="flex gap-2 hover:bg-red-100 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingNetwork(null)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleEditNetwork}>
+                  Save Changes
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>;
 };
