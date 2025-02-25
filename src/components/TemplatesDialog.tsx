@@ -1,10 +1,30 @@
-<lov-code>
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-const templates = [
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  nodes: Array<{
+    name: string;
+    type: string;
+    x_position: number;
+    y_position: number;
+    notes?: string;
+    address?: string;
+    date?: string;
+    image_url?: string;
+  }>;
+  edges: Array<{
+    source: number;
+    target: number;
+    label: string;
+  }>;
+}
+
+const templates: Template[] = [
   {
     id: "london-startup-engineer",
     name: "London Startup Engineer Network",
@@ -770,13 +790,4 @@ const templates = [
       { source: 0, target: 14, label: "Storage Policy" },
       { source: 1, target: 13, label: "Grid Tech" },
       { source: 2, target: 22, label: "Advocacy" },
-      { source: 19, target: 22, label: "Research Input" },
-      { source: 31, target: 22, label: "Financial Advisory" },
-      { source: 25, target: 15, label: "Grid Expertise" }
-    ]
-  },
-  {
-    id: "uhnw-networking",
-    name: "UHNW & Billionaire Network",
-    description: "Build relationships with ultra-high-net-worth individuals and billionaires",
-    nodes: [
+      { source:
