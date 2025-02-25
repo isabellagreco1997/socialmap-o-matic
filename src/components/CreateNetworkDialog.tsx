@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { WaveformIcon, PencilLine } from "lucide-react";
+import { AudioWaveform, PencilLine } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -119,7 +119,7 @@ export const CreateNetworkDialog = ({
                 onClick={() => createNetwork(false)}
                 disabled={!prompt.trim() || isGenerating}
               >
-                <WaveformIcon className="h-8 w-8" />
+                <AudioWaveform className="h-8 w-8" />
                 <div>
                   <div className="font-semibold">Generate network</div>
                   <div className="text-sm">AI will help you build it</div>
