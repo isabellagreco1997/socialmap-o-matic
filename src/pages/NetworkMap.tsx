@@ -6,7 +6,7 @@ import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2, GripVertical } from 'lucide-react';
+import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Users, Grid, FileText, ListTodo, MoreHorizontal, Pencil, Trash2, GripVertical, Search } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import SocialNode from '@/components/SocialNode';
 import { useToast } from '@/components/ui/use-toast';
@@ -122,10 +122,13 @@ export const Flow = () => {
   const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
-  const {
-    toast
-  } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+
+  const filteredNetworks = networks.filter(network => 
+    network.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -527,11 +530,22 @@ export const Flow = () => {
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
           <SidebarContent className="w-[260px] border-r bg-white flex flex-col h-screen overflow-hidden">
-            <div className="p-6 flex items-center justify-between border-b">
-              <h2 className="font-bold text-sm">Your Networks</h2>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
+            <div className="p-6 flex flex-col gap-4 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-sm">Your Networks</h2>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Search networks, nodes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                />
+              </div>
             </div>
 
             <div className="p-4 space-y-4 py-[20px]">
@@ -554,7 +568,7 @@ export const Flow = () => {
 
               <div className="border-t -mx-4 px-4">
                 <div className="pt-4 h-[calc(100vh-450px)] overflow-y-auto space-y-2">
-                  {networks.map(network => (
+                  {filteredNetworks.map(network => (
                     <div 
                       key={network.id} 
                       className="group relative"
