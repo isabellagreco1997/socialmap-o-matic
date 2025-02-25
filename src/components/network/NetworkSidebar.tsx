@@ -84,6 +84,9 @@ const NetworkSidebar = ({
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
+                        style={{
+                          ...provided.draggableProps.style,
+                        }}
                         className={`group relative ${snapshot.isDragging ? 'z-50' : ''}`}
                       >
                         <Button 
@@ -95,6 +98,7 @@ const NetworkSidebar = ({
                         >
                           <div 
                             {...provided.dragHandleProps}
+                            onClick={(e) => e.stopPropagation()}
                             className="mr-2 p-1 rounded hover:bg-white/10 cursor-grab active:cursor-grabbing"
                           >
                             <GripVertical className="h-3.5 w-3.5" />
