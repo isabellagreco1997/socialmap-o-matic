@@ -473,12 +473,9 @@ export const Flow = () => {
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const target = e.currentTarget;
-    target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.style.boxShadow = 'none';
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetNetwork: Database['public']['Tables']['networks']['Row']) => {
