@@ -500,18 +500,14 @@ export const Flow = () => {
 
       const updates = newNetworks.map((network, index) => ({
         id: network.id,
+        name: network.name,
+        user_id: network.user_id,
         order: index
       }));
 
       const { error } = await supabase
         .from('networks')
-        .upsert(
-          updates,
-          {
-            onConflict: 'id',
-            returning: 'minimal'
-          }
-        );
+        .upsert(updates);
 
       if (error) throw error;
 
