@@ -530,11 +530,11 @@ export const Flow = () => {
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
           <SidebarContent className="w-[260px] border-r bg-white flex flex-col h-screen overflow-hidden">
-            <div className="p-6 flex flex-col gap-4 border-b">
+            <div className="p-4 flex flex-col gap-3 border-b">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-sm">Your Networks</h2>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <ChevronLeft className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
               </div>
               <div className="relative">
@@ -543,31 +543,31 @@ export const Flow = () => {
                   placeholder="Search networks, nodes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-sm"
+                  className="pl-9 h-8 text-sm"
                 />
               </div>
             </div>
 
-            <div className="p-4 space-y-4 py-[20px]">
-              <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
-                  <PlusIcon className="h-5 w-5" />
+            <div className="p-3 space-y-3 py-3">
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
+                  <PlusIcon className="h-4 w-4" />
                   Create Network
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm rounded-lg font-medium">
-                  <LayoutGrid className="h-5 w-5" />
+                <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+                  <LayoutGrid className="h-4 w-4" />
                   Overview
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg">
-                  <MessageSquare className="h-5 w-5" />
+                <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
+                  <MessageSquare className="h-4 w-4" />
                   AI Chat
                 </Button>
               </div>
 
-              <div className="border-t -mx-4 px-4">
-                <div className="pt-4 h-[calc(100vh-450px)] overflow-y-auto space-y-2">
+              <div className="border-t -mx-3 px-3">
+                <div className="pt-3 h-[calc(100vh-350px)] overflow-y-auto space-y-1">
                   {filteredNetworks.map(network => (
                     <div 
                       key={network.id} 
@@ -580,17 +580,17 @@ export const Flow = () => {
                     >
                       <Button 
                         variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                        className={`w-full justify-start gap-3 h-10 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
+                        className={`w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg pr-12 ${network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''}`} 
                         onClick={() => setCurrentNetworkId(network.id)}
                       >
                         <GripVertical className="h-4 w-4 cursor-grab active:cursor-grabbing mr-1" />
-                        <Grid className="h-5 w-5" />
+                        <Grid className="h-4 w-4" />
                         {network.name}
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 hover:bg-red-100 hover:text-red-600" 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-7 w-7 hover:bg-red-100 hover:text-red-600" 
                         onClick={e => {
                           e.stopPropagation();
                           if (network.id === currentNetworkId) {
@@ -601,7 +601,7 @@ export const Flow = () => {
                           }
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ))}
@@ -610,13 +610,13 @@ export const Flow = () => {
             </div>
 
             <div className="border-t mt-auto p-2 space-y-1">
-              <h3 className="text-sm font-bold px-4 mb-2">Discover</h3>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium">
-                <Library className="h-5 w-5" />
+              <h3 className="text-sm font-bold px-2 mb-1">Discover</h3>
+              <Button variant="ghost" className="w-full justify-start gap-3 h-8 text-sm font-medium">
+                <Library className="h-4 w-4" />
                 Templates
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium">
-                <Globe className="h-5 w-5" />
+              <Button variant="ghost" className="w-full justify-start gap-3 h-8 text-sm font-medium">
+                <Globe className="h-4 w-4" />
                 Resources
               </Button>
             </div>
