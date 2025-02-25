@@ -271,6 +271,105 @@ const templates = [
       { source: 2, target: 5, label: "Manages" },
       { source: 3, target: 6, label: "Manages" }
     ]
+  },
+  {
+    id: "startup-funding",
+    name: "Startup Funding Network",
+    description: "Build relationships for raising capital and growing your startup",
+    nodes: [
+      // Center - You
+      { name: "You", type: "person", x_position: 600, y_position: 300 },
+      
+      // Early Stage Funding (Top Layer)
+      { name: "Angel Investors", type: "person", x_position: 400, y_position: 100 },
+      { name: "Pre-seed VCs", type: "organization", x_position: 600, y_position: 50 },
+      { name: "Seed VCs", type: "organization", x_position: 800, y_position: 100 },
+      { name: "Accelerators", type: "organization", x_position: 300, y_position: 150 },
+      { name: "Incubators", type: "organization", x_position: 900, y_position: 150 },
+      
+      // Growth Capital (Right Side)
+      { name: "Series A VCs", type: "organization", x_position: 900, y_position: 250 },
+      { name: "Series B+ VCs", type: "organization", x_position: 1000, y_position: 350 },
+      { name: "Growth Funds", type: "organization", x_position: 900, y_position: 450 },
+      { name: "Private Equity", type: "organization", x_position: 1000, y_position: 550 },
+      
+      // Alternative Funding (Left Side)
+      { name: "Crowdfunding", type: "organization", x_position: 300, y_position: 250 },
+      { name: "Revenue Financing", type: "organization", x_position: 200, y_position: 350 },
+      { name: "Government Grants", type: "organization", x_position: 300, y_position: 450 },
+      { name: "Corporate VCs", type: "organization", x_position: 200, y_position: 550 },
+      
+      // Support Network (Upper Middle)
+      { name: "Startup Lawyers", type: "organization", x_position: 500, y_position: 200 },
+      { name: "Investment Bankers", type: "person", x_position: 700, y_position: 200 },
+      { name: "Financial Advisors", type: "person", x_position: 600, y_position: 150 },
+      
+      // Industry Connections (Bottom Layer)
+      { name: "Industry Experts", type: "person", x_position: 400, y_position: 500 },
+      { name: "Strategic Partners", type: "organization", x_position: 600, y_position: 550 },
+      { name: "Corporate Clients", type: "organization", x_position: 800, y_position: 500 },
+      
+      // Ecosystem Players
+      { name: "Startup Events", type: "event", x_position: 450, y_position: 350 },
+      { name: "Founder Networks", type: "organization", x_position: 750, y_position: 350 },
+      { name: "Tech Media", type: "organization", x_position: 600, y_position: 450 },
+      
+      // Exit Opportunities
+      { name: "Investment Banks", type: "organization", x_position: 400, y_position: 600 },
+      { name: "Stock Exchanges", type: "organization", x_position: 600, y_position: 650 },
+      { name: "Strategic Acquirers", type: "organization", x_position: 800, y_position: 600 }
+    ],
+    edges: [
+      // Early Stage Connections
+      { source: 0, target: 1, label: "Pre-seed Round" },
+      { source: 0, target: 2, label: "Seed Round" },
+      { source: 0, target: 3, label: "Series Seed" },
+      { source: 0, target: 4, label: "Program" },
+      { source: 0, target: 5, label: "Mentorship" },
+      
+      // Growth Capital
+      { source: 0, target: 6, label: "Series A" },
+      { source: 0, target: 7, label: "Series B+" },
+      { source: 0, target: 8, label: "Growth Round" },
+      { source: 0, target: 9, label: "Late Stage" },
+      
+      // Alternative Funding
+      { source: 0, target: 10, label: "Community Round" },
+      { source: 0, target: 11, label: "Revenue Share" },
+      { source: 0, target: 12, label: "R&D Funding" },
+      { source: 0, target: 13, label: "Strategic Investment" },
+      
+      // Support Network
+      { source: 0, target: 14, label: "Legal" },
+      { source: 0, target: 15, label: "M&A Advisory" },
+      { source: 0, target: 16, label: "Finance" },
+      
+      // Industry Connections
+      { source: 0, target: 17, label: "Domain Expertise" },
+      { source: 0, target: 18, label: "Co-development" },
+      { source: 0, target: 19, label: "Enterprise Sales" },
+      
+      // Ecosystem
+      { source: 0, target: 20, label: "Pitch Events" },
+      { source: 0, target: 21, label: "Peer Network" },
+      { source: 0, target: 22, label: "PR & Visibility" },
+      
+      // Exit Path
+      { source: 0, target: 23, label: "IPO Advisory" },
+      { source: 0, target: 24, label: "Public Markets" },
+      { source: 0, target: 25, label: "M&A" },
+      
+      // Cross Connections
+      { source: 1, target: 20, label: "Demo Days" },
+      { source: 4, target: 21, label: "Alumni Network" },
+      { source: 14, target: 15, label: "Deals" },
+      { source: 6, target: 19, label: "Enterprise Intro" },
+      { source: 17, target: 18, label: "Industry Network" },
+      { source: 22, target: 21, label: "Coverage" },
+      { source: 23, target: 25, label: "Exit Options" },
+      { source: 8, target: 9, label: "Late Stage Funding" },
+      { source: 13, target: 19, label: "Corporate Network" }
+    ]
   }
 ];
 
