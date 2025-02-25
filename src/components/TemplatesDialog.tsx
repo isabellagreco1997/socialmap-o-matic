@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,49 +10,61 @@ const templates = [
     name: "Real Estate Agent Network",
     description: "Build and maintain relationships with real estate professionals",
     nodes: [
-      { name: "You", type: "person", x_position: 400, y_position: 50 },
+      // Center - You
+      { name: "You", type: "person", x_position: 600, y_position: 300 },
       
-      { name: "Local Brokers", type: "organization", x_position: 200, y_position: 150 },
-      { name: "Property Managers", type: "organization", x_position: 400, y_position: 150 },
-      { name: "Title Companies", type: "organization", x_position: 600, y_position: 150 },
+      // Core Professional Circle (Closer to center)
+      { name: "Local Brokers", type: "organization", x_position: 300, y_position: 200 },
+      { name: "Property Managers", type: "organization", x_position: 900, y_position: 200 },
+      { name: "Title Companies", type: "organization", x_position: 600, y_position: 100 },
       
-      { name: "Real Estate Board", type: "organization", x_position: 100, y_position: 250 },
-      { name: "Networking Events", type: "event", x_position: 300, y_position: 250 },
-      { name: "Industry Conferences", type: "event", x_position: 500, y_position: 250 },
+      // Professional Organizations (Top Layer)
+      { name: "Real Estate Board", type: "organization", x_position: 100, y_position: 150 },
+      { name: "Networking Events", type: "event", x_position: 400, y_position: 50 },
+      { name: "Industry Conferences", type: "event", x_position: 800, y_position: 50 },
       
-      { name: "Home Inspectors", type: "organization", x_position: 150, y_position: 350 },
-      { name: "Mortgage Brokers", type: "organization", x_position: 350, y_position: 350 },
-      { name: "Real Estate Attorneys", type: "organization", x_position: 550, y_position: 350 },
+      // Support Network (Left Side)
+      { name: "Home Inspectors", type: "organization", x_position: 150, y_position: 400 },
+      { name: "Mortgage Brokers", type: "organization", x_position: 300, y_position: 500 },
+      { name: "Real Estate Attorneys", type: "organization", x_position: 150, y_position: 600 },
       
-      { name: "Social Media", type: "organization", x_position: 200, y_position: 450 },
-      { name: "Real Estate Platforms", type: "organization", x_position: 400, y_position: 450 },
-      { name: "Local Forums", type: "organization", x_position: 600, y_position: 450 },
+      // Digital Presence (Right Side)
+      { name: "Social Media", type: "organization", x_position: 1050, y_position: 400 },
+      { name: "Real Estate Platforms", type: "organization", x_position: 900, y_position: 500 },
+      { name: "Local Forums", type: "organization", x_position: 1050, y_position: 600 },
       
-      { name: "Local Coffee Shops", type: "venue", x_position: 250, y_position: 550 },
-      { name: "Co-working Spaces", type: "venue", x_position: 450, y_position: 550 },
-      { name: "Community Centers", type: "venue", x_position: 650, y_position: 550 }
+      // Meeting Venues (Bottom Layer)
+      { name: "Local Coffee Shops", type: "venue", x_position: 400, y_position: 550 },
+      { name: "Co-working Spaces", type: "venue", x_position: 600, y_position: 500 },
+      { name: "Community Centers", type: "venue", x_position: 800, y_position: 550 }
     ],
     edges: [
+      // Core Professional Connections
       { source: 0, target: 1, label: "Join Agencies" },
       { source: 0, target: 2, label: "Partner With" },
       { source: 0, target: 3, label: "Work With" },
       
+      // Professional Development
       { source: 0, target: 4, label: "Member" },
       { source: 0, target: 5, label: "Attend Monthly" },
       { source: 0, target: 6, label: "Annual Events" },
       
+      // Support Network Connections
       { source: 0, target: 7, label: "Trusted Partners" },
       { source: 0, target: 8, label: "Referral Network" },
       { source: 0, target: 9, label: "Legal Support" },
       
+      // Digital Presence
       { source: 0, target: 10, label: "Regular Posts" },
       { source: 0, target: 11, label: "Active Profile" },
       { source: 0, target: 12, label: "Community Engagement" },
       
+      // Meeting Locations
       { source: 0, target: 13, label: "Weekly Meetings" },
       { source: 0, target: 14, label: "Work Sessions" },
       { source: 0, target: 15, label: "Community Events" },
       
+      // Cross-Network Connections
       { source: 1, target: 5, label: "Agency Events" },
       { source: 2, target: 8, label: "Property Financing" },
       { source: 3, target: 9, label: "Legal Processing" },
