@@ -1,18 +1,20 @@
 
-import { ReactFlow, Background, Controls } from '@xyflow/react';
+import { ReactFlow } from '@xyflow/react';
 import SocialNode from '@/components/SocialNode';
 import CustomEdge from '@/components/network/CustomEdge';
 import NetworkTopBar from '@/components/network/NetworkTopBar';
+import NetworkFlowControls from '@/components/network/NetworkFlowControls';
 import { Network } from "@/types/network";
+import { Edge, Node, Connection } from '@xyflow/react';
 
 interface NetworkFlowProps {
-  nodes: any[];
-  edges: any[];
+  nodes: Node[];
+  edges: Edge[];
   networks: Network[];
   currentNetworkId: string | null;
   onNodesChange: (changes: any) => void;
   onEdgesChange: (changes: any) => void;
-  onConnect: (connection: any) => void;
+  onConnect: (connection: Connection) => void;
   onAddNode: () => void;
   onImportCsv: () => void;
 }
@@ -52,8 +54,7 @@ const NetworkFlow = ({
           onImportCsv={onImportCsv}
         />
         
-        <Background />
-        <Controls />
+        <NetworkFlowControls />
       </ReactFlow>
     </div>
   );
