@@ -1,4 +1,3 @@
-<lov-code>
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -642,4 +641,65 @@ const templates = [
       { source: 0, target: 3, label: "Cross Promotion" },
       
       // Equipment & Supplier Relations
-      { source: 
+      { source: 0, target: 4, label: "Supply Chain" },
+      { source: 0, target: 5, label: "Distribution" },
+      { source: 0, target: 6, label: "R&D" },
+      { source: 0, target: 7, label: "Policy Advisory" },
+      
+      // Professional Development
+      { source: 0, target: 8, label: "Certification" },
+      { source: 0, target: 9, label: "Training" },
+      
+      // Staff & Training
+      { source: 0, target: 10, label: "Instructor" },
+      { source: 0, target: 11, label: "Education" },
+      
+      // Marketing & Growth
+      { source: 0, target: 12, label: "Social Media" },
+      { source: 0, target: 13, label: "Marketing" },
+      { source: 0, target: 14, label: "Events" },
+      
+      // Support Services
+      { source: 0, target: 15, label: "Insurance" },
+      { source: 0, target: 16, label: "Payment" },
+      { source: 0, target: 17, label: "Legal" }
+    ]
+  }
+];
+
+interface TemplatesDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onTemplateSelect: (template: any) => void;
+}
+
+export function TemplatesDialog({
+  open,
+  onOpenChange,
+  onTemplateSelect
+}: TemplatesDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>Choose a Template</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          {templates.map((template) => (
+            <Button
+              key={template.id}
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-start gap-2"
+              onClick={() => onTemplateSelect(template)}
+            >
+              <div className="font-medium">{template.name}</div>
+              <div className="text-sm text-muted-foreground text-left">
+                {template.description}
+              </div>
+            </Button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
