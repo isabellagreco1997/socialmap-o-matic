@@ -130,10 +130,10 @@ export const Flow = () => {
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
-        const {
-          data: networksData,
-          error
-        } = await supabase.from('networks').select('*').order('created_at');
+        const { data: networksData, error } = await supabase
+          .from('networks')
+          .select('*')
+          .order('order', { ascending: true });
         if (error) throw error;
         setNetworks(networksData);
         if (networksData.length > 0 && !currentNetworkId) {
@@ -505,7 +505,13 @@ export const Flow = () => {
 
       const { error } = await supabase
         .from('networks')
-        .upsert(updates, { onConflict: 'id' });
+        .upsert(
+          updates,
+          {
+            onConflict: 'id',
+            returning: 'minimal'
+          }
+        );
 
       if (error) throw error;
 
