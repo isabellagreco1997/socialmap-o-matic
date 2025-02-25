@@ -5,6 +5,189 @@ import { useToast } from "@/components/ui/use-toast";
 
 const templates = [
   {
+    id: "george-clooney-network",
+    name: "George Clooney Network",
+    description: "Strategic network map to connect with George Clooney through entertainment industry contacts",
+    nodes: [
+      // Core Target
+      { 
+        name: "George Clooney", 
+        type: "person", 
+        x_position: 600, 
+        y_position: 300,
+        image_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/George_Clooney_2016.jpg/800px-George_Clooney_2016.jpg",
+        notes: "Academy Award-winning actor, director, and producer. Known for humanitarian work."
+      },
+      
+      // Production Companies
+      { 
+        name: "Smokehouse Pictures", 
+        type: "organization", 
+        x_position: 400, 
+        y_position: 200,
+        notes: "Clooney's production company, founded with Grant Heslov"
+      },
+      { 
+        name: "Universal Pictures", 
+        type: "organization", 
+        x_position: 800, 
+        y_position: 200,
+        notes: "Major studio with multiple Clooney projects"
+      },
+      
+      // Industry Events
+      { 
+        name: "Academy Awards", 
+        type: "event", 
+        x_position: 600, 
+        y_position: 100,
+        date: "2024-03-10",
+        address: "Dolby Theatre, Hollywood"
+      },
+      { 
+        name: "Venice Film Festival", 
+        type: "event", 
+        x_position: 400, 
+        y_position: 100,
+        date: "2024-08-28",
+        address: "Venice Lido, Italy"
+      },
+      
+      // Professional Connections
+      { 
+        name: "CAA Talent Agency", 
+        type: "organization", 
+        x_position: 200, 
+        y_position: 300,
+        notes: "Clooney's representation"
+      },
+      { 
+        name: "Grant Heslov", 
+        type: "person", 
+        x_position: 300, 
+        y_position: 250,
+        notes: "Producing partner and close friend"
+      },
+      
+      // Humanitarian Organizations
+      { 
+        name: "United Nations", 
+        type: "organization", 
+        x_position: 1000, 
+        y_position: 300,
+        notes: "Clooney is a UN Messenger of Peace"
+      },
+      { 
+        name: "Not On Our Watch", 
+        type: "organization", 
+        x_position: 900, 
+        y_position: 400,
+        notes: "Humanitarian organization co-founded by Clooney"
+      },
+      
+      // Film Industry Venues
+      { 
+        name: "Dolby Theatre", 
+        type: "venue", 
+        x_position: 500, 
+        y_position: 500,
+        address: "Hollywood Boulevard, LA"
+      },
+      { 
+        name: "Directors Guild", 
+        type: "venue", 
+        x_position: 700, 
+        y_position: 500,
+        address: "DGA Building, Los Angeles"
+      },
+      
+      // Media Contacts
+      { 
+        name: "Hollywood Reporter", 
+        type: "organization", 
+        x_position: 300, 
+        y_position: 400,
+        notes: "Leading industry publication"
+      },
+      { 
+        name: "Variety Magazine", 
+        type: "organization", 
+        x_position: 900, 
+        y_position: 200,
+        notes: "Premier entertainment industry news"
+      },
+      
+      // Current Projects
+      { 
+        name: "Upcoming Film Project", 
+        type: "event", 
+        x_position: 500, 
+        y_position: 300,
+        date: "2024-12-01"
+      },
+      { 
+        name: "Charity Gala", 
+        type: "event", 
+        x_position: 700, 
+        y_position: 300,
+        date: "2024-09-15"
+      },
+      
+      // Industry Organizations
+      { 
+        name: "Screen Actors Guild", 
+        type: "organization", 
+        x_position: 400, 
+        y_position: 600,
+        notes: "Professional actors' union"
+      },
+      { 
+        name: "Directors Guild of America", 
+        type: "organization", 
+        x_position: 800, 
+        y_position: 600,
+        notes: "Professional directors' organization"
+      }
+    ],
+    edges: [
+      // Direct Professional Connections
+      { source: 0, target: 1, label: "Co-founder" },
+      { source: 0, target: 6, label: "Business Partner" },
+      { source: 0, target: 5, label: "Represented by" },
+      
+      // Project Connections
+      { source: 1, target: 2, label: "Distribution Deal" },
+      { source: 0, target: 13, label: "Starring Role" },
+      { source: 1, target: 13, label: "Producing" },
+      
+      // Event Participation
+      { source: 0, target: 3, label: "Regular Attendee" },
+      { source: 0, target: 4, label: "Festival Circuit" },
+      { source: 3, target: 9, label: "Venue" },
+      
+      // Humanitarian Work
+      { source: 0, target: 7, label: "Peace Ambassador" },
+      { source: 0, target: 8, label: "Co-founder" },
+      { source: 0, target: 14, label: "Host" },
+      
+      // Media Relations
+      { source: 11, target: 13, label: "Coverage" },
+      { source: 12, target: 0, label: "Interviews" },
+      
+      // Industry Organization Links
+      { source: 0, target: 15, label: "Member" },
+      { source: 0, target: 16, label: "Member" },
+      { source: 15, target: 10, label: "Meetings" },
+      
+      // Cross-connections
+      { source: 5, target: 13, label: "Negotiation" },
+      { source: 6, target: 13, label: "Co-producing" },
+      { source: 7, target: 14, label: "Supporting" },
+      { source: 11, target: 14, label: "Press Coverage" },
+      { source: 2, target: 13, label: "Distribution" }
+    ]
+  },
+  {
     id: "renewable-energy",
     name: "Renewable Energy Network",
     description: "Network of renewable energy experts and organizations in California",
