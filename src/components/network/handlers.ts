@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Network, NodeData } from "@/types/network";
@@ -111,23 +110,18 @@ export const useNetworkHandlers = (
   
       if (networkError) throw networkError;
   
-      // Calculate spacing based on number of nodes
-      const spacing = 200; // Base spacing between nodes
+      const spacing = 200;
       const gridSize = Math.ceil(Math.sqrt(template.nodes.length));
       
-      // Center point for the network
       const centerX = (gridSize * spacing) / 2;
       const centerY = (gridSize * spacing) / 2;
 
       const nodesPromises = template.nodes.map((node: any, index: number) => {
-        // Calculate grid position
         const row = Math.floor(index / gridSize);
         const col = index % gridSize;
         
-        // Add some randomness to make it look more natural
         const randomOffset = () => (Math.random() - 0.5) * 50;
         
-        // Calculate actual position with offset from center
         const x_position = (col * spacing) - centerX + randomOffset();
         const y_position = (row * spacing) - centerY + randomOffset();
         
@@ -269,11 +263,37 @@ export const useNetworkHandlers = (
     }
   };
 
+  const handleDeleteNetwork = async (networkId: string) => {
+    try {
+      const { error } = await supabase
+        .from('networks')
+        .delete()
+        .eq('id', networkId);
+      
+      if (error) throw error;
+
+      setNetworks(networks.filter(network => network.id !== networkId));
+      setEditingNetwork(null);
+      toast({
+        title: "Network deleted",
+        description: "Network has been successfully deleted"
+      });
+    } catch (error) {
+      console.error('Error deleting network:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete network"
+      });
+    }
+  };
+
   return {
     handleAddNode,
     handleEditNetwork,
     handleDuplicateNetwork,
     handleTemplateSelect,
     handleCsvImport,
+    handleDeleteNetwork,
   };
 };

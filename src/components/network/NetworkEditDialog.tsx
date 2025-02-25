@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface NetworkEditDialogProps {
   network: Network | null;
@@ -12,6 +13,7 @@ interface NetworkEditDialogProps {
   onDescriptionChange: (value: string) => void;
   onClose: () => void;
   onSave: () => void;
+  onDelete?: (networkId: string) => void;
 }
 
 const NetworkEditDialog = ({
@@ -21,7 +23,8 @@ const NetworkEditDialog = ({
   onNameChange,
   onDescriptionChange,
   onClose,
-  onSave
+  onSave,
+  onDelete
 }: NetworkEditDialogProps) => {
   return (
     <Dialog open={network !== null} onOpenChange={onClose}>
@@ -47,11 +50,36 @@ const NetworkEditDialog = ({
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={onSave}>Save Changes</Button>
+        <DialogFooter className="flex justify-between items-center">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete Network</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your network
+                  and remove all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => network && onDelete?.(network.id)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={onSave}>Save Changes</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

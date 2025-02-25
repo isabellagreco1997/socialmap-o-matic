@@ -38,7 +38,8 @@ export const Flow = () => {
     handleEditNetwork,
     handleDuplicateNetwork,
     handleTemplateSelect,
-    handleCsvImport
+    handleCsvImport,
+    handleDeleteNetwork
   } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks);
 
   const filteredNetworks = networks.filter(network => 
@@ -256,6 +257,7 @@ export const Flow = () => {
             onDescriptionChange={setNetworkDescription}
             onClose={() => setEditingNetwork(null)}
             onSave={() => handleEditNetwork(networkName)}
+            onDelete={handleDeleteNetwork}
           />
           
           <input

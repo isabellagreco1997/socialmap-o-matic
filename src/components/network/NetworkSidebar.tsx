@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Network } from "@/types/network";
-import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Settings } from 'lucide-react';
+import { ChevronLeft, PlusIcon, LayoutGrid, MessageSquare, Library, Globe, Menu } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 
 interface NetworkSidebarProps {
@@ -66,7 +66,7 @@ const NetworkSidebar = ({
                     onEditNetwork(network);
                   }}
                 >
-                  <Settings className="h-3.5 w-3.5" />
+                  <Menu className="h-3.5 w-3.5" />
                 </div>
                 {network.name}
               </Button>
