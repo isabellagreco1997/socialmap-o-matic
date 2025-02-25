@@ -55,7 +55,7 @@ const LandingPage = () => {
             <span><span className="text-[#0A2463]">Professional</span> <span className="text-[#0A2463]">Network</span></span>
           </h1>
           <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">
-            Designed to help Entrepreneurs, Executives, and Salespeople build their personal networks
+            The AI-powered workspace to help you map, track, and manage high-value relationships with ease.
           </p>
           <div className="flex gap-4 justify-center pt-4">
             <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90 text-lg h-14 px-10" asChild>
