@@ -1,4 +1,4 @@
-import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Edge, Node, Connection } from '@xyflow/react';
+import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
@@ -35,20 +35,20 @@ export const Flow = () => {
     network.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddNode = async (nodeData: NodeData) => {
+  const handleAddNode = ({ data }: { data: NodeData }) => {
     try {
       const id = `node-${Date.now()}`;
       const newNode = {
         id,
         type: 'social',
         position: { x: Math.random() * 500, y: Math.random() * 500 },
-        data: nodeData
+        data
       };
       setNodes(nodes => [...nodes, newNode]);
       setIsDialogOpen(false);
       toast({
         title: "Node added",
-        description: `Added ${nodeData.name} to the network`,
+        description: `Added ${data.name} to the network`,
       });
     } catch (error) {
       console.error('Error adding node:', error);
