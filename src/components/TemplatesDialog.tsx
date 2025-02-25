@@ -5,6 +5,103 @@ import { useToast } from "@/components/ui/use-toast";
 
 const templates = [
   {
+    id: "uhnw-networking",
+    name: "UHNW & Billionaire Network",
+    description: "Build relationships with ultra-high-net-worth individuals and billionaires",
+    nodes: [
+      // Center - You
+      { name: "You", type: "person", x_position: 600, y_position: 300 },
+      
+      // Exclusive Clubs & Venues (Top Layer)
+      { name: "Private Members Clubs", type: "venue", x_position: 400, y_position: 100 },
+      { name: "Golf & Country Clubs", type: "venue", x_position: 600, y_position: 50 },
+      { name: "Yacht Clubs", type: "venue", x_position: 800, y_position: 100 },
+      { name: "Private Jets & Terminals", type: "venue", x_position: 1000, y_position: 150 },
+      
+      // Financial Services (Right Side)
+      { name: "Private Banks", type: "organization", x_position: 900, y_position: 200 },
+      { name: "Wealth Management Firms", type: "organization", x_position: 1000, y_position: 300 },
+      { name: "Family Offices", type: "organization", x_position: 900, y_position: 400 },
+      { name: "Investment Banks", type: "organization", x_position: 1000, y_position: 500 },
+      
+      // Professional Services (Left Side)
+      { name: "Elite Law Firms", type: "organization", x_position: 300, y_position: 200 },
+      { name: "Tax Advisors", type: "organization", x_position: 200, y_position: 300 },
+      { name: "Luxury Real Estate", type: "organization", x_position: 300, y_position: 400 },
+      { name: "Art Dealers", type: "organization", x_position: 200, y_position: 500 },
+      
+      // Events & Gatherings (Upper Middle)
+      { name: "Charity Galas", type: "event", x_position: 500, y_position: 150 },
+      { name: "Art Auctions", type: "event", x_position: 700, y_position: 150 },
+      { name: "Fashion Shows", type: "event", x_position: 600, y_position: 200 },
+      
+      // Industry Leaders (Bottom Layer)
+      { name: "Tech Entrepreneurs", type: "person", x_position: 400, y_position: 500 },
+      { name: "Industry CEOs", type: "person", x_position: 600, y_position: 550 },
+      { name: "Investment Leaders", type: "person", x_position: 800, y_position: 500 },
+      
+      // Influencers & Connectors
+      { name: "Celebrity Agents", type: "person", x_position: 450, y_position: 350 },
+      { name: "Society Columnists", type: "person", x_position: 750, y_position: 350 },
+      { name: "Philanthropic Advisors", type: "person", x_position: 600, y_position: 450 },
+      
+      // Global Network
+      { name: "Embassy Relations", type: "organization", x_position: 400, y_position: 600 },
+      { name: "International Forums", type: "event", x_position: 600, y_position: 650 },
+      { name: "Global Think Tanks", type: "organization", x_position: 800, y_position: 600 }
+    ],
+    edges: [
+      // Club & Venue Connections
+      { source: 0, target: 1, label: "Membership" },
+      { source: 0, target: 2, label: "Regular Events" },
+      { source: 0, target: 3, label: "Social Network" },
+      { source: 0, target: 4, label: "Travel Network" },
+      
+      // Financial Services
+      { source: 0, target: 5, label: "Banking Relations" },
+      { source: 0, target: 6, label: "Wealth Planning" },
+      { source: 0, target: 7, label: "Investment Advice" },
+      { source: 0, target: 8, label: "Capital Access" },
+      
+      // Professional Services
+      { source: 0, target: 9, label: "Legal Network" },
+      { source: 0, target: 10, label: "Tax Planning" },
+      { source: 0, target: 11, label: "Property Access" },
+      { source: 0, target: 12, label: "Art Investment" },
+      
+      // Events
+      { source: 0, target: 13, label: "Philanthropy" },
+      { source: 0, target: 14, label: "Collections" },
+      { source: 0, target: 15, label: "Luxury Events" },
+      
+      // Industry Leaders
+      { source: 0, target: 16, label: "Tech Network" },
+      { source: 0, target: 17, label: "Business Network" },
+      { source: 0, target: 18, label: "Investment Network" },
+      
+      // Influencers
+      { source: 0, target: 19, label: "Entertainment" },
+      { source: 0, target: 20, label: "Media Relations" },
+      { source: 0, target: 21, label: "Charitable Advice" },
+      
+      // Global Network
+      { source: 0, target: 22, label: "Diplomatic Ties" },
+      { source: 0, target: 23, label: "Global Events" },
+      { source: 0, target: 24, label: "Think Tanks" },
+      
+      // Cross Connections
+      { source: 1, target: 13, label: "Charity Events" },
+      { source: 2, target: 17, label: "Business Meetings" },
+      { source: 3, target: 19, label: "Elite Network" },
+      { source: 5, target: 7, label: "Wealth Management" },
+      { source: 9, target: 11, label: "Property Deals" },
+      { source: 14, target: 12, label: "Art Market" },
+      { source: 16, target: 18, label: "Tech Investment" },
+      { source: 21, target: 23, label: "Global Impact" },
+      { source: 20, target: 24, label: "Thought Leadership" }
+    ]
+  },
+  {
     id: "gym-networking",
     name: "Gym Owner Network",
     description: "Build relationships with gym owners and fitness industry professionals",
