@@ -47,7 +47,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 pt-20 pb-32 bg-gradient-to-b from-background to-secondary/20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src="https://img.freepik.com/free-vector/vector-network-background-abstract-polygon-triangle_2065-76.jpg?t=st=1740493025~exp=1740496625~hmac=5bfe53753bd93346b572a737c5442767d86a489c52b6eb9b92dfef770741aa74&w=1480" alt="Global Network Connection" className="w-full h-full object-cover opacity-25" />
+          <img src="https://img.freepik.com/free-vector/vector-network-background-abstract-polygon-triangle_2065-76.jpg?t=st=1740493025~exp=1740496625~hmac=5bfe53753bd93346b572a737c5442767d86a489c52b6eb9b92dfef770741aa74&w=1480" alt="Global Network Connection" className="w-full h-full object-cover opacity-40" />
         </div>
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
