@@ -111,15 +111,38 @@ export const useNetworkHandlers = (
   
       if (networkError) throw networkError;
   
-      const nodesPromises = template.nodes.map((node: any, index: number) => 
-        supabase.from('nodes').insert({
+      // Calculate spacing based on number of nodes
+      const spacing = 200; // Base spacing between nodes
+      const gridSize = Math.ceil(Math.sqrt(template.nodes.length));
+      
+      // Center point for the network
+      const centerX = (gridSize * spacing) / 2;
+      const centerY = (gridSize * spacing) / 2;
+
+      const nodesPromises = template.nodes.map((node: any, index: number) => {
+        // Calculate grid position
+        const row = Math.floor(index / gridSize);
+        const col = index % gridSize;
+        
+        // Add some randomness to make it look more natural
+        const randomOffset = () => (Math.random() - 0.5) * 50;
+        
+        // Calculate actual position with offset from center
+        const x_position = (col * spacing) - centerX + randomOffset();
+        const y_position = (row * spacing) - centerY + randomOffset();
+        
+        return supabase.from('nodes').insert({
           network_id: network.id,
           name: node.name,
           type: node.type,
-          x_position: node.x_position,
-          y_position: node.y_position
-        }).select()
-      );
+          x_position,
+          y_position,
+          notes: node.notes,
+          address: node.address,
+          date: node.date,
+          image_url: node.image_url
+        }).select();
+      });
   
       const nodesResults = await Promise.all(nodesPromises);
       const createdNodes = nodesResults.map(result => result.data?.[0]);
