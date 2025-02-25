@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AddNodeDialog from '@/components/AddNodeDialog';
 import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { TemplatesDialog } from '@/components/TemplatesDialog';
+import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -593,66 +594,63 @@ export const Flow = () => {
     }
   };
 
-    // Add new function to handle template selection
-    const handleTemplateSelect = async (template: any) => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('No user found');
+  const handleTemplateSelect = async (template: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
   
-        const { data: network, error: networkError } = await supabase
-          .from('networks')
-          .insert([{
-            name: template.name,
-            user_id: user.id
-          }])
-          .select()
-          .single();
+      const { data: network, error: networkError } = await supabase
+        .from('networks')
+        .insert([{
+          name: template.name,
+          user_id: user.id
+        }])
+        .select()
+        .single();
   
-        if (networkError) throw networkError;
+      if (networkError) throw networkError;
   
-        // Create nodes from template
-        const nodesPromises = template.nodes.map((node: any, index: number) => 
-          supabase.from('nodes').insert({
-            network_id: network.id,
-            name: node.name,
-            type: node.type,
-            x_position: node.x_position,
-            y_position: node.y_position
-          }).select()
-        );
+      const nodesPromises = template.nodes.map((node: any, index: number) => 
+        supabase.from('nodes').insert({
+          network_id: network.id,
+          name: node.name,
+          type: node.type,
+          x_position: node.x_position,
+          y_position: node.y_position
+        }).select()
+      );
   
-        const nodesResults = await Promise.all(nodesPromises);
-        const createdNodes = nodesResults.map(result => result.data?.[0]);
+      const nodesResults = await Promise.all(nodesPromises);
+      const createdNodes = nodesResults.map(result => result.data?.[0]);
   
-        // Create edges from template
-        const edgesPromises = template.edges.map((edge: any) => 
-          supabase.from('edges').insert({
-            network_id: network.id,
-            source_id: createdNodes[edge.source].id,
-            target_id: createdNodes[edge.target].id,
-            label: edge.label
-          })
-        );
+      const edgesPromises = template.edges.map((edge: any) => 
+        supabase.from('edges').insert({
+          network_id: network.id,
+          source_id: createdNodes[edge.source].id,
+          target_id: createdNodes[edge.target].id,
+          label: edge.label
+        })
+      );
   
-        await Promise.all(edgesPromises);
+      await Promise.all(edgesPromises);
   
-        setNetworks(prev => [...prev, network]);
-        setCurrentNetworkId(network.id);
-        setIsTemplatesDialogOpen(false);
+      setNetworks(prev => [...prev, network]);
+      setCurrentNetworkId(network.id);
+      setIsTemplatesDialogOpen(false);
   
-        toast({
-          title: "Template Applied",
-          description: `Created new network from ${template.name} template`
-        });
-      } catch (error) {
-        console.error('Error applying template:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to apply template"
-        });
-      }
-    };
+      toast({
+        title: "Template Applied",
+        description: `Created new network from ${template.name} template`
+      });
+    } catch (error) {
+      console.error('Error applying template:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to apply template"
+      });
+    }
+  };
 
   return <SidebarProvider>
       <div className="h-screen w-full bg-background flex">
@@ -678,10 +676,14 @@ export const Flow = () => {
 
             <div className="p-3 space-y-3 py-3">
               <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg" onClick={createNewNetwork}>
-                  <PlusIcon className="h-4 w-4" />
-                  Create Network
-                </Button>
+                <CreateNetworkDialog 
+                  trigger={
+                    <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
+                      <PlusIcon className="h-4 w-4" />
+                      Create Network
+                    </Button>
+                  }
+                />
 
                 <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
                   <LayoutGrid className="h-4 w-4" />
