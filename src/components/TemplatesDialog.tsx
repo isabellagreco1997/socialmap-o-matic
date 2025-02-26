@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,12 @@ export interface Template {
     target: number;
     label: string;
   }>;
+}
+
+export interface TemplatesDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onTemplateSelect: (template: Template) => void;
 }
 
 const templates: Template[] = [
