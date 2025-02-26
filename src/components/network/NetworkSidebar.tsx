@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, LayoutGrid, MessageSquare, Menu } from 'lucide-react';
+import { PlusIcon, LayoutGrid, MessageSquare, Menu, Compass } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
@@ -34,8 +34,11 @@ const NetworkSidebar = ({
   };
 
   return (
-    <div className="p-3 space-y-3 py-3">
-      <div className="space-y-2">
+    <div className="p-3 space-y-3">
+      <div className="flex flex-col gap-1">
+        <div className="text-xs font-semibold text-muted-foreground/70 px-2 py-1.5">
+          Core
+        </div>
         <CreateNetworkDialog 
           trigger={
             <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
@@ -56,6 +59,16 @@ const NetworkSidebar = ({
         </Button>
       </div>
 
+      <div className="flex flex-col gap-1">
+        <div className="text-xs font-semibold text-muted-foreground/70 px-2 py-1.5">
+          Discover
+        </div>
+        <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+          <Compass className="h-4 w-4" />
+          Templates
+        </Button>
+      </div>
+
       <div className="border-t -mx-3">
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="networks">
@@ -63,7 +76,7 @@ const NetworkSidebar = ({
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="pt-3 px-3 h-[calc(100vh-350px)] overflow-y-auto space-y-1"
+                className="pt-3 px-3 h-[calc(100vh-400px)] overflow-y-auto space-y-1"
               >
                 {networks.map((network, index) => (
                   <Draggable key={network.id} draggableId={network.id} index={index}>
