@@ -40,8 +40,8 @@ const NetworkSidebar = ({
   };
 
   const handleMyTasksClick = () => {
-    if (typeof window !== 'undefined' && (window as any).toggleOverview) {
-      (window as any).toggleOverview();
+    if (typeof window !== 'undefined' && (window as any).toggleNetworkOverview) {
+      (window as any).toggleNetworkOverview();
     }
   };
 
