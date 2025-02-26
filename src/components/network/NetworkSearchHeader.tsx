@@ -1,7 +1,6 @@
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface NetworkSearchHeaderProps {
   searchQuery: string;
@@ -12,10 +11,7 @@ const NetworkSearchHeader = ({ searchQuery, onSearchChange }: NetworkSearchHeade
   return (
     <div className="p-4 flex flex-col gap-3 border-b">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-sm">Networky</h2>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        <h2 className="font-bold text-sm">RelMaps</h2>
       </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
