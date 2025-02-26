@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, LayoutGrid, MessageSquare, Menu, FileText, BookOpen, Users } from 'lucide-react';
+import { PlusIcon, LayoutGrid, MessageSquare, Menu } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
@@ -14,8 +14,6 @@ interface NetworkSidebarProps {
   onEditNetwork: (network: Network) => void;
   onOpenTemplates: () => void;
   onNetworksReorder: (networks: Network[]) => void;
-  onOverviewClick: () => void;
-  isOverviewOpen: boolean;
 }
 
 const NetworkSidebar = ({
@@ -24,8 +22,6 @@ const NetworkSidebar = ({
   onNetworkSelect,
   onEditNetwork,
   onNetworksReorder,
-  onOverviewClick,
-  isOverviewOpen,
 }: NetworkSidebarProps) => {
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -59,13 +55,7 @@ const NetworkSidebar = ({
             }
           />
 
-          <Button 
-            variant="ghost" 
-            className={`w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium ${
-              isOverviewOpen ? 'bg-gray-100 hover:bg-gray-200' : ''
-            }`}
-            onClick={onOverviewClick}
-          >
+          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
             <LayoutGrid className="h-4 w-4" />
             Overview
           </Button>
@@ -94,16 +84,16 @@ const NetworkSidebar = ({
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="pt-3 px-3 h-[calc(100vh-500px)] overflow-y-auto space-y-1"
+                  className="pt-3 px-3 space-y-1"
                 >
                   {networks.map((network, index) => (
                     <Draggable key={network.id} draggableId={network.id} index={index}>
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className="border rounded-lg group relative"
+                          className={`border rounded-lg ${snapshot.isDragging ? 'opacity-50' : ''}`}
                         >
                           <Button 
                             variant={network.id === currentNetworkId ? "default" : "ghost"} 
@@ -135,22 +125,14 @@ const NetworkSidebar = ({
         </div>
       </div>
 
-      <div className="mt-3 border-t">
+      <div className="mt-auto border-t">
         <div className="p-3 space-y-1">
           <div className="text-xs font-semibold text-muted-foreground/70 px-2 py-1.5">
             Discover
           </div>
           <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
-            <FileText className="h-4 w-4" />
+            <LayoutGrid className="h-4 w-4" />
             Templates
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
-            <BookOpen className="h-4 w-4" />
-            Resources
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
-            <Users className="h-4 w-4" />
-            Community
           </Button>
         </div>
       </div>
