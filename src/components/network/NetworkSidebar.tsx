@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, LayoutGrid, MessageSquare, Menu, FileText, BookOpen, Users } from 'lucide-react';
+import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
@@ -51,11 +51,6 @@ const NetworkSidebar = ({
               </Button>
             }
           />
-
-          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
-            <LayoutGrid className="h-4 w-4" />
-            Overview
-          </Button>
 
           <Button 
             variant="ghost" 
