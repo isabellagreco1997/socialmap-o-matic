@@ -1,19 +1,19 @@
-
 import { Panel } from '@xyflow/react';
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
 import { PlusIcon, FileText, ListTodo, MoreHorizontal } from 'lucide-react';
-
 interface NetworkTopBarProps {
   currentNetwork: Network | undefined;
   onAddNode: () => void;
   onImportCsv: () => void;
 }
-
-const NetworkTopBar = ({ currentNetwork, onAddNode, onImportCsv }: NetworkTopBarProps) => {
-  return (
-    <>
-      <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2">
+const NetworkTopBar = ({
+  currentNetwork,
+  onAddNode,
+  onImportCsv
+}: NetworkTopBarProps) => {
+  return <>
+      <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2 px-[12px] mx-[50px]">
         <span className="text-lg font-medium">
           {currentNetwork?.name || 'Network 1'}
         </span>
@@ -36,8 +36,6 @@ const NetworkTopBar = ({ currentNetwork, onAddNode, onImportCsv }: NetworkTopBar
           Tasks
         </Button>
       </Panel>
-    </>
-  );
+    </>;
 };
-
 export default NetworkTopBar;
