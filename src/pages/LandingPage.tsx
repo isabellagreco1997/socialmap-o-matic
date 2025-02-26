@@ -6,7 +6,6 @@ import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, Us
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -53,9 +52,7 @@ const LandingPage = () => {
             <span>Map & Visualize your</span>
             <span><span className="text-[#0A2463]">Professional</span> <span className="text-[#0A2463]">Network</span></span>
           </h1>
-          <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">
-            The AI-powered workspace to help you map, track, and manage high-value relationships with ease.
-          </p>
+          <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">Map relationships with exceptional business leaders, alumni, and wealthy individuals to drive your organization’s success.</p>
           <div className="flex gap-4 justify-center pt-4">
             <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90 text-lg h-14 px-10" asChild>
               <Link to="/network">Start Mapping</Link>
@@ -611,5 +608,4 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
-
 export default LandingPage;
