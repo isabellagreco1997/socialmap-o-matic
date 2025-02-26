@@ -863,10 +863,22 @@ const templates: Template[] = [
       // Wind Energy Sector
       { name: "Wind Energy Association", type: "organization", x_position: 800, y_position: 100 },
       { name: "Offshore Wind Developer", type: "organization", x_position: 1000, y_position: 50 },
-      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 600, y_position: 0 }
+      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 600, y_position: 150 }
     ],
     edges: [
-      // Connections between nodes
+      // Central Organization Connections
+      { source: 0, target: 1, label: "Grid Management" },
+      { source: 0, target: 2, label: "Policy Coordination" },
+      
+      // Solar Sector Connections
+      { source: 3, target: 4, label: "Supply Chain" },
+      { source: 3, target: 5, label: "Implementation" },
+      { source: 3, target: 6, label: "R&D" },
+      { source: 3, target: 7, label: "Policy Advisory" },
+      
+      // Wind Sector Connections
+      { source: 8, target: 9, label: "Development" },
+      { source: 8, target: 10, label: "Equipment" }
     ]
   }
 ];
