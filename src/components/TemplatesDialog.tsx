@@ -1,3 +1,4 @@
+<lov-code>
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -790,46 +791,4 @@ const templates: Template[] = [
       { source: 0, target: 14, label: "Storage Policy" },
       { source: 1, target: 13, label: "Grid Tech" },
       { source: 2, target: 22, label: "Advocacy" },
-      { source: 19, target: 22, label: "Research Input" },
-      { source: 31, target: 22, label: "Financial Advisory" },
-      { source: 25, target: 15, label: "Grid Expertise" }
-    ]
-  }
-];
-
-interface TemplatesDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onTemplateSelect: (template: Template) => void;
-}
-
-export function TemplatesDialog({
-  open,
-  onOpenChange,
-  onTemplateSelect
-}: TemplatesDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px]">
-        <DialogHeader>
-          <DialogTitle>Choose a Template</DialogTitle>
-        </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-4">
-          {templates.map((template) => (
-            <Button
-              key={template.id}
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-start gap-2"
-              onClick={() => onTemplateSelect(template)}
-            >
-              <div className="font-medium">{template.name}</div>
-              <div className="text-sm text-muted-foreground text-left">
-                {template.description}
-              </div>
-            </Button>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+      
