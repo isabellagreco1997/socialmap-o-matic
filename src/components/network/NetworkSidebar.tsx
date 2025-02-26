@@ -31,9 +31,8 @@ const NetworkSidebar = ({
       defaultSize={20}
       minSize={15}
       maxSize={40}
-      collapsedSize={4}
-      collapsible={true}
-      collapsed={isCollapsed}
+      onCollapse={() => setIsCollapsed(true)}
+      onExpand={() => setIsCollapsed(false)}
       className={cn(
         "min-w-[200px] border-r transition-all duration-300 ease-in-out",
         isCollapsed && "min-w-[50px] transition-all duration-300 ease-in-out"
