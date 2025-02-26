@@ -47,7 +47,7 @@ const NetworkTopBar = ({
       </Panel>
 
       <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
-        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] border-t-0 rounded-tl-none [&>button]:hidden backdrop-blur-none bg-white/95 shadow-2xl">
+        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] border-t-0 rounded-xl rounded-tr-none [&>button]:hidden backdrop-blur-none bg-white/95 shadow-2xl pointer-events-auto">
           <SheetHeader className="p-6 pb-2">
             <SheetTitle>Network Overview</SheetTitle>
           </SheetHeader>
