@@ -3,9 +3,10 @@ import { ReactFlowProvider } from '@xyflow/react';
 import NetworkFlow from './NetworkFlow';
 import { NetworkOverview } from './NetworkOverview';
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
-import { ChevronsRight } from 'lucide-react';
+import { ChevronsRight, ChevronsLeft } from 'lucide-react';
 import type { Node, Edge } from '@xyflow/react';
 import type { Network, TodoItem } from '@/types/network';
+import { useState } from 'react';
 
 interface NetworkContentProps {
   nodes: Node[];
@@ -32,9 +33,19 @@ export const NetworkContent = ({
   onAddNode,
   onImportCsv
 }: NetworkContentProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleExpandClick = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1">
-      <ResizablePanel defaultSize={isOverviewOpen ? 70 : 100} minSize={30}>
+      <ResizablePanel 
+        defaultSize={isOverviewOpen ? (isExpanded ? 30 : 70) : 100} 
+        minSize={isExpanded ? 30 : 30}
+        maxSize={isExpanded ? 30 : 100}
+      >
         <ReactFlowProvider>
           <NetworkFlow 
             nodes={nodes} 
@@ -54,10 +65,23 @@ export const NetworkContent = ({
         <>
           <div className="relative">
             <ResizableHandle className="!absolute !right-0 !top-0 !w-6 !h-6 !bg-transparent hover:!bg-gray-100 transition-colors cursor-ew-resize z-50 flex items-center justify-center">
-              <ChevronsRight className="h-4 w-4 text-gray-500" />
+              <button 
+                onClick={handleExpandClick}
+                className="w-full h-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                {isExpanded ? (
+                  <ChevronsRight className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronsLeft className="h-4 w-4 text-gray-500" />
+                )}
+              </button>
             </ResizableHandle>
           </div>
-          <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+          <ResizablePanel 
+            defaultSize={isExpanded ? 70 : 30} 
+            minSize={isExpanded ? 70 : 20} 
+            maxSize={isExpanded ? 70 : 50}
+          >
             <div className="h-full border-l border-gray-200">
               <NetworkOverview todos={nodes.flatMap(node => (node.data.todos || []) as TodoItem[])} />
             </div>
