@@ -37,9 +37,6 @@ const NetworkSidebar = ({
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
         <div className="flex flex-col gap-1">
-          <div className="text-xs font-semibold text-muted-foreground/70 px-2 py-1.5">
-            Core
-          </div>
           <CreateNetworkDialog 
             trigger={
               <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
@@ -61,6 +58,11 @@ const NetworkSidebar = ({
         </div>
 
         <div className="border-t -mx-3">
+          <div className="px-5 pt-3">
+            <div className="text-xs font-semibold text-muted-foreground/70">
+              Networks
+            </div>
+          </div>
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="networks">
               {(provided) => (
