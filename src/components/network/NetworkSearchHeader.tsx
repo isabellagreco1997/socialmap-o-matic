@@ -12,7 +12,7 @@ const NetworkSearchHeader = ({ searchQuery, onSearchChange }: NetworkSearchHeade
   return (
     <div className="p-4 flex flex-col gap-3 border-b">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-sm">Your Networks</h2>
+        <h2 className="font-bold text-sm">Networky</h2>
         <Button variant="ghost" size="icon" className="h-7 w-7">
           <ChevronLeft className="h-4 w-4" />
         </Button>
