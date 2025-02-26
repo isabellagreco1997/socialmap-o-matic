@@ -6,7 +6,7 @@ import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/componen
 import { ChevronsRight, ChevronsLeft } from 'lucide-react';
 import type { Node, Edge } from '@xyflow/react';
 import type { Network, TodoItem } from '@/types/network';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface NetworkContentProps {
   nodes: Node[];
@@ -34,11 +34,6 @@ export const NetworkContent = ({
   onImportCsv
 }: NetworkContentProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showOverview, setShowOverview] = useState(isOverviewOpen);
-
-  useEffect(() => {
-    setShowOverview(isOverviewOpen);
-  }, [isOverviewOpen]);
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded);
@@ -47,8 +42,8 @@ export const NetworkContent = ({
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1">
       <ResizablePanel 
-        defaultSize={showOverview ? (isExpanded ? 30 : 70) : 100} 
-        minSize={isExpanded ? 30 : 30}
+        defaultSize={isOverviewOpen ? (isExpanded ? 30 : 70) : 100} 
+        minSize={30}
         maxSize={isExpanded ? 30 : 100}
       >
         <ReactFlowProvider>
@@ -66,7 +61,7 @@ export const NetworkContent = ({
         </ReactFlowProvider>
       </ResizablePanel>
 
-      {showOverview && (
+      {isOverviewOpen && (
         <>
           <div className="relative">
             <ResizableHandle className="!absolute !right-0 !top-0 !w-6 !h-6 !bg-transparent hover:!bg-gray-100 transition-colors cursor-ew-resize z-50 flex items-center justify-center">
@@ -83,8 +78,8 @@ export const NetworkContent = ({
             </ResizableHandle>
           </div>
           <ResizablePanel 
-            defaultSize={isExpanded ? 70 : 30} 
-            minSize={isExpanded ? 70 : 20} 
+            defaultSize={isExpanded ? 70 : 30}
+            minSize={isExpanded ? 70 : 20}
             maxSize={isExpanded ? 70 : 50}
           >
             <div className="h-full border-l border-gray-200">
