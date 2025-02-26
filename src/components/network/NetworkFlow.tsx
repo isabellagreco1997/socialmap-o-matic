@@ -49,9 +49,8 @@ const NetworkFlow = ({
         fitView
       >
         <NetworkTopBar
-          currentNetwork={networks.find(n => n.id === currentNetworkId)}
-          onAddNode={onAddNode}
-          onImportCsv={onImportCsv}
+          networks={networks}
+          currentNetworkId={currentNetworkId}
         />
         
         <NetworkFlowControls />
