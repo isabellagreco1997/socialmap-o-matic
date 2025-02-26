@@ -2,7 +2,7 @@
 import { Panel } from '@xyflow/react';
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronRight } from 'lucide-react';
+import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronLeft } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from 'react';
@@ -52,16 +52,18 @@ const NetworkTopBar = ({
 
       <Sheet open={isOverviewOpen} modal={false}>
         <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] mb-8 border-t-0 rounded-xl [&>button]:hidden backdrop-blur-none bg-white/95 shadow-2xl pointer-events-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleOverview}
-            className="absolute -left-8 top-4 h-8 w-8 rounded-full bg-white shadow-md border hover:bg-gray-100"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
           <SheetHeader className="p-6 pb-2">
-            <SheetTitle>Network Overview</SheetTitle>
+            <div className="flex justify-between items-center">
+              <SheetTitle>Network Overview</SheetTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleOverview}
+                className="h-8 w-8 hover:bg-gray-100"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </div>
           </SheetHeader>
           <Tabs defaultValue="tasks" className="w-full">
             <TabsList className="w-full justify-start rounded-none border-b px-6">
