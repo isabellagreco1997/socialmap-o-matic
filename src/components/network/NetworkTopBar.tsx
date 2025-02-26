@@ -93,7 +93,7 @@ const NetworkTopBar = ({
                 </div>
               </TabsContent>
               <TabsContent value="ai-chat" className="space-y-4">
-                <div className="flex flex-col h-[calc(100vh-300px)]">
+                <div className="flex flex-col h-[calc(100vh-200px)]">
                   <div className="flex-1 space-y-4 overflow-y-auto p-4 rounded-lg bg-gray-50">
                     <div className="flex gap-3 items-start">
                       <div className="h-8 w-8 rounded-lg bg-blue-500 flex items-center justify-center">
@@ -107,7 +107,7 @@ const NetworkTopBar = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 border-t">
+                  <div className="sticky bottom-0 p-4 border-t bg-white">
                     <Textarea 
                       placeholder="Ask me about your network..."
                       className="w-full resize-none"
