@@ -1,3 +1,4 @@
+
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -13,7 +14,7 @@ import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
 import { NetworkOverview } from '@/components/network/NetworkOverview';
-import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
 import type { Network, NodeData } from '@/types/network';
 
 export const Flow = () => {
@@ -213,11 +214,14 @@ export const Flow = () => {
           </ResizablePanel>
 
           {isOverviewOpen && (
-            <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-              <div className="h-full border-l border-gray-200">
-                <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
-              </div>
-            </ResizablePanel>
+            <>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+                <div className="h-full border-l border-gray-200">
+                  <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
+                </div>
+              </ResizablePanel>
+            </>
           )}
         </ResizablePanelGroup>
 
