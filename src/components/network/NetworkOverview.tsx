@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
-import { ListChecks, Calendar as CalendarIcon, FileText, Filter, ArrowUpDown } from 'lucide-react';
+import { ListChecks, Calendar as CalendarIcon, FileText, Filter, ArrowUpDown, Expand } from 'lucide-react';
 import { TodoItem } from '@/types/network';
 
 interface NetworkOverviewProps {
@@ -13,12 +13,13 @@ interface NetworkOverviewProps {
 
 export const NetworkOverview = ({ todos }: NetworkOverviewProps) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isExpanded, setIsExpanded] = useState(false);
   
   return (
     <div className="h-full bg-white">
       <Tabs defaultValue="tasks" className="h-full">
-        <div className="p-4 border-b">
-          <TabsList className="grid w-full grid-cols-3">
+        <div className="p-4 border-b flex justify-between items-center">
+          <TabsList className="grid w-[250px] grid-cols-3">
             <TabsTrigger value="tasks" className="flex gap-2">
               <ListChecks className="h-4 w-4" />
               Tasks
@@ -32,6 +33,14 @@ export const NetworkOverview = ({ todos }: NetworkOverviewProps) => {
               Notes
             </TabsTrigger>
           </TabsList>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="ml-2"
+          >
+            <Expand className="h-4 w-4" />
+          </Button>
         </div>
 
         <TabsContent value="tasks" className="m-0 h-[calc(100%-65px)]">
