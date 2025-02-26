@@ -39,6 +39,9 @@ const NetworkSidebar = ({
     }
   };
 
+  const isOverviewOpen = typeof window !== 'undefined' ? (window as any).isOverviewOpen : false;
+  const activeTab = typeof window !== 'undefined' ? (window as any).activeTab : '';
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
@@ -59,7 +62,9 @@ const NetworkSidebar = ({
 
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
+            className={`w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg transition-colors ${
+              isOverviewOpen && activeTab === 'ai-chat' ? 'bg-gray-100 hover:bg-gray-200' : ''
+            }`}
             onClick={handleAIChatClick}
           >
             <MessageSquare className="h-4 w-4" />

@@ -42,6 +42,8 @@ const NetworkTopBar = ({
   // Make handleAIChatClick available globally
   if (typeof window !== 'undefined') {
     (window as any).openAIChat = handleAIChatClick;
+    (window as any).isOverviewOpen = isOverviewOpen;
+    (window as any).activeTab = activeTab;
   }
 
   return (
@@ -64,7 +66,11 @@ const NetworkTopBar = ({
           <FileText className="h-4 w-4 mr-2" />
           Import CSV
         </Button>
-        <Button variant="outline" className="bg-white shadow-lg" onClick={() => toggleOverview()}>
+        <Button 
+          variant="outline" 
+          className={`shadow-lg transition-colors ${isOverviewOpen ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'}`} 
+          onClick={() => toggleOverview()}
+        >
           <LayoutPanelTop className="h-4 w-4 mr-2" />
           Overview
         </Button>
