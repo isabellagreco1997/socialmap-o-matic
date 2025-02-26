@@ -64,7 +64,7 @@ const NetworkSidebar = ({
             onClick={handleOverviewClick}
           >
             <LayoutGrid className="h-4 w-4" />
-            Overview
+            My Tasks
           </Button>
 
           <Button 
