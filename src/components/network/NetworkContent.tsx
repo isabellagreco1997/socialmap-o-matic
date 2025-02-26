@@ -64,15 +64,15 @@ export const NetworkContent = ({
       {isOverviewOpen && (
         <>
           <div className="relative">
-            <ResizableHandle className="!absolute !right-0 !top-0 !w-6 !h-6 !bg-transparent hover:!bg-gray-100 transition-colors cursor-ew-resize z-[100] flex items-center justify-center">
+            <ResizableHandle className="!absolute !right-0 !top-0 !w-6 !h-6 !bg-transparent hover:!bg-gray-100 transition-colors cursor-ew-resize z-50 flex items-center justify-center">
               <button 
                 onClick={handleExpandClick}
                 className="w-full h-full flex items-center justify-center bg-white border border-gray-200 rounded-sm shadow-sm hover:bg-gray-50 transition-colors"
               >
                 {isExpanded ? (
-                  <ChevronsRight className="h-5 w-5 text-gray-900" />
+                  <ChevronsRight className="h-4 w-4 text-gray-700" />
                 ) : (
-                  <ChevronsLeft className="h-5 w-5 text-gray-900" />
+                  <ChevronsLeft className="h-4 w-4 text-gray-700" />
                 )}
               </button>
             </ResizableHandle>
