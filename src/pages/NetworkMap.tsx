@@ -15,6 +15,7 @@ import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
 import { NetworkOverview } from '@/components/network/NetworkOverview';
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
+import { ChevronRight, ChevronsRight } from 'lucide-react';
 import type { Network, NodeData } from '@/types/network';
 
 export const Flow = () => {
@@ -215,7 +216,11 @@ export const Flow = () => {
 
           {isOverviewOpen && (
             <>
-              <ResizableHandle withHandle />
+              <div className="relative">
+                <ResizableHandle className="!absolute !right-0 !top-0 !w-6 !h-6 !bg-transparent hover:!bg-gray-100 transition-colors cursor-ew-resize z-50 flex items-center justify-center">
+                  <ChevronsRight className="h-4 w-4 text-gray-500" />
+                </ResizableHandle>
+              </div>
               <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
                 <div className="h-full border-l border-gray-200">
                   <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
