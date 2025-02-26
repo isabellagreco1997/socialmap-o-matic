@@ -6,10 +6,14 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import NetworkSidebar from '@/components/network/NetworkSidebar';
 import NetworkSearchHeader from '@/components/network/NetworkSearchHeader';
+import NetworkFlow from '@/components/network/NetworkFlow';
+import NetworkEditDialog from '@/components/network/NetworkEditDialog';
+import AddNodeDialog from '@/components/AddNodeDialog';
+import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
+import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
-import { NetworkContent } from '@/components/network/NetworkContent';
-import { NetworkDialogs } from '@/components/network/NetworkDialogs';
-import type { Network } from '@/types/network';
+import type { Network, NodeData } from '@/types/network';
+import type { Database } from "@/integrations/supabase/types";
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -21,13 +25,14 @@ export const Flow = () => {
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isTemplatesDialogOpen, setIsTemplatesDialogOpen] = useState(false);
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
-  const [isOverviewOpen, setIsOverviewOpen] = useState(false);
 
   const {
     handleAddNode,
@@ -39,26 +44,7 @@ export const Flow = () => {
     handleNetworksReorder
   } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks);
 
-  const handleNodesChange = useCallback(async (changes: any) => {
-    onNodesChange(changes);
-
-    const positionChanges = changes.filter((change: any) => change.type === 'position' && change.dragging === false);
-    if (positionChanges.length > 0 && currentNetworkId) {
-      try {
-        await Promise.all(positionChanges.map((change: any) => supabase.from('nodes').update({
-          x_position: change.position.x,
-          y_position: change.position.y
-        }).eq('id', change.id).eq('network_id', currentNetworkId)));
-      } catch (error) {
-        console.error('Error updating node positions:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to save node positions"
-        });
-      }
-    }
-  }, [currentNetworkId, onNodesChange, toast]);
+  const filteredNetworks = networks.filter(network => network.name.toLowerCase().includes(searchQuery.toLowerCase())).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -87,6 +73,27 @@ export const Flow = () => {
     };
     fetchNetworks();
   }, [currentNetworkId, toast]);
+
+  const handleNodesChange = useCallback(async (changes: any) => {
+    onNodesChange(changes);
+
+    const positionChanges = changes.filter((change: any) => change.type === 'position' && change.dragging === false);
+    if (positionChanges.length > 0 && currentNetworkId) {
+      try {
+        await Promise.all(positionChanges.map((change: any) => supabase.from('nodes').update({
+          x_position: change.position.x,
+          y_position: change.position.y
+        }).eq('id', change.id).eq('network_id', currentNetworkId)));
+      } catch (error) {
+        console.error('Error updating node positions:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save node positions"
+        });
+      }
+    }
+  }, [currentNetworkId, onNodesChange, toast]);
 
   useEffect(() => {
     const fetchNetworkData = async () => {
@@ -161,14 +168,6 @@ export const Flow = () => {
     reader.readAsText(file);
   };
 
-  const handleOverviewClick = () => {
-    setIsOverviewOpen(!isOverviewOpen);
-  };
-
-  const filteredNetworks = networks.filter(network => 
-    network.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -183,56 +182,65 @@ export const Flow = () => {
               onNetworkSelect={setCurrentNetworkId} 
               onEditNetwork={setEditingNetwork} 
               onOpenTemplates={() => setIsTemplatesDialogOpen(true)} 
-              onNetworksReorder={handleNetworksReorder}
-              onOverviewClick={handleOverviewClick}
-              isOverviewOpen={isOverviewOpen}
+              onNetworksReorder={handleNetworksReorder} 
             />
           </SidebarContent>
         </Sidebar>
 
-        <NetworkContent 
-          nodes={nodes}
-          edges={edges}
-          networks={networks}
-          currentNetworkId={currentNetworkId}
-          isOverviewOpen={isOverviewOpen}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onAddNode={() => setIsDialogOpen(true)}
-          onImportCsv={() => document.getElementById('csv-input')?.click()}
-        />
+        <div className="flex-1">
+          <ReactFlowProvider>
+            <NetworkFlow 
+              nodes={nodes} 
+              edges={edges} 
+              networks={networks} 
+              currentNetworkId={currentNetworkId} 
+              onNodesChange={handleNodesChange} 
+              onEdgesChange={onEdgesChange} 
+              onConnect={onConnect} 
+              onAddNode={() => setIsDialogOpen(true)} 
+              onImportCsv={() => document.getElementById('csv-input')?.click()} 
+            />
+          </ReactFlowProvider>
 
-        <NetworkDialogs 
-          isDialogOpen={isDialogOpen}
-          setIsDialogOpen={setIsDialogOpen}
-          isCsvDialogOpen={isCsvDialogOpen}
-          setIsCsvDialogOpen={setIsCsvDialogOpen}
-          isTemplatesDialogOpen={isTemplatesDialogOpen}
-          setIsTemplatesDialogOpen={setIsTemplatesDialogOpen}
-          csvHeaders={csvHeaders}
-          csvRows={csvRows}
-          editingNetwork={editingNetwork}
-          networkName={networkName}
-          networkDescription={networkDescription}
-          onNameChange={setNetworkName}
-          onDescriptionChange={setNetworkDescription}
-          onAddNode={handleAddNode}
-          onCsvImport={handleCsvImport}
-          onTemplateSelect={handleTemplateSelect}
-          onEditNetwork={handleEditNetwork}
-          onDeleteNetwork={handleDeleteNetwork}
-          currentNetworkId={currentNetworkId}
-          setEditingNetwork={setEditingNetwork}
-        />
-        
-        <input 
-          id="csv-input" 
-          type="file" 
-          accept=".csv" 
-          className="hidden" 
-          onChange={handleFileUpload} 
-        />
+          <AddNodeDialog 
+            open={isDialogOpen} 
+            onOpenChange={setIsDialogOpen} 
+            onSave={handleAddNode} 
+          />
+          
+          <CsvPreviewDialog 
+            open={isCsvDialogOpen} 
+            onOpenChange={setIsCsvDialogOpen} 
+            headers={csvHeaders} 
+            rows={csvRows} 
+            onConfirm={mapping => handleCsvImport(mapping, currentNetworkId, csvHeaders, csvRows)} 
+          />
+          
+          <TemplatesDialog 
+            open={isTemplatesDialogOpen} 
+            onOpenChange={setIsTemplatesDialogOpen} 
+            onTemplateSelect={handleTemplateSelect} 
+          />
+          
+          <NetworkEditDialog 
+            network={editingNetwork} 
+            networkName={networkName} 
+            networkDescription={networkDescription} 
+            onNameChange={setNetworkName} 
+            onDescriptionChange={setNetworkDescription} 
+            onClose={() => setEditingNetwork(null)} 
+            onSave={() => handleEditNetwork(networkName)} 
+            onDelete={handleDeleteNetwork} 
+          />
+          
+          <input 
+            id="csv-input" 
+            type="file" 
+            accept=".csv" 
+            className="hidden" 
+            onChange={handleFileUpload} 
+          />
+        </div>
       </div>
     </SidebarProvider>
   );
