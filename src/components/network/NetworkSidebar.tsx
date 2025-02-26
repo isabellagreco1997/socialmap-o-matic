@@ -82,7 +82,7 @@ const NetworkSidebar = ({
                           onClick={() => onNetworkSelect(network.id)}
                         >
                           <div 
-                            className="mr-2 p-1 rounded hover:bg-white/10"
+                            className="mr-2 p-1 rounded hover:bg-white/10 flex-shrink-0"
                             onClick={(e) => {
                               e.stopPropagation();
                               onEditNetwork(network);
@@ -90,7 +90,7 @@ const NetworkSidebar = ({
                           >
                             <Menu className="h-3.5 w-3.5" />
                           </div>
-                          {network.name}
+                          <span className="truncate">{network.name}</span>
                         </Button>
                       </div>
                     )}
