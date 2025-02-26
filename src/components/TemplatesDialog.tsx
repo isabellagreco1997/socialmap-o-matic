@@ -1,4 +1,3 @@
-<lov-code>
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -506,6 +505,162 @@ const templates: Template[] = [
     ]
   },
   {
+    id: "virtual-family-office",
+    name: "Virtual Family Office Network",
+    description: "Comprehensive map of a modern virtual family office structure including wealth management, legal, tax, and operations",
+    nodes: [
+      // Core Family & Governance
+      {
+        name: "Family Council",
+        type: "organization",
+        x_position: 600,
+        y_position: 300,
+        notes: "Primary decision-making body for family matters"
+      },
+      // Wealth Management
+      {
+        name: "Chief Investment Officer",
+        type: "person",
+        x_position: 400,
+        y_position: 200,
+        notes: "Oversees investment strategy and portfolio management"
+      },
+      {
+        name: "Portfolio Manager",
+        type: "person",
+        x_position: 800,
+        y_position: 200,
+        notes: "Manages day-to-day investment decisions"
+      },
+      {
+        name: "Private Bank",
+        type: "organization",
+        x_position: 400,
+        y_position: 100,
+        notes: "Provides banking and lending services"
+      },
+      {
+        name: "Investment Bank",
+        type: "organization",
+        x_position: 800,
+        y_position: 100,
+        notes: "Advises on M&A, capital raising, and other transactions"
+      },
+      // Legal & Tax
+      {
+        name: "Estate Planning Attorney",
+        type: "person",
+        x_position: 200,
+        y_position: 300,
+        notes: "Advises on estate planning and wealth transfer"
+      },
+      {
+        name: "Tax Advisor",
+        type: "person",
+        x_position: 1000,
+        y_position: 300,
+        notes: "Provides tax planning and compliance services"
+      },
+      {
+        name: "Trust Company",
+        type: "organization",
+        x_position: 200,
+        y_position: 400,
+        notes: "Administers trusts and provides fiduciary services"
+      },
+      {
+        name: "Insurance Broker",
+        type: "person",
+        x_position: 1000,
+        y_position: 400,
+        notes: "Provides insurance solutions for risk management"
+      },
+      // Operations & Administration
+      {
+        name: "Family Office Manager",
+        type: "person",
+        x_position: 600,
+        y_position: 400,
+        notes: "Oversees day-to-day operations and administration"
+      },
+      {
+        name: "Accountant",
+        type: "person",
+        x_position: 400,
+        y_position: 500,
+        notes: "Manages financial reporting and accounting"
+      },
+      {
+        name: "Technology Provider",
+        type: "organization",
+        x_position: 800,
+        y_position: 500,
+        notes: "Provides technology solutions for data management"
+      },
+      {
+        name: "Cybersecurity Firm",
+        type: "organization",
+        x_position: 600,
+        y_position: 50,
+        notes: "Protects family data and assets from cyber threats"
+      },
+      // Philanthropy
+      {
+        name: "Philanthropy Advisor",
+        type: "person",
+        x_position: 200,
+        y_position: 200,
+        notes: "Advises on charitable giving and foundation management"
+      },
+      {
+        name: "Foundation Manager",
+        type: "person",
+        x_position: 1000,
+        y_position: 200,
+        notes: "Manages foundation operations and grantmaking"
+      },
+      // Lifestyle & Concierge
+      {
+        name: "Travel Agent",
+        type: "person",
+        x_position: 200,
+        y_position: 500,
+        notes: "Arranges travel and accommodations"
+      },
+      {
+        name: "Concierge Service",
+        type: "organization",
+        x_position: 1000,
+        y_position: 500,
+        notes: "Provides personal assistance and lifestyle management"
+      }
+    ],
+    edges: [
+      // Governance
+      { source: 0, target: 1, label: "Investment Oversight" },
+      { source: 0, target: 5, label: "Estate Planning" },
+      { source: 0, target: 9, label: "Operational Management" },
+      // Wealth Management
+      { source: 1, target: 2, label: "Portfolio Management" },
+      { source: 1, target: 3, label: "Banking Services" },
+      { source: 1, target: 4, label: "Investment Advice" },
+      // Legal & Tax
+      { source: 5, target: 7, label: "Trust Administration" },
+      { source: 5, target: 6, label: "Tax Planning" },
+      { source: 6, target: 8, label: "Insurance Solutions" },
+      // Operations
+      { source: 9, target: 10, label: "Financial Reporting" },
+      { source: 9, target: 11, label: "Technology Solutions" },
+      { source: 9, target: 12, label: "Cybersecurity" },
+      // Philanthropy
+      { source: 0, target: 13, label: "Charitable Giving" },
+      { source: 13, target: 14, label: "Foundation Management" },
+      // Lifestyle
+      { source: 9, target: 15, label: "Travel Arrangements" },
+      { source: 9, target: 16, label: "Personal Assistance" }
+    ]
+  },
+  {
     id: "george-clooney-network",
     name: "George Clooney Network",
     description: "Strategic network map to connect with George Clooney through entertainment industry contacts",
@@ -708,87 +863,4 @@ const templates: Template[] = [
       // Wind Energy Sector
       { name: "Wind Energy Association", type: "organization", x_position: 800, y_position: 100 },
       { name: "Offshore Wind Developer", type: "organization", x_position: 1000, y_position: 50 },
-      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 600, y_position: 150 },
-      { name: "Wind Resource Analyst", type: "person", x_position: 900, y_position: 150 },
-      
-      // Storage & Grid
-      { name: "Battery Storage Company", type: "organization", x_position: 200, y_position: 400 },
-      { name: "Grid Technology Provider", type: "organization", x_position: 1000, y_position: 400 },
-      { name: "Energy Storage Association", type: "organization", x_position: 600, y_position: 450 },
-      { name: "Grid Modernization Expert", type: "person", x_position: 800, y_position: 450 },
-      
-      // Research & Education
-      { name: "UC Berkeley Energy Lab", type: "organization", x_position: 300, y_position: 550 },
-      { name: "Stanford Energy Program", type: "organization", x_position: 500, y_position: 550 },
-      { name: "CalTech Energy Institute", type: "organization", x_position: 700, y_position: 550 },
-      { name: "Leading Energy Researcher", type: "person", x_position: 500, y_position: 650 },
-      
-      // Policy & Government
-      { name: "State Energy Office", type: "organization", x_position: 200, y_position: 200 },
-      { name: "Environmental Policy Group", type: "organization", x_position: 1000, y_position: 200 },
-      { name: "Clean Energy Advocate", type: "person", x_position: 600, y_position: 200 },
-      
-      // Utilities & Implementation
-      { name: "PG&E", type: "organization", x_position: 300, y_position: 350 },
-      { name: "Southern California Edison", type: "organization", x_position: 900, y_position: 350 },
-      { name: "Municipal Utility Director", type: "person", x_position: 600, y_position: 350 },
-      
-      // Industry Events & Venues
-      { name: "RE+ Conference", type: "event", x_position: 400, y_position: 450 },
-      { name: "Energy Storage Summit", type: "event", x_position: 800, y_position: 250 },
-      { name: "Moscone Center", type: "venue", x_position: 400, y_position: 250 },
-      
-      // Financial & Investment
-      { name: "Clean Energy Fund", type: "organization", x_position: 200, y_position: 500 },
-      { name: "Energy VC Firm", type: "organization", x_position: 1000, y_position: 500 },
-      { name: "Project Finance Expert", type: "person", x_position: 600, y_position: 500 }
-    ],
-    edges: [
-      // Central Organization Connections
-      { source: 0, target: 1, label: "Grid Management" },
-      { source: 0, target: 2, label: "Policy Coordination" },
-      
-      // Solar Sector Connections
-      { source: 3, target: 4, label: "Supply Chain" },
-      { source: 3, target: 5, label: "Implementation" },
-      { source: 3, target: 6, label: "R&D" },
-      { source: 3, target: 7, label: "Policy Advisory" },
-      
-      // Wind Sector Connections
-      { source: 8, target: 9, label: "Development" },
-      { source: 8, target: 10, label: "Equipment" },
-      { source: 8, target: 11, label: "Analysis" },
-      
-      // Storage & Grid Connections
-      { source: 12, target: 14, label: "Industry Group" },
-      { source: 13, target: 14, label: "Technology" },
-      { source: 14, target: 15, label: "Expert Guidance" },
-      
-      // Research Connections
-      { source: 16, target: 19, label: "Research" },
-      { source: 17, target: 19, label: "Studies" },
-      { source: 18, target: 19, label: "Innovation" },
-      
-      // Policy Connections
-      { source: 20, target: 21, label: "Policy Making" },
-      { source: 21, target: 22, label: "Advocacy" },
-      
-      // Utility Connections
-      { source: 23, target: 25, label: "Operations" },
-      { source: 24, target: 25, label: "Management" },
-      
-      // Event Connections
-      { source: 26, target: 28, label: "Venue" },
-      { source: 27, target: 14, label: "Industry Event" },
-      
-      // Financial Connections
-      { source: 29, target: 31, label: "Investment" },
-      { source: 30, target: 31, label: "Funding" },
-      
-      // Cross-sector Connections
-      { source: 0, target: 3, label: "Solar Policy" },
-      { source: 0, target: 8, label: "Wind Policy" },
-      { source: 0, target: 14, label: "Storage Policy" },
-      { source: 1, target: 13, label: "Grid Tech" },
-      { source: 2, target: 22, label: "Advocacy" },
-    
+      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 6
