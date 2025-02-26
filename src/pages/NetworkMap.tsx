@@ -12,8 +12,9 @@ import AddNodeDialog from '@/components/AddNodeDialog';
 import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
+import { NetworkOverview } from '@/components/network/NetworkOverview';
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import type { Network, NodeData } from '@/types/network';
-import type { Database } from "@/integrations/supabase/types";
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -33,6 +34,7 @@ export const Flow = () => {
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
+  const [isOverviewOpen, setIsOverviewOpen] = useState(false);
 
   const {
     handleAddNode,
@@ -168,6 +170,10 @@ export const Flow = () => {
     reader.readAsText(file);
   };
 
+  const handleOverviewClick = () => {
+    setIsOverviewOpen(!isOverviewOpen);
+  };
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -182,65 +188,77 @@ export const Flow = () => {
               onNetworkSelect={setCurrentNetworkId} 
               onEditNetwork={setEditingNetwork} 
               onOpenTemplates={() => setIsTemplatesDialogOpen(true)} 
-              onNetworksReorder={handleNetworksReorder} 
+              onNetworksReorder={handleNetworksReorder}
+              onOverviewClick={handleOverviewClick}
+              isOverviewOpen={isOverviewOpen}
             />
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex-1">
-          <ReactFlowProvider>
-            <NetworkFlow 
-              nodes={nodes} 
-              edges={edges} 
-              networks={networks} 
-              currentNetworkId={currentNetworkId} 
-              onNodesChange={handleNodesChange} 
-              onEdgesChange={onEdgesChange} 
-              onConnect={onConnect} 
-              onAddNode={() => setIsDialogOpen(true)} 
-              onImportCsv={() => document.getElementById('csv-input')?.click()} 
-            />
-          </ReactFlowProvider>
+        <ResizablePanelGroup direction="horizontal" className="flex-1">
+          <ResizablePanel defaultSize={isOverviewOpen ? 70 : 100} minSize={30}>
+            <ReactFlowProvider>
+              <NetworkFlow 
+                nodes={nodes} 
+                edges={edges} 
+                networks={networks} 
+                currentNetworkId={currentNetworkId} 
+                onNodesChange={handleNodesChange} 
+                onEdgesChange={onEdgesChange} 
+                onConnect={onConnect} 
+                onAddNode={() => setIsDialogOpen(true)} 
+                onImportCsv={() => document.getElementById('csv-input')?.click()} 
+              />
+            </ReactFlowProvider>
+          </ResizablePanel>
 
-          <AddNodeDialog 
-            open={isDialogOpen} 
-            onOpenChange={setIsDialogOpen} 
-            onSave={handleAddNode} 
-          />
-          
-          <CsvPreviewDialog 
-            open={isCsvDialogOpen} 
-            onOpenChange={setIsCsvDialogOpen} 
-            headers={csvHeaders} 
-            rows={csvRows} 
-            onConfirm={mapping => handleCsvImport(mapping, currentNetworkId, csvHeaders, csvRows)} 
-          />
-          
-          <TemplatesDialog 
-            open={isTemplatesDialogOpen} 
-            onOpenChange={setIsTemplatesDialogOpen} 
-            onTemplateSelect={handleTemplateSelect} 
-          />
-          
-          <NetworkEditDialog 
-            network={editingNetwork} 
-            networkName={networkName} 
-            networkDescription={networkDescription} 
-            onNameChange={setNetworkName} 
-            onDescriptionChange={setNetworkDescription} 
-            onClose={() => setEditingNetwork(null)} 
-            onSave={() => handleEditNetwork(networkName)} 
-            onDelete={handleDeleteNetwork} 
-          />
-          
-          <input 
-            id="csv-input" 
-            type="file" 
-            accept=".csv" 
-            className="hidden" 
-            onChange={handleFileUpload} 
-          />
-        </div>
+          {isOverviewOpen && (
+            <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+              <div className="h-full border-l border-gray-200">
+                <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
+              </div>
+            </ResizablePanel>
+          )}
+        </ResizablePanelGroup>
+
+        <AddNodeDialog 
+          open={isDialogOpen} 
+          onOpenChange={setIsDialogOpen} 
+          onSave={handleAddNode} 
+        />
+        
+        <CsvPreviewDialog 
+          open={isCsvDialogOpen} 
+          onOpenChange={setIsCsvDialogOpen} 
+          headers={csvHeaders} 
+          rows={csvRows} 
+          onConfirm={mapping => handleCsvImport(mapping, currentNetworkId, csvHeaders, csvRows)} 
+        />
+        
+        <TemplatesDialog 
+          open={isTemplatesDialogOpen} 
+          onOpenChange={setIsTemplatesDialogOpen} 
+          onTemplateSelect={handleTemplateSelect} 
+        />
+        
+        <NetworkEditDialog 
+          network={editingNetwork} 
+          networkName={networkName} 
+          networkDescription={networkDescription} 
+          onNameChange={setNetworkName} 
+          onDescriptionChange={setNetworkDescription} 
+          onClose={() => setEditingNetwork(null)} 
+          onSave={() => handleEditNetwork(networkName)} 
+          onDelete={handleDeleteNetwork} 
+        />
+        
+        <input 
+          id="csv-input" 
+          type="file" 
+          accept=".csv" 
+          className="hidden" 
+          onChange={handleFileUpload} 
+        />
       </div>
     </SidebarProvider>
   );
