@@ -31,8 +31,12 @@ const NetworkTopBar = ({
 
   // Function to handle global AI Chat button click
   const handleAIChatClick = () => {
-    setActiveTab('ai-chat');
-    setIsOverviewOpen(true);
+    if (isOverviewOpen && activeTab === 'ai-chat') {
+      setIsOverviewOpen(false); // Close if already open on AI chat
+    } else {
+      setActiveTab('ai-chat');
+      setIsOverviewOpen(true);
+    }
   };
 
   // Make handleAIChatClick available globally
