@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
 import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid } from 'lucide-react';
@@ -40,8 +39,14 @@ const NetworkSidebar = ({
   };
 
   const handleMyTasksClick = () => {
+    console.log('My Tasks button clicked');
+    console.log('toggleNetworkOverview exists:', !!(window as any).toggleNetworkOverview);
+    
     if (typeof window !== 'undefined' && (window as any).toggleNetworkOverview) {
+      console.log('Attempting to call toggleNetworkOverview');
       (window as any).toggleNetworkOverview();
+    } else {
+      console.log('toggleNetworkOverview is not available on window object');
     }
   };
 
