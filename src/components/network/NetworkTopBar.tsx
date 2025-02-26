@@ -1,42 +1,24 @@
 
-import { Panel } from '@xyflow/react';
-import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, FileText, ListTodo, MoreHorizontal } from 'lucide-react';
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface NetworkTopBarProps {
-  currentNetwork: Network | undefined;
-  onAddNode: () => void;
-  onImportCsv: () => void;
+  networks: Network[];
+  currentNetworkId: string | null;
 }
 
-const NetworkTopBar = ({ currentNetwork, onAddNode, onImportCsv }: NetworkTopBarProps) => {
+const NetworkTopBar = ({ networks, currentNetworkId }: NetworkTopBarProps) => {
+  const currentNetwork = networks.find(network => network.id === currentNetworkId);
+
   return (
-    <>
-      <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2">
-        <span className="text-lg font-medium">
-          {currentNetwork?.name || 'Network 1'}
-        </span>
-        <Button variant="ghost" size="icon" className="h-8 w-8 ml-1">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </Panel>
-      
-      <Panel position="top-right" className="flex gap-2 m-4">
-        <Button variant="default" className="bg-[#0F172A] hover:bg-[#1E293B] shadow-lg" onClick={onAddNode}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Add Node
-        </Button>
-        <Button variant="outline" className="bg-white shadow-lg" onClick={onImportCsv}>
-          <FileText className="h-4 w-4 mr-2" />
-          Import CSV
-        </Button>
-        <Button variant="outline" className="bg-white shadow-lg">
-          <ListTodo className="h-4 w-4 mr-2" />
-          Tasks
-        </Button>
-      </Panel>
-    </>
+    <div className="flex items-center h-14 px-6 border-b bg-background">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger />
+        <div className="ml-6 font-medium">
+          {currentNetwork?.name || "Select a network"}
+        </div>
+      </div>
+    </div>
   );
 };
 
