@@ -2,10 +2,11 @@
 import { Panel } from '@xyflow/react';
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronLeft } from 'lucide-react';
+import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronLeft, MessageSquare } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from 'react';
+import { Textarea } from "@/components/ui/textarea";
 
 interface NetworkTopBarProps {
   currentNetwork: Network | undefined;
@@ -70,6 +71,7 @@ const NetworkTopBar = ({
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="calendar">Calendar</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="ai-chat">AI Chat</TabsTrigger>
             </TabsList>
             <div className="px-6 py-4">
               <TabsContent value="tasks">
@@ -88,6 +90,33 @@ const NetworkTopBar = ({
                 <div className="space-y-4">
                   <h3 className="text-sm font-medium">Notes</h3>
                   <p className="text-sm text-muted-foreground">No notes available.</p>
+                </div>
+              </TabsContent>
+              <TabsContent value="ai-chat" className="space-y-4">
+                <div className="flex flex-col h-[calc(100vh-300px)]">
+                  <div className="flex-1 space-y-4 overflow-y-auto p-4 rounded-lg bg-gray-50">
+                    <div className="flex gap-3 items-start">
+                      <div className="h-8 w-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                        <MessageSquare className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium mb-1">AI Assistant</p>
+                        <p className="text-sm text-muted-foreground">
+                          Hello! I can help you analyze your network and suggest outreach strategies. What would you like to know?
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border-t">
+                    <Textarea 
+                      placeholder="Ask me about your network..."
+                      className="w-full resize-none"
+                      rows={3}
+                    />
+                    <Button className="mt-2 w-full">
+                      Send message
+                    </Button>
+                  </div>
                 </div>
               </TabsContent>
             </div>
