@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, LayoutGrid, MessageSquare, Menu, FileText, BookOpen, Users } from 'lucide-react';
+import { PlusIcon, LayoutGrid, MessageSquare, Menu, FileText, BookOpen, Users, Expand } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
@@ -74,6 +74,15 @@ const NetworkSidebar = ({
           >
             <MessageSquare className="h-4 w-4" />
             AI Chat
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
+            onClick={onOverviewClick}
+          >
+            <Expand className="h-4 w-4" />
+            Expand Overview
           </Button>
         </div>
 
