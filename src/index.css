@@ -78,24 +78,6 @@
   }
 }
 
-/* Custom scrollbar styles */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-.scrollbar-thumb-gray-200::-webkit-scrollbar-thumb {
-  background-color: #E5E7EB;
-  border-radius: 6px;
-}
-
-.scrollbar-track-transparent::-webkit-scrollbar-track {
-  background-color: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-
 @layer utilities {
   .animate-carousel {
     animation: carousel 40s linear infinite;
@@ -169,4 +151,3 @@
 [data-sidebar="sidebar"] {
   @apply bg-background text-foreground;
 }
-
