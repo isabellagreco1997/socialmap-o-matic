@@ -1,9 +1,8 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export interface EdgeData {
   label: string;
@@ -22,6 +21,16 @@ const EdgeLabelDialog = ({ open, onOpenChange, onSave, initialData }: EdgeLabelD
     label: initialData?.label || '',
     notes: initialData?.notes || '',
   });
+
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        label: initialData.label || '',
+        notes: initialData.notes || '',
+      });
+    }
+  }, [initialData]);
 
   const handleSave = () => {
     onSave(formData);

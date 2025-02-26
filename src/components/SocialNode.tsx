@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import NodeHeader from '@/components/social/NodeHeader';
 import NodeTodoList from '@/components/social/NodeTodoList';
 import NodeEditDialog from '@/components/social/NodeEditDialog';
 import type { NodeData } from '@/types/network';
+import { supabase } from "@/integrations/supabase/client";
 
 interface SocialNodeProps {
   id: string;
@@ -32,18 +32,61 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     );
   }
 
-  const handleContactDetailsChange = (notes: string) => {
-    const newDetails = { ...contactDetails, notes };
-    setContactDetails(newDetails);
-    updateNodeData({ ...data, contactDetails: newDetails });
+  const handleContactDetailsChange = async (notes: string) => {
+    try {
+      const newDetails = { ...contactDetails, notes };
+      setContactDetails(newDetails);
+      
+      // Update node in database with notes
+      await supabase
+        .from('nodes')
+        .update({ notes })
+        .eq('id', id);
+      
+      updateNodeData({ ...data, contactDetails: newDetails });
+      
+      toast({
+        title: "Notes updated",
+        description: "Node notes have been saved",
+      });
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save notes",
+      });
+    }
   };
 
-  const handleDeleteNode = () => {
-    setNodes(nds => nds.filter(node => node.id !== id));
-    toast({
-      title: "Node deleted",
-      description: `Removed ${data.name} from the network`,
-    });
+  const handleDeleteNode = async () => {
+    try {
+      // Delete associated todos first
+      await supabase
+        .from('todos')
+        .delete()
+        .eq('node_id', id);
+      
+      // Delete the node
+      await supabase
+        .from('nodes')
+        .delete()
+        .eq('id', id);
+      
+      setNodes(nds => nds.filter(node => node.id !== id));
+      
+      toast({
+        title: "Node deleted",
+        description: `Removed ${data.name} from the network`,
+      });
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete node",
+      });
+    }
   };
 
   const updateNodeData = (newData: NodeData) => {
@@ -54,10 +97,6 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
           : node
       )
     );
-    toast({
-      title: "Node updated",
-      description: `Updated ${newData.name} successfully`,
-    });
   };
 
   return (
@@ -102,6 +141,7 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
                 setTodos(newTodos);
                 updateNodeData({ ...data, todos: newTodos });
               }}
+              nodeId={id}
             />
           </div>
         )}
