@@ -43,6 +43,7 @@ const NetworkSidebar = ({
     }
   };
 
+  const isOverviewOpen = typeof window !== 'undefined' ? (window as any).isOverviewOpen : false;
   const activeTab = typeof window !== 'undefined' ? (window as any).activeTab : '';
 
   return (
