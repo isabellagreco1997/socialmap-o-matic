@@ -50,7 +50,7 @@ const LandingPage = () => {
         </div>
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
-            <span>Use AI to map & visualize your</span>
+            <span>Use AI to map & visualize</span>
             <span className="text-[#0A2463]">Professional Connections</span>
           </h1>
           <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">Map relationships with exceptional business leaders, alumni, and wealthy individuals to drive your organization's success.</p>
