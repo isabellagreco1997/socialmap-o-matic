@@ -4,7 +4,6 @@ import { Network } from "@/types/network";
 import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { useNavigate } from "react-router-dom";
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -24,8 +23,6 @@ const NetworkSidebar = ({
   onEditNetwork,
   onNetworksReorder,
 }: NetworkSidebarProps) => {
-  const navigate = useNavigate();
-
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     
@@ -43,7 +40,9 @@ const NetworkSidebar = ({
   };
 
   const handleOverviewClick = () => {
-    navigate('/overview');
+    if (typeof window !== 'undefined' && (window as any).openOverview) {
+      (window as any).openOverview();
+    }
   };
 
   return (
