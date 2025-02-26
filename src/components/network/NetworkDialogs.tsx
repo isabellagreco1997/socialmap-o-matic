@@ -23,7 +23,7 @@ interface NetworkDialogsProps {
   onCsvImport: (mapping: any, networkId: string | null, headers: string[], rows: string[][]) => void;
   onTemplateSelect: (template: any) => void;
   onEditNetwork: (name: string) => void;
-  onDeleteNetwork: () => void;
+  onDeleteNetwork: (networkId: string) => void;
   currentNetworkId: string | null;
   setEditingNetwork: (network: Network | null) => void;
 }
@@ -80,7 +80,7 @@ export const NetworkDialogs = ({
         onDescriptionChange={onDescriptionChange} 
         onClose={() => setEditingNetwork(null)} 
         onSave={() => onEditNetwork(networkName)} 
-        onDelete={onDeleteNetwork} 
+        onDelete={() => editingNetwork && onDeleteNetwork(editingNetwork.id)} 
       />
     </>
   );

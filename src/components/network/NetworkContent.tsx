@@ -5,7 +5,7 @@ import { NetworkOverview } from './NetworkOverview';
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
 import { ChevronsRight } from 'lucide-react';
 import type { Node, Edge } from '@xyflow/react';
-import type { Network } from '@/types/network';
+import type { Network, TodoItem } from '@/types/network';
 
 interface NetworkContentProps {
   nodes: Node[];
@@ -59,7 +59,7 @@ export const NetworkContent = ({
           </div>
           <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
             <div className="h-full border-l border-gray-200">
-              <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
+              <NetworkOverview todos={nodes.flatMap(node => (node.data.todos || []) as TodoItem[])} />
             </div>
           </ResizablePanel>
         </>
