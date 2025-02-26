@@ -14,6 +14,8 @@ interface NetworkSidebarProps {
   onEditNetwork: (network: Network) => void;
   onOpenTemplates: () => void;
   onNetworksReorder: (networks: Network[]) => void;
+  onOverviewClick: () => void;
+  isOverviewOpen: boolean;
 }
 
 const NetworkSidebar = ({
@@ -22,6 +24,8 @@ const NetworkSidebar = ({
   onNetworkSelect,
   onEditNetwork,
   onNetworksReorder,
+  onOverviewClick,
+  isOverviewOpen,
 }: NetworkSidebarProps) => {
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -55,7 +59,13 @@ const NetworkSidebar = ({
             }
           />
 
-          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium ${
+              isOverviewOpen ? 'bg-gray-100 hover:bg-gray-200' : ''
+            }`}
+            onClick={onOverviewClick}
+          >
             <LayoutGrid className="h-4 w-4" />
             Overview
           </Button>

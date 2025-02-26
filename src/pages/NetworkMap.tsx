@@ -14,6 +14,7 @@ import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
 import type { Network, NodeData } from '@/types/network';
 import type { Database } from "@/integrations/supabase/types";
+import { NetworkOverview } from '@/components/network/NetworkOverview';
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -33,6 +34,7 @@ export const Flow = () => {
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
+  const [isOverviewOpen, setIsOverviewOpen] = useState(false);
 
   const {
     handleAddNode,
@@ -168,6 +170,10 @@ export const Flow = () => {
     reader.readAsText(file);
   };
 
+  const handleOverviewClick = () => {
+    setIsOverviewOpen(!isOverviewOpen);
+  };
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -182,12 +188,14 @@ export const Flow = () => {
               onNetworkSelect={setCurrentNetworkId} 
               onEditNetwork={setEditingNetwork} 
               onOpenTemplates={() => setIsTemplatesDialogOpen(true)} 
-              onNetworksReorder={handleNetworksReorder} 
+              onNetworksReorder={handleNetworksReorder}
+              onOverviewClick={handleOverviewClick}
+              isOverviewOpen={isOverviewOpen} 
             />
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex-1">
+        <div className="flex-1 flex">
           <ReactFlowProvider>
             <NetworkFlow 
               nodes={nodes} 
@@ -201,6 +209,12 @@ export const Flow = () => {
               onImportCsv={() => document.getElementById('csv-input')?.click()} 
             />
           </ReactFlowProvider>
+
+          {isOverviewOpen && (
+            <div className="w-[400px] border-l border-gray-200 overflow-hidden">
+              <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
+            </div>
+          )}
 
           <AddNodeDialog 
             open={isDialogOpen} 
