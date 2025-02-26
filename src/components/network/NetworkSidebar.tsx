@@ -69,7 +69,8 @@ const NetworkSidebar = ({
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="pt-3 px-3 h-[calc(100vh-500px)] overflow-y-auto space-y-1"
+                  className="pt-3 px-3 h-[calc(100vh-500px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent space-y-1"
+                  style={{ scrollbarGutter: 'stable' }}
                 >
                   {networks.map((network, index) => (
                     <Draggable key={network.id} draggableId={network.id} index={index}>
