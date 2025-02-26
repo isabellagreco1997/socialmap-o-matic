@@ -39,9 +39,9 @@ const NetworkSidebar = ({
     }
   };
 
-  const handleOverviewClick = () => {
-    if (typeof window !== 'undefined' && (window as any).openOverview) {
-      (window as any).openOverview();
+  const handleMyTasksClick = () => {
+    if (typeof window !== 'undefined' && (window as any).toggleOverview) {
+      (window as any).toggleOverview();
     }
   };
 
@@ -61,7 +61,7 @@ const NetworkSidebar = ({
           <Button 
             variant="ghost" 
             className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
-            onClick={handleOverviewClick}
+            onClick={handleMyTasksClick}
           >
             <LayoutGrid className="h-4 w-4" />
             My Tasks
