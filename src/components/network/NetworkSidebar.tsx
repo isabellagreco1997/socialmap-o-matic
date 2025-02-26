@@ -42,19 +42,19 @@ const NetworkSidebar = ({
           </div>
           <CreateNetworkDialog 
             trigger={
-              <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
                 <PlusIcon className="h-4 w-4" />
                 Create Network
               </Button>
             }
           />
 
-          <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
             <LayoutGrid className="h-4 w-4" />
             Overview
           </Button>
 
-          <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
+          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
             <MessageSquare className="h-4 w-4" />
             AI Chat
           </Button>
@@ -67,7 +67,7 @@ const NetworkSidebar = ({
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="pt-3 px-3 h-[calc(100vh-450px)] overflow-y-auto space-y-1"
+                  className="pt-3 px-3 h-[calc(100vh-500px)] overflow-y-auto space-y-1"
                 >
                   {networks.map((network, index) => (
                     <Draggable key={network.id} draggableId={network.id} index={index}>
@@ -108,20 +108,20 @@ const NetworkSidebar = ({
         </div>
       </div>
 
-      <div className="mt-auto border-t">
+      <div className="mt-3 border-t">
         <div className="p-3 space-y-1">
           <div className="text-xs font-semibold text-muted-foreground/70 px-2 py-1.5">
             Discover
           </div>
-          <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
             <FileText className="h-4 w-4" />
             Templates
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
             <BookOpen className="h-4 w-4" />
             Resources
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
+          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm rounded-lg font-medium">
             <Users className="h-4 w-4" />
             Community
           </Button>
