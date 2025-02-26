@@ -52,7 +52,7 @@ const NetworkTopBar = ({
       </Panel>
 
       <Sheet open={isOverviewOpen} modal={false}>
-        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] mb-8 border-t-0 rounded-xl [&>button]:hidden backdrop-blur-none bg-white/95 shadow-2xl pointer-events-auto">
+        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] mb-4 border-t-0 rounded-xl [&>button]:hidden backdrop-blur-none bg-white/95 shadow-2xl pointer-events-auto">
           <SheetHeader className="p-6 pb-2">
             <div className="flex justify-between items-center">
               <SheetTitle>Network Overview</SheetTitle>
