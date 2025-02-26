@@ -2,7 +2,7 @@
 import { Panel } from '@xyflow/react';
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal } from 'lucide-react';
+import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from 'react';
@@ -19,6 +19,10 @@ const NetworkTopBar = ({
   onImportCsv
 }: NetworkTopBarProps) => {
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+
+  const toggleOverview = () => {
+    setIsOverviewOpen(!isOverviewOpen);
+  };
 
   return (
     <>
@@ -40,14 +44,22 @@ const NetworkTopBar = ({
           <FileText className="h-4 w-4 mr-2" />
           Import CSV
         </Button>
-        <Button variant="outline" className="bg-white shadow-lg" onClick={() => setIsOverviewOpen(true)}>
+        <Button variant="outline" className="bg-white shadow-lg" onClick={toggleOverview}>
           <LayoutPanelTop className="h-4 w-4 mr-2" />
           Overview
         </Button>
       </Panel>
 
-      <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
+      <Sheet open={isOverviewOpen} modal={false}>
         <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] border-t-0 rounded-xl rounded-tr-none [&>button]:hidden backdrop-blur-none bg-white/95 shadow-2xl pointer-events-auto">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleOverview}
+            className="absolute -left-8 top-4 h-8 w-8 rounded-full bg-white shadow-md border hover:bg-gray-100"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
           <SheetHeader className="p-6 pb-2">
             <SheetTitle>Network Overview</SheetTitle>
           </SheetHeader>
