@@ -20,10 +20,25 @@ const NetworkTopBar = ({
   onImportCsv
 }: NetworkTopBarProps) => {
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('tasks');
 
-  const toggleOverview = () => {
+  const toggleOverview = (tab?: string) => {
+    if (tab) {
+      setActiveTab(tab);
+    }
     setIsOverviewOpen(!isOverviewOpen);
   };
+
+  // Function to handle global AI Chat button click
+  const handleAIChatClick = () => {
+    setActiveTab('ai-chat');
+    setIsOverviewOpen(true);
+  };
+
+  // Make handleAIChatClick available globally
+  if (typeof window !== 'undefined') {
+    (window as any).openAIChat = handleAIChatClick;
+  }
 
   return (
     <>
@@ -45,7 +60,7 @@ const NetworkTopBar = ({
           <FileText className="h-4 w-4 mr-2" />
           Import CSV
         </Button>
-        <Button variant="outline" className="bg-white shadow-lg" onClick={toggleOverview}>
+        <Button variant="outline" className="bg-white shadow-lg" onClick={() => toggleOverview()}>
           <LayoutPanelTop className="h-4 w-4 mr-2" />
           Overview
         </Button>
@@ -59,14 +74,14 @@ const NetworkTopBar = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleOverview}
+                onClick={() => toggleOverview()}
                 className="h-8 w-8 hover:bg-gray-100"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </div>
           </SheetHeader>
-          <Tabs defaultValue="tasks" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start rounded-none border-b px-6">
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="calendar">Calendar</TabsTrigger>

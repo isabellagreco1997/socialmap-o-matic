@@ -33,6 +33,12 @@ const NetworkSidebar = ({
     onNetworksReorder(items);
   };
 
+  const handleAIChatClick = () => {
+    if (typeof window !== 'undefined' && (window as any).openAIChat) {
+      (window as any).openAIChat();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
@@ -51,7 +57,11 @@ const NetworkSidebar = ({
             Overview
           </Button>
 
-          <Button variant="ghost" className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
+            onClick={handleAIChatClick}
+          >
             <MessageSquare className="h-4 w-4" />
             AI Chat
           </Button>
