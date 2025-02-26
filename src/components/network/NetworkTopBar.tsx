@@ -22,7 +22,7 @@ const NetworkTopBar = ({
 
   return (
     <>
-      <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2 px-[12px] mx-[50px]">
+      <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-3 m-4 flex items-center gap-2 px-[12px] mx-[50px] z-50">
         <span className="text-lg font-medium">
           {currentNetwork?.name || 'Network 1'}
         </span>
@@ -31,7 +31,7 @@ const NetworkTopBar = ({
         </Button>
       </Panel>
       
-      <Panel position="top-right" className="flex gap-2 m-4">
+      <Panel position="top-right" className="flex gap-2 m-4 z-50">
         <Button variant="default" className="bg-[#0F172A] hover:bg-[#1E293B] shadow-lg" onClick={onAddNode}>
           <PlusIcon className="h-4 w-4 mr-2" />
           Add Node
@@ -47,7 +47,7 @@ const NetworkTopBar = ({
       </Panel>
 
       <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
-        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
+        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 mt-[72px] border-t-0 rounded-tl-none [&>button]:hidden">
           <SheetHeader className="p-6 pb-2">
             <SheetTitle>Network Overview</SheetTitle>
           </SheetHeader>
