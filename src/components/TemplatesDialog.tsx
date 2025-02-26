@@ -863,4 +863,47 @@ const templates: Template[] = [
       // Wind Energy Sector
       { name: "Wind Energy Association", type: "organization", x_position: 800, y_position: 100 },
       { name: "Offshore Wind Developer", type: "organization", x_position: 1000, y_position: 50 },
-      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 6
+      { name: "Wind Turbine Manufacturer", type: "organization", x_position: 600, y_position: 0 }
+    ],
+    edges: [
+      // Connections between nodes
+    ]
+  }
+];
+
+interface TemplatesDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onTemplateSelect: (template: Template) => void;
+}
+
+export function TemplatesDialog({
+  open,
+  onOpenChange,
+  onTemplateSelect
+}: TemplatesDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>Choose a Template</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          {templates.map((template) => (
+            <Button
+              key={template.id}
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-start gap-2"
+              onClick={() => onTemplateSelect(template)}
+            >
+              <div className="font-medium">{template.name}</div>
+              <div className="text-sm text-muted-foreground text-left">
+                {template.description}
+              </div>
+            </Button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
