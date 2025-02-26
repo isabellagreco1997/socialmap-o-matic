@@ -1,4 +1,3 @@
-
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -7,16 +6,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import NetworkSidebar from '@/components/network/NetworkSidebar';
 import NetworkSearchHeader from '@/components/network/NetworkSearchHeader';
-import NetworkFlow from '@/components/network/NetworkFlow';
-import NetworkEditDialog from '@/components/network/NetworkEditDialog';
-import AddNodeDialog from '@/components/AddNodeDialog';
-import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
-import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
-import { NetworkOverview } from '@/components/network/NetworkOverview';
-import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
-import { ChevronRight, ChevronsRight } from 'lucide-react';
-import type { Network, NodeData } from '@/types/network';
+import { NetworkContent } from '@/components/network/NetworkContent';
+import { NetworkDialogs } from '@/components/network/NetworkDialogs';
+import type { Network } from '@/types/network';
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -28,9 +21,7 @@ export const Flow = () => {
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isTemplatesDialogOpen, setIsTemplatesDialogOpen] = useState(false);
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
@@ -48,7 +39,26 @@ export const Flow = () => {
     handleNetworksReorder
   } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks);
 
-  const filteredNetworks = networks.filter(network => network.name.toLowerCase().includes(searchQuery.toLowerCase())).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const handleNodesChange = useCallback(async (changes: any) => {
+    onNodesChange(changes);
+
+    const positionChanges = changes.filter((change: any) => change.type === 'position' && change.dragging === false);
+    if (positionChanges.length > 0 && currentNetworkId) {
+      try {
+        await Promise.all(positionChanges.map((change: any) => supabase.from('nodes').update({
+          x_position: change.position.x,
+          y_position: change.position.y
+        }).eq('id', change.id).eq('network_id', currentNetworkId)));
+      } catch (error) {
+        console.error('Error updating node positions:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save node positions"
+        });
+      }
+    }
+  }, [currentNetworkId, onNodesChange, toast]);
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -77,27 +87,6 @@ export const Flow = () => {
     };
     fetchNetworks();
   }, [currentNetworkId, toast]);
-
-  const handleNodesChange = useCallback(async (changes: any) => {
-    onNodesChange(changes);
-
-    const positionChanges = changes.filter((change: any) => change.type === 'position' && change.dragging === false);
-    if (positionChanges.length > 0 && currentNetworkId) {
-      try {
-        await Promise.all(positionChanges.map((change: any) => supabase.from('nodes').update({
-          x_position: change.position.x,
-          y_position: change.position.y
-        }).eq('id', change.id).eq('network_id', currentNetworkId)));
-      } catch (error) {
-        console.error('Error updating node positions:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to save node positions"
-        });
-      }
-    }
-  }, [currentNetworkId, onNodesChange, toast]);
 
   useEffect(() => {
     const fetchNetworkData = async () => {
@@ -176,6 +165,10 @@ export const Flow = () => {
     setIsOverviewOpen(!isOverviewOpen);
   };
 
+  const filteredNetworks = networks.filter(network => 
+    network.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -197,68 +190,40 @@ export const Flow = () => {
           </SidebarContent>
         </Sidebar>
 
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          <ResizablePanel defaultSize={isOverviewOpen ? 70 : 100} minSize={30}>
-            <ReactFlowProvider>
-              <NetworkFlow 
-                nodes={nodes} 
-                edges={edges} 
-                networks={networks} 
-                currentNetworkId={currentNetworkId} 
-                onNodesChange={handleNodesChange} 
-                onEdgesChange={onEdgesChange} 
-                onConnect={onConnect} 
-                onAddNode={() => setIsDialogOpen(true)} 
-                onImportCsv={() => document.getElementById('csv-input')?.click()} 
-              />
-            </ReactFlowProvider>
-          </ResizablePanel>
+        <NetworkContent 
+          nodes={nodes}
+          edges={edges}
+          networks={networks}
+          currentNetworkId={currentNetworkId}
+          isOverviewOpen={isOverviewOpen}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onAddNode={() => setIsDialogOpen(true)}
+          onImportCsv={() => document.getElementById('csv-input')?.click()}
+        />
 
-          {isOverviewOpen && (
-            <>
-              <div className="relative">
-                <ResizableHandle className="!absolute !right-0 !top-0 !w-6 !h-6 !bg-transparent hover:!bg-gray-100 transition-colors cursor-ew-resize z-50 flex items-center justify-center">
-                  <ChevronsRight className="h-4 w-4 text-gray-500" />
-                </ResizableHandle>
-              </div>
-              <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-                <div className="h-full border-l border-gray-200">
-                  <NetworkOverview todos={nodes.flatMap(node => node.data.todos || [])} />
-                </div>
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
-
-        <AddNodeDialog 
-          open={isDialogOpen} 
-          onOpenChange={setIsDialogOpen} 
-          onSave={handleAddNode} 
-        />
-        
-        <CsvPreviewDialog 
-          open={isCsvDialogOpen} 
-          onOpenChange={setIsCsvDialogOpen} 
-          headers={csvHeaders} 
-          rows={csvRows} 
-          onConfirm={mapping => handleCsvImport(mapping, currentNetworkId, csvHeaders, csvRows)} 
-        />
-        
-        <TemplatesDialog 
-          open={isTemplatesDialogOpen} 
-          onOpenChange={setIsTemplatesDialogOpen} 
-          onTemplateSelect={handleTemplateSelect} 
-        />
-        
-        <NetworkEditDialog 
-          network={editingNetwork} 
-          networkName={networkName} 
-          networkDescription={networkDescription} 
-          onNameChange={setNetworkName} 
-          onDescriptionChange={setNetworkDescription} 
-          onClose={() => setEditingNetwork(null)} 
-          onSave={() => handleEditNetwork(networkName)} 
-          onDelete={handleDeleteNetwork} 
+        <NetworkDialogs 
+          isDialogOpen={isDialogOpen}
+          setIsDialogOpen={setIsDialogOpen}
+          isCsvDialogOpen={isCsvDialogOpen}
+          setIsCsvDialogOpen={setIsCsvDialogOpen}
+          isTemplatesDialogOpen={isTemplatesDialogOpen}
+          setIsTemplatesDialogOpen={setIsTemplatesDialogOpen}
+          csvHeaders={csvHeaders}
+          csvRows={csvRows}
+          editingNetwork={editingNetwork}
+          networkName={networkName}
+          networkDescription={networkDescription}
+          onNameChange={setNetworkName}
+          onDescriptionChange={setNetworkDescription}
+          onAddNode={handleAddNode}
+          onCsvImport={handleCsvImport}
+          onTemplateSelect={handleTemplateSelect}
+          onEditNetwork={handleEditNetwork}
+          onDeleteNetwork={handleDeleteNetwork}
+          currentNetworkId={currentNetworkId}
+          setEditingNetwork={setEditingNetwork}
         />
         
         <input 
