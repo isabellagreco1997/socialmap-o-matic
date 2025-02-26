@@ -6,11 +6,12 @@ import { CheckCircle2, UsersRound, GraduationCap, Network, HeartPulse, Route, Us
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+
 const LandingPage = () => {
   return <div className="min-h-screen flex flex-col">
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-16 items-center relative">
-          <span className="text-xl font-semibold pl-8">SocialMapr</span>
+          <span className="text-xl font-semibold pl-8">Connection Mapper</span>
           <div className="flex-1 flex justify-center">
             <div className="hidden md:flex items-center gap-6">
               <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
@@ -49,10 +50,10 @@ const LandingPage = () => {
         </div>
         <div className="max-w-4xl space-y-10 relative z-10">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight flex flex-col gap-4">
-            <span>Map & Visualize your</span>
-            <span><span className="text-[#0A2463]">Professional</span> <span className="text-[#0A2463]">Network</span></span>
+            <span>Use AI to map & visualize your</span>
+            <span className="text-[#0A2463]">Professional Connections</span>
           </h1>
-          <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">Map relationships with exceptional business leaders, alumni, and wealthy individuals to drive your organization’s success.</p>
+          <p className="text-2xl max-w-3xl mx-auto text-center text-slate-950">Map relationships with exceptional business leaders, alumni, and wealthy individuals to drive your organization's success.</p>
           <div className="flex gap-4 justify-center pt-4">
             <Button size="lg" className="bg-[#0A2463] hover:bg-[#0A2463]/90 text-lg h-14 px-10" asChild>
               <Link to="/network">Start Mapping</Link>
@@ -608,4 +609,5 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
+
 export default LandingPage;
