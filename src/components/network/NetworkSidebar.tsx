@@ -50,11 +50,6 @@ const NetworkSidebar = ({
     }
   };
 
-  // Handle network creation and selection
-  const handleNetworkCreated = (networkId: string) => {
-    onNetworkSelect(networkId);
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
@@ -66,7 +61,6 @@ const NetworkSidebar = ({
                 Create Network
               </Button>
             }
-            onNetworkCreated={handleNetworkCreated}
           />
 
           <Button 
@@ -80,7 +74,7 @@ const NetworkSidebar = ({
 
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-3 h- 9 text-sm font-medium rounded-lg"
+            className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
             onClick={handleAIChatClick}
           >
             <MessageSquare className="h-4 w-4" />

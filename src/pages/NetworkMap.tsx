@@ -14,8 +14,6 @@ import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
 import type { Network, NodeData } from '@/types/network';
 import type { Database } from "@/integrations/supabase/types";
-import EdgeLabelDialog, { EdgeData } from '@/components/EdgeLabelDialog';
-import NetworkChat from '@/components/NetworkChat';
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -35,9 +33,6 @@ export const Flow = () => {
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
-  const [isEdgeLabelDialogOpen, setIsEdgeLabelDialogOpen] = useState(false);
-  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
-  const [showChat, setShowChat] = useState(false);
 
   const {
     handleAddNode,
@@ -54,8 +49,6 @@ export const Flow = () => {
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
-        setIsLoading(true);
-        
         const {
           data: networksData,
           error
@@ -106,52 +99,27 @@ export const Flow = () => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
       try {
-        const [nodesResponse, edgesResponse] = await Promise.all([
-          supabase.from('nodes').select('*').eq('network_id', currentNetworkId),
-          supabase.from('edges').select('*').eq('network_id', currentNetworkId)
-        ]);
-        
+        const [nodesResponse, edgesResponse] = await Promise.all([supabase.from('nodes').select('*').eq('network_id', currentNetworkId), supabase.from('edges').select('*').eq('network_id', currentNetworkId)]);
         if (nodesResponse.error) throw nodesResponse.error;
         if (edgesResponse.error) throw edgesResponse.error;
-        
-        // Fetch todos for each node
-        const nodesTodosPromises = nodesResponse.data.map(node => 
-          supabase.from('todos').select('*').eq('node_id', node.id)
-        );
-        
-        const nodesTodosResponses = await Promise.all(nodesTodosPromises);
-        
-        const nodesWithTodos = nodesResponse.data.map((node, index) => {
-          // Map todos with proper field names
-          const todoItems = nodesTodosResponses[index].data?.map(todo => ({
-            id: todo.id,
-            text: todo.text,
-            completed: todo.completed || false,
-            dueDate: todo.due_date // Map database due_date to UI dueDate
-          })) || [];
-          
-          return {
-            id: node.id,
-            type: 'social',
-            position: {
-              x: node.x_position || Math.random() * 500,
-              y: node.y_position || Math.random() * 500
-            },
-            data: {
-              type: node.type,
-              name: node.name,
-              profileUrl: node.profile_url,
-              imageUrl: node.image_url,
-              date: node.date,
-              address: node.address,
-              contactDetails: {
-                notes: node.notes
-              },
-              todos: todoItems
-            }
-          };
-        });
-        
+        const nodesTodosResponse = await Promise.all(nodesResponse.data.map(node => supabase.from('todos').select('*').eq('node_id', node.id)));
+        const nodesWithTodos = nodesResponse.data.map((node, index) => ({
+          id: node.id,
+          type: 'social',
+          position: {
+            x: node.x_position || Math.random() * 500,
+            y: node.y_position || Math.random() * 500
+          },
+          data: {
+            type: node.type,
+            name: node.name,
+            profileUrl: node.profile_url,
+            imageUrl: node.image_url,
+            date: node.date,
+            address: node.address,
+            todos: nodesTodosResponse[index].data || []
+          }
+        }));
         const formattedEdges = edgesResponse.data.map(edge => ({
           id: edge.id,
           source: edge.source_id,
@@ -163,7 +131,6 @@ export const Flow = () => {
             labelPosition: edge.label_position
           }
         }));
-        
         setNodes(nodesWithTodos);
         setEdges(formattedEdges);
       } catch (error) {
@@ -178,87 +145,12 @@ export const Flow = () => {
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
 
-  const onConnect = useCallback(async (params: Connection) => {
-    if (!currentNetworkId) return;
-    
-    try {
-      // Create edge in database
-      const { data: newEdge, error } = await supabase
-        .from('edges')
-        .insert({
-          network_id: currentNetworkId,
-          source_id: params.source,
-          target_id: params.target,
-          label: ''
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Add edge to flow
-      const edge = {
-        id: newEdge.id,
-        ...params,
-        type: 'custom',
-        data: {
-          label: '',
-          notes: ''
-        }
-      };
-      
-      setEdges(eds => addEdge(edge, eds));
-      
-      // Open dialog to add label
-      setSelectedEdge(edge);
-      setIsEdgeLabelDialogOpen(true);
-    } catch (error) {
-      console.error('Error creating edge:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create connection"
-      });
-    }
-  }, [currentNetworkId, setEdges, toast]);
-
-  const handleEdgeLabelSave = async (data: EdgeData) => {
-    if (!selectedEdge) return;
-    
-    try {
-      // Update edge in database
-      const { error } = await supabase
-        .from('edges')
-        .update({
-          label: data.label,
-          notes: data.notes
-        })
-        .eq('id', selectedEdge.id);
-      
-      if (error) throw error;
-      
-      // Update edge in flow
-      setEdges(eds => 
-        eds.map(edge => 
-          edge.id === selectedEdge.id 
-            ? { ...edge, data: { ...edge.data, ...data } } 
-            : edge
-        )
-      );
-      
-      toast({
-        title: "Connection updated",
-        description: "Connection details have been saved"
-      });
-    } catch (error) {
-      console.error('Error updating edge:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update connection"
-      });
-    }
-  };
+  const onConnect = useCallback((params: Connection) => {
+    setEdges(eds => addEdge({
+      ...params,
+      type: 'custom'
+    }, eds));
+  }, [setEdges]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -274,17 +166,6 @@ export const Flow = () => {
       setIsCsvDialogOpen(true);
     };
     reader.readAsText(file);
-  };
-
-  // Make the AI chat toggle function available globally
-  if (typeof window !== 'undefined') {
-    (window as any).openAIChat = () => setShowChat(true);
-  }
-
-  // Handle network creation callback
-  const handleNetworkCreated = (networkId: string) => {
-    // Set the current network to the newly created one
-    setCurrentNetworkId(networkId);
   };
 
   return (
@@ -306,7 +187,7 @@ export const Flow = () => {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex-1 relative">
+        <div className="flex-1">
           <ReactFlowProvider>
             <NetworkFlow 
               nodes={nodes} 
@@ -350,18 +231,6 @@ export const Flow = () => {
             onClose={() => setEditingNetwork(null)} 
             onSave={() => handleEditNetwork(networkName)} 
             onDelete={handleDeleteNetwork} 
-          />
-          
-          <EdgeLabelDialog
-            open={isEdgeLabelDialogOpen}
-            onOpenChange={setIsEdgeLabelDialogOpen}
-            onSave={handleEdgeLabelSave}
-            initialData={selectedEdge?.data as EdgeData}
-          />
-          
-          <NetworkChat 
-            show={showChat} 
-            onClose={() => setShowChat(false)} 
           />
           
           <input 
