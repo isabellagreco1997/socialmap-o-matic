@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,9 @@ interface Message {
 interface AIChatProps {
   networkName?: string;
 }
+
+// Store the API key as a constant
+const OPENAI_API_KEY = "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";
 
 const AIChat = ({ networkName }: AIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -68,7 +72,7 @@ const AIChat = ({ networkName }: AIChatProps) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
