@@ -19,6 +19,11 @@ interface NetworkFlowProps {
   onImportCsv: () => void;
 }
 
+// Add custom styles to the ReactFlow container
+const flowStyles = {
+  background: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)',
+};
+
 const NetworkFlow = ({
   nodes,
   edges,
@@ -30,6 +35,28 @@ const NetworkFlow = ({
   onAddNode,
   onImportCsv
 }: NetworkFlowProps) => {
+  // Define the custom connection line as a styled component
+  const connectionLineStyle = {
+    stroke: 'rgba(59, 130, 246, 0.5)',
+    strokeWidth: 2,
+    strokeDasharray: '5,5',
+  };
+
+  // Define default edge options
+  const defaultEdgeOptions = {
+    type: 'custom',
+    style: {
+      strokeWidth: 2,
+      stroke: 'rgba(59, 130, 246, 0.6)',
+    },
+    markerEnd: {
+      type: 'arrowclosed',
+      color: 'rgba(59, 130, 246, 0.6)',
+      width: 20,
+      height: 20,
+    },
+  };
+
   return (
     <div className="h-full">
       <ReactFlow 
@@ -47,6 +74,11 @@ const NetworkFlow = ({
         minZoom={0.1}
         maxZoom={2}
         fitView
+        style={flowStyles}
+        connectionLineStyle={connectionLineStyle}
+        defaultEdgeOptions={defaultEdgeOptions}
+        proOptions={{ hideAttribution: true }}
+        className="bg-gradient-to-br from-sky-50 to-indigo-50"
       >
         <NetworkTopBar
           currentNetwork={networks.find(n => n.id === currentNetworkId)}

@@ -26,7 +26,7 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
 
   if (!data || !data.name) {
     return (
-      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur">
+      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur rounded-xl">
         <div className="text-destructive">Invalid node data</div>
       </Card>
     );
@@ -60,11 +60,37 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     });
   };
 
+  // Get background color based on node type
+  const getNodeBackground = () => {
+    switch (data.type) {
+      case 'person':
+        return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200';
+      case 'organization':
+        return 'bg-gradient-to-br from-green-50 to-green-100 border-green-200';
+      case 'event':
+        return 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200';
+      case 'venue':
+        return 'bg-gradient-to-br from-red-50 to-red-100 border-red-200';
+      default:
+        return 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200';
+    }
+  };
+
   return (
     <>
-      <Card className="min-w-[300px] p-4 bg-background/95 backdrop-blur">
-        <Handle type="target" position={Position.Left} className="!bg-primary !w-3 !h-3" />
-        <Handle type="source" position={Position.Right} className="!bg-primary !w-3 !h-3" />
+      <Card 
+        className={`min-w-[300px] p-4 backdrop-blur rounded-xl shadow-lg border-2 transition-all duration-300 ${getNodeBackground()} hover:shadow-xl`}
+      >
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          className="!bg-blue-500 !border-2 !border-white !w-3 !h-3 !transition-all !duration-200 hover:!scale-125" 
+        />
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          className="!bg-blue-500 !border-2 !border-white !w-3 !h-3 !transition-all !duration-200 hover:!scale-125" 
+        />
         
         <NodeHeader 
           data={data}
@@ -74,7 +100,7 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
 
         <Button 
           variant="ghost" 
-          className="w-full mt-2 text-sm"
+          className="w-full mt-3 text-sm font-medium transition-colors duration-200"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? (
@@ -85,14 +111,14 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
         </Button>
 
         {isExpanded && (
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-4 animate-accordion-down">
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Notes</h4>
               <Textarea
                 placeholder="Add notes..."
                 value={contactDetails.notes || ''}
                 onChange={(e) => handleContactDetailsChange(e.target.value)}
-                className="text-sm min-h-[100px]"
+                className="text-sm min-h-[100px] focus-visible:ring-blue-500 border-blue-100 bg-white/70 backdrop-blur-sm resize-none"
               />
             </div>
 

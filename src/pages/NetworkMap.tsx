@@ -1,3 +1,4 @@
+
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -12,8 +13,7 @@ import AddNodeDialog from '@/components/AddNodeDialog';
 import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
-import type { Network, NodeData } from '@/types/network';
-import type { Database } from "@/integrations/supabase/types";
+import type { Network, NodeData, EdgeData } from '@/types/network';
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -118,7 +118,7 @@ export const Flow = () => {
             date: node.date,
             address: node.address,
             todos: nodesTodosResponse[index].data || []
-          }
+          } as NodeData
         }));
         const formattedEdges = edgesResponse.data.map(edge => ({
           id: edge.id,
@@ -126,10 +126,10 @@ export const Flow = () => {
           target: edge.target_id,
           type: 'custom',
           data: {
-            label: edge.label,
-            notes: edge.notes,
+            label: edge.label || '',
+            notes: edge.notes || '',
             labelPosition: edge.label_position
-          }
+          } as EdgeData
         }));
         setNodes(nodesWithTodos);
         setEdges(formattedEdges);
@@ -148,7 +148,11 @@ export const Flow = () => {
   const onConnect = useCallback((params: Connection) => {
     setEdges(eds => addEdge({
       ...params,
-      type: 'custom'
+      type: 'custom',
+      data: {
+        label: '',
+        notes: ''
+      } as EdgeData
     }, eds));
   }, [setEdges]);
 

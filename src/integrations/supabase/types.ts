@@ -103,6 +103,7 @@ export type Database = {
           image_url: string | null
           name: string
           network_id: string
+          notes: string | null
           profile_url: string | null
           type: string
           updated_at: string | null
@@ -117,6 +118,7 @@ export type Database = {
           image_url?: string | null
           name: string
           network_id: string
+          notes?: string | null
           profile_url?: string | null
           type: string
           updated_at?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           image_url?: string | null
           name?: string
           network_id?: string
+          notes?: string | null
           profile_url?: string | null
           type?: string
           updated_at?: string | null
