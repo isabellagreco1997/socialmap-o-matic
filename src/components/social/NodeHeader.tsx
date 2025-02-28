@@ -1,16 +1,17 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Building2, User, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, Building2, User, Edit, Trash2, ExternalLink, Palette } from 'lucide-react';
 import { NodeData } from '@/types/network';
 
 interface NodeHeaderProps {
   data: NodeData;
   onEdit: () => void;
   onDelete: () => void;
+  onColorChange: () => void;
 }
 
-const NodeHeader = ({ data, onEdit, onDelete }: NodeHeaderProps) => {
+const NodeHeader = ({ data, onEdit, onDelete, onColorChange }: NodeHeaderProps) => {
   const getTypeIcon = () => {
     switch (data.type) {
       case 'person':
@@ -27,6 +28,10 @@ const NodeHeader = ({ data, onEdit, onDelete }: NodeHeaderProps) => {
   };
 
   const getBorderColor = () => {
+    if (data.color) {
+      return `border-2 border-${data.color}-500`;
+    }
+    
     switch (data.type) {
       case 'person':
         return 'border-blue-300';
@@ -41,9 +46,18 @@ const NodeHeader = ({ data, onEdit, onDelete }: NodeHeaderProps) => {
     }
   };
 
+  // Get avatar style for custom color
+  const getCustomAvatarStyle = () => {
+    if (!data.color) return {};
+    return { borderColor: data.color };
+  };
+
   return (
     <div className="flex items-center gap-3">
-      <Avatar className={`h-14 w-14 ring-2 ring-offset-2 ${getBorderColor()}`}>
+      <Avatar 
+        className={`h-14 w-14 ring-2 ring-offset-2 ${getBorderColor()}`}
+        style={getCustomAvatarStyle()}
+      >
         <AvatarImage src={data.imageUrl} />
         <AvatarFallback className={`font-bold text-lg uppercase bg-white text-gray-700`}>
           {data.name ? data.name[0] : '?'}
@@ -79,6 +93,15 @@ const NodeHeader = ({ data, onEdit, onDelete }: NodeHeaderProps) => {
         )}
       </div>
       <div className="flex gap-2">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onColorChange} 
+          className="h-8 w-8 rounded-full hover:bg-purple-100 transition-colors duration-200"
+          title="Change node color"
+        >
+          <Palette className="h-4 w-4 text-purple-600" />
+        </Button>
         <Button 
           variant="ghost" 
           size="icon" 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import NodeHeader from '@/components/social/NodeHeader';
 import NodeTodoList from '@/components/social/NodeTodoList';
 import NodeEditDialog from '@/components/social/NodeEditDialog';
+import NodeColorPicker from '@/components/social/NodeColorPicker';
 import type { NodeData } from '@/types/network';
 
 interface SocialNodeProps {
@@ -21,6 +21,7 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
   const [contactDetails, setContactDetails] = useState<{ notes?: string }>({ notes: data?.contactDetails?.notes });
   const [todos, setTodos] = useState(data?.todos || []);
   const [isEditing, setIsEditing] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const { setNodes } = useReactFlow();
   const { toast } = useToast();
 
@@ -60,8 +61,16 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     });
   };
 
-  // Get background color based on node type
+  const handleColorChange = (color: string) => {
+    updateNodeData({ ...data, color });
+    setShowColorPicker(false);
+  };
+
   const getNodeBackground = () => {
+    if (data.color) {
+      return `bg-white border-2 border-${data.color}-300`;
+    }
+    
     switch (data.type) {
       case 'person':
         return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200';
@@ -76,10 +85,34 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     }
   };
 
+  const getCustomColorStyle = () => {
+    if (!data.color) return {};
+    
+    return {
+      borderColor: data.color,
+      background: `linear-gradient(to bottom right, ${adjustColorBrightness(data.color, 90)}, ${adjustColorBrightness(data.color, 80)})`,
+    };
+  };
+
+  const adjustColorBrightness = (hexColor: string, percent: number) => {
+    if (!hexColor.startsWith('#')) return hexColor;
+    
+    let r = parseInt(hexColor.substring(1, 3), 16);
+    let g = parseInt(hexColor.substring(3, 5), 16);
+    let b = parseInt(hexColor.substring(5, 7), 16);
+    
+    r = Math.min(255, Math.round(r * (percent / 100)));
+    g = Math.min(255, Math.round(g * (percent / 100)));
+    b = Math.min(255, Math.round(b * (percent / 100)));
+    
+    return `rgba(${r}, ${g}, ${b}, 0.${percent})`;
+  };
+
   return (
     <>
       <Card 
         className={`min-w-[300px] p-4 backdrop-blur rounded-xl shadow-lg border-2 transition-all duration-300 ${getNodeBackground()} hover:shadow-xl`}
+        style={getCustomColorStyle()}
       >
         <Handle 
           type="target" 
@@ -96,6 +129,7 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
           data={data}
           onEdit={() => setIsEditing(true)}
           onDelete={handleDeleteNode}
+          onColorChange={() => setShowColorPicker(true)}
         />
 
         <Button 
@@ -138,6 +172,13 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
         onClose={() => setIsEditing(false)}
         data={data}
         onSave={updateNodeData}
+      />
+
+      <NodeColorPicker
+        isOpen={showColorPicker}
+        onClose={() => setShowColorPicker(false)}
+        currentColor={data.color || ''}
+        onColorChange={handleColorChange}
       />
     </>
   );

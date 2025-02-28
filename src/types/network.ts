@@ -25,5 +25,13 @@ export interface NodeData {
     [key: string]: unknown;
   };
   todos?: TodoItem[];
+  color?: string;
+  [key: string]: unknown;
+}
+
+export interface EdgeData {
+  label?: string;
+  notes?: string;
+  labelPosition?: string;
   [key: string]: unknown;
 }

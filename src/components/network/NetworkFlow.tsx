@@ -1,5 +1,5 @@
 
-import { ReactFlow } from '@xyflow/react';
+import { ReactFlow, MarkerType } from '@xyflow/react';
 import SocialNode from '@/components/SocialNode';
 import CustomEdge from '@/components/network/CustomEdge';
 import NetworkTopBar from '@/components/network/NetworkTopBar';
@@ -42,7 +42,7 @@ const NetworkFlow = ({
     strokeDasharray: '5,5',
   };
 
-  // Define default edge options
+  // Define default edge options with correct MarkerType
   const defaultEdgeOptions = {
     type: 'custom',
     style: {
@@ -50,7 +50,7 @@ const NetworkFlow = ({
       stroke: 'rgba(59, 130, 246, 0.6)',
     },
     markerEnd: {
-      type: 'arrowclosed',
+      type: MarkerType.ArrowClosed,
       color: 'rgba(59, 130, 246, 0.6)',
       width: 20,
       height: 20,
