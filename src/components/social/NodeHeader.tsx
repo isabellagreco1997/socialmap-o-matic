@@ -29,27 +29,39 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange }: NodeHeaderProps) 
 
   const getBorderColor = () => {
     if (data.color) {
-      return `border-2 border-${data.color}-500`;
+      return `border-2 border-${data.color}-500/40`;
     }
     
     switch (data.type) {
       case 'person':
-        return 'border-blue-300';
+        return 'border-blue-300/60';
       case 'organization':
-        return 'border-green-300';
+        return 'border-green-300/60';
       case 'event':
-        return 'border-purple-300';
+        return 'border-purple-300/60';
       case 'venue':
-        return 'border-red-300';
+        return 'border-red-300/60';
       default:
-        return 'border-gray-300';
+        return 'border-gray-300/60';
     }
   };
 
-  // Get avatar style for custom color
+  // Get avatar style for custom color with transparency
   const getCustomAvatarStyle = () => {
     if (!data.color) return {};
-    return { borderColor: data.color };
+    
+    // Convert hex to rgba
+    const hexToRgba = (hex: string, alpha: number = 0.5) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+    
+    return { 
+      borderColor: hexToRgba(data.color, 0.5),
+      boxShadow: `0 0 0 2px ${hexToRgba(data.color, 0.2)}`
+    };
   };
 
   return (

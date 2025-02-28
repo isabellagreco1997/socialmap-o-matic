@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
@@ -66,52 +67,63 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     setShowColorPicker(false);
   };
 
+  // Get background color based on node type or custom color
   const getNodeBackground = () => {
     if (data.color) {
-      return `bg-white border-2 border-${data.color}-300`;
+      return `bg-white border-2`;
     }
     
+    // Default transparent gradient backgrounds based on type
     switch (data.type) {
       case 'person':
-        return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200';
+        return 'bg-gradient-to-br from-blue-50/80 to-blue-100/60 border-blue-200/70';
       case 'organization':
-        return 'bg-gradient-to-br from-green-50 to-green-100 border-green-200';
+        return 'bg-gradient-to-br from-green-50/80 to-green-100/60 border-green-200/70';
       case 'event':
-        return 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200';
+        return 'bg-gradient-to-br from-purple-50/80 to-purple-100/60 border-purple-200/70';
       case 'venue':
-        return 'bg-gradient-to-br from-red-50 to-red-100 border-red-200';
+        return 'bg-gradient-to-br from-red-50/80 to-red-100/60 border-red-200/70';
       default:
-        return 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200';
+        return 'bg-gradient-to-br from-gray-50/80 to-gray-100/60 border-gray-200/70';
     }
   };
 
+  // Get inline style for custom color with transparency
   const getCustomColorStyle = () => {
     if (!data.color) return {};
     
+    // Extract RGB components from hex color and create transparent versions
+    const rgbColor = hexToRgb(data.color);
+    if (!rgbColor) return {};
+    
     return {
-      borderColor: data.color,
-      background: `linear-gradient(to bottom right, ${adjustColorBrightness(data.color, 90)}, ${adjustColorBrightness(data.color, 80)})`,
+      borderColor: `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.5)`,
+      background: `linear-gradient(to bottom right, rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.1), rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.15))`,
     };
   };
 
-  const adjustColorBrightness = (hexColor: string, percent: number) => {
-    if (!hexColor.startsWith('#')) return hexColor;
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    // Remove # if present
+    hex = hex.replace('#', '');
     
-    let r = parseInt(hexColor.substring(1, 3), 16);
-    let g = parseInt(hexColor.substring(3, 5), 16);
-    let b = parseInt(hexColor.substring(5, 7), 16);
+    // Parse the hex values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
     
-    r = Math.min(255, Math.round(r * (percent / 100)));
-    g = Math.min(255, Math.round(g * (percent / 100)));
-    b = Math.min(255, Math.round(b * (percent / 100)));
+    // Check if parsing was successful
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+      return null;
+    }
     
-    return `rgba(${r}, ${g}, ${b}, 0.${percent})`;
+    return { r, g, b };
   };
 
   return (
     <>
       <Card 
-        className={`min-w-[300px] p-4 backdrop-blur rounded-xl shadow-lg border-2 transition-all duration-300 ${getNodeBackground()} hover:shadow-xl`}
+        className={`min-w-[300px] p-4 backdrop-blur-md rounded-xl shadow-lg border-2 transition-all duration-300 ${getNodeBackground()} hover:shadow-xl`}
         style={getCustomColorStyle()}
       >
         <Handle 

@@ -62,7 +62,7 @@ const CustomEdge = ({
         style={{
           ...style,
           strokeWidth: 2,
-          stroke: 'rgba(59, 130, 246, 0.6)',
+          stroke: 'rgba(59, 130, 246, 0.3)',
           strokeDasharray: 5,
           animation: 'flow 30s linear infinite'
         }} 
@@ -78,20 +78,20 @@ const CustomEdge = ({
             }} 
             className="nodrag flex items-center gap-1"
           >
-            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-md border border-blue-100 flex items-center gap-2 transition-all duration-200 hover:shadow-lg">
-              <span className="text-sm font-medium text-blue-800">{data?.label as string}</span>
+            <div className="bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md shadow-md border border-blue-100/50 flex items-center gap-2 transition-all duration-200 hover:shadow-lg">
+              <span className="text-sm font-medium text-blue-800/90">{data?.label as string}</span>
               <div className="flex items-center gap-1">
                 <button 
-                  className="p-1 hover:bg-blue-50 rounded transition-colors duration-200" 
+                  className="p-1 hover:bg-blue-50/80 rounded transition-colors duration-200" 
                   onClick={() => setIsEditing(true)}
                 >
-                  <Pencil className="h-3 w-3 text-blue-600" />
+                  <Pencil className="h-3 w-3 text-blue-600/90" />
                 </button>
                 <button 
-                  className="p-1 hover:bg-red-50 rounded transition-colors duration-200" 
+                  className="p-1 hover:bg-red-50/80 rounded transition-colors duration-200" 
                   onClick={onDelete}
                 >
-                  <Trash2 className="h-3 w-3 text-red-500" />
+                  <Trash2 className="h-3 w-3 text-red-500/90" />
                 </button>
               </div>
             </div>
