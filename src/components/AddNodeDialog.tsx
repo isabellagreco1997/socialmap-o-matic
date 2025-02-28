@@ -24,6 +24,7 @@ interface NodeData {
   imageUrl?: string;
   date?: string;
   address?: string;
+  tags?: Array<{ id: string; text: string; color?: string }>;
 }
 
 export interface AddNodeDialogProps {
@@ -124,6 +125,10 @@ const AddNodeDialog = ({ open, onOpenChange, onSave }: AddNodeDialogProps) => {
               )}
             </>
           )}
+
+          <div className="text-xs text-muted-foreground">
+            Note: You can add tags to this node after creation by clicking the tag icon in the node header.
+          </div>
 
           <Button type="submit" className="w-full">
             Add Node

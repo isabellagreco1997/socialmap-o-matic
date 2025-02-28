@@ -5,12 +5,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Tag as TagIcon } from 'lucide-react';
 import NodeHeader from '@/components/social/NodeHeader';
 import NodeTodoList from '@/components/social/NodeTodoList';
 import NodeEditDialog from '@/components/social/NodeEditDialog';
 import NodeColorPicker from '@/components/social/NodeColorPicker';
-import type { NodeData } from '@/types/network';
+import NodeTagEditor from '@/components/social/NodeTagEditor';
+import type { NodeData, Tag } from '@/types/network';
 
 interface SocialNodeProps {
   id: string;
@@ -21,8 +22,10 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [contactDetails, setContactDetails] = useState<{ notes?: string }>({ notes: data?.contactDetails?.notes });
   const [todos, setTodos] = useState(data?.todos || []);
+  const [tags, setTags] = useState<Tag[]>(data?.tags || []);
   const [isEditing, setIsEditing] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showTagEditor, setShowTagEditor] = useState(false);
   const { setNodes } = useReactFlow();
   const { toast } = useToast();
 
@@ -65,6 +68,12 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
   const handleColorChange = (color: string) => {
     updateNodeData({ ...data, color });
     setShowColorPicker(false);
+  };
+
+  const handleTagsChange = (newTags: Tag[]) => {
+    setTags(newTags);
+    updateNodeData({ ...data, tags: newTags });
+    setShowTagEditor(false);
   };
 
   // Get background color based on node type or custom color
@@ -142,7 +151,29 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
           onEdit={() => setIsEditing(true)}
           onDelete={handleDeleteNode}
           onColorChange={() => setShowColorPicker(true)}
+          onTagsEdit={() => setShowTagEditor(true)}
         />
+
+        {/* Tags display */}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {tags.map((tag) => (
+              <div 
+                key={tag.id} 
+                className="px-2 py-0.5 text-xs rounded-full flex items-center gap-1"
+                style={{ 
+                  backgroundColor: tag.color ? `${tag.color}30` : '#f3f4f6',
+                  color: tag.color ? tag.color : '#4b5563',
+                  borderColor: tag.color ? `${tag.color}50` : '#e5e7eb',
+                  borderWidth: '1px'
+                }}
+              >
+                <TagIcon className="h-3 w-3" />
+                {tag.text}
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button 
           variant="ghost" 
@@ -191,6 +222,13 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
         onClose={() => setShowColorPicker(false)}
         currentColor={data.color || ''}
         onColorChange={handleColorChange}
+      />
+
+      <NodeTagEditor
+        isOpen={showTagEditor}
+        onClose={() => setShowTagEditor(false)}
+        tags={tags}
+        onTagsChange={handleTagsChange}
       />
     </>
   );

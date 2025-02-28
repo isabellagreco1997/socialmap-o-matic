@@ -13,6 +13,12 @@ export interface TodoItem {
   [key: string]: unknown;
 }
 
+export interface Tag {
+  id: string;
+  text: string;
+  color?: string;
+}
+
 export interface NodeData {
   type: NodeType;
   name: string;
@@ -25,6 +31,7 @@ export interface NodeData {
     [key: string]: unknown;
   };
   todos?: TodoItem[];
+  tags?: Tag[];
   color?: string;
   [key: string]: unknown;
 }

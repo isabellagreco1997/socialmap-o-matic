@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Building2, User, Edit, Trash2, ExternalLink, Palette } from 'lucide-react';
+import { Calendar, MapPin, Building2, User, Edit, Trash2, ExternalLink, Palette, Tag } from 'lucide-react';
 import { NodeData } from '@/types/network';
 
 interface NodeHeaderProps {
@@ -9,9 +9,10 @@ interface NodeHeaderProps {
   onEdit: () => void;
   onDelete: () => void;
   onColorChange: () => void;
+  onTagsEdit: () => void;
 }
 
-const NodeHeader = ({ data, onEdit, onDelete, onColorChange }: NodeHeaderProps) => {
+const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeHeaderProps) => {
   const getTypeIcon = () => {
     switch (data.type) {
       case 'person':
@@ -105,6 +106,15 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange }: NodeHeaderProps) 
         )}
       </div>
       <div className="flex gap-2">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onTagsEdit} 
+          className="h-8 w-8 rounded-full hover:bg-yellow-100 transition-colors duration-200"
+          title="Edit tags"
+        >
+          <Tag className="h-4 w-4 text-yellow-600" />
+        </Button>
         <Button 
           variant="ghost" 
           size="icon" 
