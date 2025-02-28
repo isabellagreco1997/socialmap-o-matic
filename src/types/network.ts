@@ -32,6 +32,6 @@ export interface NodeData {
 export interface EdgeData {
   label?: string;
   notes?: string;
-  labelPosition?: string;
+  labelPosition?: string | number; // Allow both string and number types
   [key: string]: unknown;
 }
