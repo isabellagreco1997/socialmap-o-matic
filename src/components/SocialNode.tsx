@@ -70,11 +70,6 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
     setShowColorPicker(false);
   };
 
-  const handleBgColorChange = (bgColor: string) => {
-    updateNodeData({ ...data, bgColor });
-    setShowColorPicker(false);
-  };
-
   const handleTagsChange = (newTags: Tag[]) => {
     setTags(newTags);
     updateNodeData({ ...data, tags: newTags });
@@ -83,46 +78,62 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
 
   // Get background color based on node type or custom color
   const getNodeBackground = () => {
-    if (data.bgColor) {
-      return `bg-white border`;
+    if (data.color) {
+      return `bg-white border-2`;
     }
     
-    // Default color based on the reference image - light mint green
-    return 'bg-[#F2FCE2] border border-[#E5F1D4]';
+    // Default transparent gradient backgrounds based on type
+    switch (data.type) {
+      case 'person':
+        return 'bg-gradient-to-br from-blue-50/80 to-blue-100/60 border-blue-200/70';
+      case 'organization':
+        return 'bg-gradient-to-br from-green-50/80 to-green-100/60 border-green-200/70';
+      case 'event':
+        return 'bg-gradient-to-br from-purple-50/80 to-purple-100/60 border-purple-200/70';
+      case 'venue':
+        return 'bg-gradient-to-br from-red-50/80 to-red-100/60 border-red-200/70';
+      default:
+        return 'bg-gradient-to-br from-gray-50/80 to-gray-100/60 border-gray-200/70';
+    }
   };
 
-  // Get inline style for custom background color
-  const getCustomBgStyle = () => {
-    if (!data.bgColor) return {};
+  // Get inline style for custom color with transparency
+  const getCustomColorStyle = () => {
+    if (!data.color) return {};
+    
+    // Extract RGB components from hex color and create transparent versions
+    const rgbColor = hexToRgb(data.color);
+    if (!rgbColor) return {};
     
     return {
-      backgroundColor: data.bgColor,
-      borderColor: `${adjustColor(data.bgColor, -20)}`,
+      borderColor: `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.5)`,
+      background: `linear-gradient(to bottom right, rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.1), rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.15))`,
     };
   };
 
-  // Helper function to adjust color brightness
-  const adjustColor = (hex: string, percent: number) => {
-    let r = parseInt(hex.substring(1, 3), 16);
-    let g = parseInt(hex.substring(3, 5), 16);
-    let b = parseInt(hex.substring(5, 7), 16);
-
-    r = Math.min(255, Math.max(0, r + percent));
-    g = Math.min(255, Math.max(0, g + percent));
-    b = Math.min(255, Math.max(0, b + percent));
-
-    const rr = r.toString(16).padStart(2, '0');
-    const gg = g.toString(16).padStart(2, '0');
-    const bb = b.toString(16).padStart(2, '0');
-
-    return `#${rr}${gg}${bb}`;
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Parse the hex values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Check if parsing was successful
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+      return null;
+    }
+    
+    return { r, g, b };
   };
 
   return (
     <>
       <Card 
-        className={`min-w-[300px] p-0 rounded-xl shadow-sm ${getNodeBackground()}`}
-        style={getCustomBgStyle()}
+        className={`min-w-[300px] p-4 backdrop-blur-md rounded-xl shadow-lg border-2 transition-all duration-300 ${getNodeBackground()} hover:shadow-xl`}
+        style={getCustomColorStyle()}
       >
         <Handle 
           type="target" 
@@ -135,19 +146,17 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
           className="!bg-blue-500 !border-2 !border-white !w-3 !h-3 !transition-all !duration-200 hover:!scale-125" 
         />
         
-        <div className="p-4 pb-0">
-          <NodeHeader 
-            data={data}
-            onEdit={() => setIsEditing(true)}
-            onDelete={handleDeleteNode}
-            onColorChange={() => setShowColorPicker(true)}
-            onTagsEdit={() => setShowTagEditor(true)}
-          />
-        </div>
+        <NodeHeader 
+          data={data}
+          onEdit={() => setIsEditing(true)}
+          onDelete={handleDeleteNode}
+          onColorChange={() => setShowColorPicker(true)}
+          onTagsEdit={() => setShowTagEditor(true)}
+        />
 
         {/* Tags display */}
         {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2 px-4">
+          <div className="flex flex-wrap gap-1 mt-3">
             {tags.map((tag) => (
               <div 
                 key={tag.id} 
@@ -179,14 +188,14 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
         </Button>
 
         {isExpanded && (
-          <div className="p-4 pt-2 space-y-4 animate-accordion-down">
+          <div className="mt-4 space-y-4 animate-accordion-down">
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Notes</h4>
               <Textarea
                 placeholder="Add notes..."
                 value={contactDetails.notes || ''}
                 onChange={(e) => handleContactDetailsChange(e.target.value)}
-                className="text-sm min-h-[100px] focus-visible:ring-blue-500 border-gray-200 bg-white/90 backdrop-blur-sm resize-none"
+                className="text-sm min-h-[100px] focus-visible:ring-blue-500 border-blue-100 bg-white/70 backdrop-blur-sm resize-none"
               />
             </div>
 
@@ -213,8 +222,6 @@ const SocialNode = ({ id, data }: SocialNodeProps) => {
         onClose={() => setShowColorPicker(false)}
         currentColor={data.color || ''}
         onColorChange={handleColorChange}
-        currentBgColor={data.bgColor || '#F2FCE2'}
-        onBgColorChange={handleBgColorChange}
       />
 
       <NodeTagEditor

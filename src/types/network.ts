@@ -33,7 +33,6 @@ export interface NodeData {
   todos?: TodoItem[];
   tags?: Tag[];
   color?: string;
-  bgColor?: string; // Added bgColor property for custom background colors
   [key: string]: unknown;
 }
 
