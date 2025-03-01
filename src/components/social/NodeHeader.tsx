@@ -66,9 +66,9 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-start gap-3">
       <Avatar 
-        className={`h-14 w-14 ring-2 ring-offset-2 ${getBorderColor()}`}
+        className={`h-12 w-12 ring-2 ring-offset-2 ${getBorderColor()}`}
         style={getCustomAvatarStyle()}
       >
         <AvatarImage src={data.imageUrl} />
@@ -81,6 +81,12 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
           {getTypeIcon()}
           <span className="font-medium text-base">{data.name}</span>
         </div>
+        {data.address && (
+          <span className="text-sm text-gray-600 flex items-center gap-1 mt-0.5">
+            <MapPin className="h-3 w-3" />
+            {data.address}
+          </span>
+        )}
         {data.profileUrl && (
           <a
             href={data.profileUrl}
@@ -98,19 +104,13 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
             {new Date(data.date).toLocaleDateString()}
           </span>
         )}
-        {data.address && (
-          <span className="text-sm text-gray-600 flex items-center gap-1 mt-0.5">
-            <MapPin className="h-3 w-3" />
-            {data.address}
-          </span>
-        )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={onTagsEdit} 
-          className="h-8 w-8 rounded-full hover:bg-yellow-100 transition-colors duration-200"
+          className="h-7 w-7 rounded-full hover:bg-yellow-100 transition-colors duration-200"
           title="Edit tags"
         >
           <Tag className="h-4 w-4 text-yellow-600" />
@@ -119,7 +119,7 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
           variant="ghost" 
           size="icon" 
           onClick={onColorChange} 
-          className="h-8 w-8 rounded-full hover:bg-purple-100 transition-colors duration-200"
+          className="h-7 w-7 rounded-full hover:bg-purple-100 transition-colors duration-200"
           title="Change node color"
         >
           <Palette className="h-4 w-4 text-purple-600" />
@@ -128,7 +128,7 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
           variant="ghost" 
           size="icon" 
           onClick={onEdit} 
-          className="h-8 w-8 rounded-full hover:bg-blue-100 transition-colors duration-200"
+          className="h-7 w-7 rounded-full hover:bg-blue-100 transition-colors duration-200"
         >
           <Edit className="h-4 w-4 text-blue-600" />
         </Button>
@@ -136,7 +136,7 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
           variant="ghost" 
           size="icon" 
           onClick={onDelete} 
-          className="h-8 w-8 rounded-full hover:bg-red-100 transition-colors duration-200"
+          className="h-7 w-7 rounded-full hover:bg-red-100 transition-colors duration-200"
         >
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>
