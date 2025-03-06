@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 
 import { ReactFlow, MarkerType } from '@xyflow/react';
+=======
+import { ReactFlow } from '@xyflow/react';
+>>>>>>> a55cd2e (code)
 import SocialNode from '@/components/SocialNode';
 import CustomEdge from '@/components/network/CustomEdge';
 import NetworkTopBar from '@/components/network/NetworkTopBar';
@@ -74,11 +78,23 @@ const NetworkFlow = ({
         minZoom={0.1}
         maxZoom={2}
         fitView
+<<<<<<< HEAD
         style={flowStyles}
         connectionLineStyle={connectionLineStyle}
         defaultEdgeOptions={defaultEdgeOptions}
         proOptions={{ hideAttribution: true }}
         className="bg-gradient-to-br from-sky-50 to-indigo-50"
+=======
+        snapToGrid={false}
+        nodesDraggable={true}
+        elementsSelectable={true}
+        selectNodesOnDrag={false}
+        panOnDrag={true}
+        panOnScroll={true}
+        panOnScrollMode="free"
+        proOptions={{ hideAttribution: true }}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+>>>>>>> a55cd2e (code)
       >
         <NetworkTopBar
           currentNetwork={networks.find(n => n.id === currentNetworkId)}

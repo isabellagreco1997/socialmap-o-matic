@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Network, NodeData } from "@/types/network";
@@ -294,23 +293,25 @@ export const useNetworkHandlers = (
 
   const handleNetworksReorder = async (reorderedNetworks: Network[]) => {
     try {
-      setNetworks(reorderedNetworks);
-
-      const updatePromises = reorderedNetworks.map((network) =>
+      // Update the order field for each network
+      const updates = reorderedNetworks.map((network, index) => 
         supabase
           .from('networks')
-          .update({ order: network.order })
+          .update({ order: index })
           .eq('id', network.id)
       );
-
-      await Promise.all(updatePromises);
-
+      
+      await Promise.all(updates);
+      
+      // Update local state with new order
+      setNetworks(reorderedNetworks);
+      
       toast({
         title: "Networks reordered",
         description: "Network order has been updated"
       });
     } catch (error) {
-      console.error('Error updating network order:', error);
+      console.error('Error reordering networks:', error);
       toast({
         variant: "destructive",
         title: "Error",

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
 import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -22,14 +22,20 @@ const NetworkSidebar = ({
   onEditNetwork,
   onNetworksReorder,
 }: NetworkSidebarProps) => {
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
     const items = Array.from(networks);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    onNetworksReorder(items);
+    // Update the order of all networks
+    const reorderedNetworks = items.map((network, index) => ({
+      ...network,
+      order: index
+    }));
+    
+    onNetworksReorder(reorderedNetworks);
   };
 
   const handleAIChatClick = () => {
@@ -39,17 +45,18 @@ const NetworkSidebar = ({
   };
 
   const handleMyTasksClick = () => {
-    console.log('My Tasks button clicked');
-    console.log('toggleNetworkOverview exists:', !!(window as any).toggleNetworkOverview);
-    
     if (typeof window !== 'undefined' && (window as any).toggleNetworkOverview) {
-      console.log('Attempting to call toggleNetworkOverview');
       (window as any).toggleNetworkOverview();
-    } else {
-      console.log('toggleNetworkOverview is not available on window object');
     }
   };
 
+<<<<<<< HEAD
+=======
+  const handleNetworkCreated = (networkId: string) => {
+    onNetworkSelect(networkId);
+  };
+
+>>>>>>> a55cd2e (code)
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
@@ -69,7 +76,7 @@ const NetworkSidebar = ({
             onClick={handleMyTasksClick}
           >
             <LayoutGrid className="h-4 w-4" />
-            My Tasks
+            Network Health
           </Button>
 
           <Button 
@@ -98,31 +105,56 @@ const NetworkSidebar = ({
                 >
                   {networks.map((network, index) => (
                     <Draggable key={network.id} draggableId={network.id} index={index}>
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="border rounded-lg group relative"
+                          style={{
+                            ...provided.draggableProps.style,
+                            transform: provided.draggableProps.style?.transform,
+                            transition: 'box-shadow 0.1s ease'
+                          }}
+                          className={`border rounded-lg group relative will-change-transform ${
+                            snapshot.isDragging 
+                              ? 'shadow-lg ring-1 ring-primary/10 bg-white z-50' 
+                              : ''
+                          }`}
                         >
-                          <Button 
-                            variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                            className={`w-full justify-start h-9 text-sm font-medium rounded-lg ${
-                              network.id === currentNetworkId ? 'bg-[#0F172A] text-white' : ''
-                            }`}
-                            onClick={() => onNetworkSelect(network.id)}
-                          >
+                          <div className="flex items-center w-full will-change-transform">
                             <div 
-                              className="mr-2 p-1 rounded hover:bg-white/10 flex-shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEditNetwork(network);
-                              }}
+                              {...provided.dragHandleProps}
+                              className="p-2 rounded-l hover:bg-gray-50/80 flex-shrink-0 cursor-grab active:cursor-grabbing select-none"
+                              style={snapshot.isDragging ? { cursor: 'grabbing' } : undefined}
                             >
-                              <Menu className="h-3.5 w-3.5" />
+                              <Menu className={`h-4 w-4 will-change-transform ${
+                                snapshot.isDragging ? 'text-primary' : 'text-gray-400'
+                              }`} />
                             </div>
-                            <span className="truncate">{network.name}</span>
-                          </Button>
+                            <Button 
+                              variant={network.id === currentNetworkId ? "default" : "ghost"} 
+                              className={`flex-1 justify-between h-9 text-sm font-medium rounded-r-lg select-none will-change-transform ${
+                                network.id === currentNetworkId 
+                                  ? 'bg-[#0F172A] text-white' 
+                                  : ''
+                              }`}
+                              onClick={() => onNetworkSelect(network.id)}
+                            >
+                              <div className="flex items-center w-full px-2">
+                                <span className="truncate max-w-[140px] text-left">{network.name}</span>
+                                <div className="ml-auto">
+                                  <div 
+                                    className="p-1 rounded hover:bg-gray-50/80 flex-shrink-0 select-none"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onEditNetwork(network);
+                                    }}
+                                  >
+                                    <FileText className="h-3.5 w-3.5" />
+                                  </div>
+                                </div>
+                              </div>
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </Draggable>

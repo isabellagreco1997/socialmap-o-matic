@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -205,4 +204,103 @@
 
 [data-sidebar="sidebar"] {
   @apply bg-background text-foreground;
+}
+
+/* Enhanced Network Visualization Styles */
+.react-flow__node {
+  transition: transform 0.1s ease, filter 0.2s ease;
+  will-change: transform;
+}
+
+.react-flow__node:not(.react-flow__node-dragging) {
+  transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+.react-flow__node.react-flow__node-dragging {
+  transition: none;
+  cursor: grabbing;
+  z-index: 1000;
+}
+
+.react-flow__node:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.1));
+}
+
+/* Node type-specific styling */
+.react-flow__node[data-type="person"] {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.react-flow__node[data-type="organization"] {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+}
+
+.react-flow__node[data-type="event"] {
+  background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+}
+
+.react-flow__node[data-type="venue"] {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+}
+
+/* Enhanced edge styling */
+.react-flow__edge {
+  transition: all 0.3s ease;
+}
+
+.react-flow__edge-path {
+  stroke: #94a3b8;
+  stroke-width: 2;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5;
+  animation: flowAnimation 3s linear infinite;
+  stroke: #3b82f6;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #2563eb;
+  stroke-width: 3;
+}
+
+/* Edge interaction states */
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: #2563eb;
+  stroke-width: 3;
+}
+
+/* Enhanced background */
+.react-flow__background {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(#e2e8f0 1px, transparent 1px),
+    radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+@keyframes flowAnimation {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Handle styling */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border: 2px solid white;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+}
+
+.react-flow__handle:hover {
+  background: #2563eb;
+  transform: scale(1.2);
 }

@@ -33,6 +33,12 @@ export const Flow = () => {
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
+<<<<<<< HEAD
+=======
+  const [isEdgeLabelDialogOpen, setIsEdgeLabelDialogOpen] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+  const [showChat, setShowChat] = useState(true);
+>>>>>>> a55cd2e (code)
 
   const {
     handleAddNode,
@@ -75,15 +81,68 @@ export const Flow = () => {
   }, [currentNetworkId, toast]);
 
   const handleNodesChange = useCallback(async (changes: any) => {
+    // Apply changes to local state immediately
     onNodesChange(changes);
 
-    const positionChanges = changes.filter((change: any) => change.type === 'position' && change.dragging === false);
+    // Only update positions when dragging ends
+    const positionChanges = changes.filter((change: any) => 
+      change.type === 'position' && 
+      change.dragging === false && 
+      typeof change.position?.x === 'number' && 
+      typeof change.position?.y === 'number'
+    );
+
     if (positionChanges.length > 0 && currentNetworkId) {
       try {
-        await Promise.all(positionChanges.map((change: any) => supabase.from('nodes').update({
-          x_position: change.position.x,
-          y_position: change.position.y
-        }).eq('id', change.id).eq('network_id', currentNetworkId)));
+        // Batch update all position changes
+        const updates = await Promise.all(positionChanges.map(async change => {
+          // First fetch the existing node to preserve all fields
+          const { data: existingNode } = await supabase
+            .from('nodes')
+            .select('*')
+            .eq('id', change.id)
+            .single();
+
+          return {
+            ...existingNode,
+            id: change.id,
+            network_id: currentNetworkId,
+            x_position: Math.round(change.position.x),
+            y_position: Math.round(change.position.y),
+            updated_at: new Date().toISOString()
+          };
+        }));
+
+        const { error } = await supabase
+          .from('nodes')
+          .upsert(
+            updates,
+            {
+              onConflict: 'id',
+              ignoreDuplicates: false
+            }
+          );
+
+        if (error) {
+          throw error;
+        }
+
+        // Update local state to match database
+        setNodes(nodes => 
+          nodes.map(node => {
+            const update = updates.find(u => u.id === node.id);
+            if (update) {
+              return {
+                ...node,
+                position: {
+                  x: update.x_position,
+                  y: update.y_position
+                }
+              };
+            }
+            return node;
+          })
+        );
       } catch (error) {
         console.error('Error updating node positions:', error);
         toast({
@@ -93,12 +152,13 @@ export const Flow = () => {
         });
       }
     }
-  }, [currentNetworkId, onNodesChange, toast]);
+  }, [currentNetworkId, onNodesChange, setNodes, toast]);
 
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
       try {
+<<<<<<< HEAD
         const [nodesResponse, edgesResponse] = await Promise.all([supabase.from('nodes').select('*').eq('network_id', currentNetworkId), supabase.from('edges').select('*').eq('network_id', currentNetworkId)]);
         if (nodesResponse.error) throw nodesResponse.error;
         if (edgesResponse.error) throw edgesResponse.error;
@@ -121,18 +181,87 @@ export const Flow = () => {
           } as NodeData
         }));
         const formattedEdges = edgesResponse.data.map(edge => ({
+=======
+        const [nodesResponse, edgesResponse] = await Promise.all([
+          supabase.from('nodes')
+            .select('*')
+            .eq('network_id', currentNetworkId),
+          supabase.from('edges')
+            .select('*')
+            .eq('network_id', currentNetworkId)
+        ]);
+        
+        if (nodesResponse.error) throw nodesResponse.error;
+        if (edgesResponse.error) throw edgesResponse.error;
+        
+        const nodesTodosPromises = nodesResponse.data.map(node => 
+          supabase.from('todos').select('*').eq('node_id', node.id)
+        );
+        
+        const nodesTodosResponses = await Promise.all(nodesTodosPromises);
+        
+        // Create nodes with their saved positions or calculate new ones
+        const nodesWithTodos = nodesResponse.data.map((node, index) => {
+          const todoItems = nodesTodosResponses[index].data?.map(todo => ({
+            id: todo.id,
+            text: todo.text,
+            completed: todo.completed || false,
+            dueDate: todo.due_date
+          })) || [];
+
+          // Use saved position if it exists
+          const position = {
+            x: node.x_position !== null ? node.x_position : Math.random() * 500,
+            y: node.y_position !== null ? node.y_position : Math.random() * 500
+          };
+
+          return {
+            id: node.id,
+            type: 'social',
+            position,
+            data: {
+              type: node.type,
+              name: node.name,
+              profileUrl: node.profile_url,
+              imageUrl: node.image_url,
+              date: node.date,
+              address: node.address,
+              color: node.color,
+              contactDetails: {
+                notes: node.notes
+              },
+              todos: todoItems
+            },
+            style: node.color ? {
+              backgroundColor: `${node.color}15`,
+              borderColor: node.color,
+              borderWidth: 2,
+            } : undefined
+          };
+        });
+
+        setNodes(nodesWithTodos);
+        setEdges(edgesResponse.data.map(edge => ({
+>>>>>>> a55cd2e (code)
           id: edge.id,
           source: edge.source_id,
           target: edge.target_id,
           type: 'custom',
           data: {
             label: edge.label || '',
+<<<<<<< HEAD
             notes: edge.notes || '',
             labelPosition: edge.label_position
           } as EdgeData
         }));
         setNodes(nodesWithTodos);
         setEdges(formattedEdges);
+=======
+            notes: '',
+            labelPosition: 'center'
+          }
+        })));
+>>>>>>> a55cd2e (code)
       } catch (error) {
         console.error('Error fetching network data:', error);
         toast({
@@ -237,6 +366,24 @@ export const Flow = () => {
             onDelete={handleDeleteNetwork} 
           />
           
+<<<<<<< HEAD
+=======
+          <EdgeLabelDialog
+            open={isEdgeLabelDialogOpen}
+            onOpenChange={setIsEdgeLabelDialogOpen}
+            onSave={handleEdgeLabelSave}
+            initialData={selectedEdge?.data as EdgeData}
+          />
+          
+          <NetworkChat 
+            show={showChat} 
+            onClose={() => setShowChat(false)}
+            currentNetwork={networks.find(n => n.id === currentNetworkId)}
+            nodes={nodes}
+            edges={edges}
+          />
+          
+>>>>>>> a55cd2e (code)
           <input 
             id="csv-input" 
             type="file" 

@@ -6,42 +6,36 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       edges: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           label: string | null
-          label_position: number | null
           network_id: string
-          notes: string | null
           source_id: string
           target_id: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           label?: string | null
-          label_position?: number | null
           network_id: string
-          notes?: string | null
           source_id: string
           target_id: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           label?: string | null
-          label_position?: number | null
           network_id?: string
-          notes?: string | null
           source_id?: string
           target_id?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -69,27 +63,27 @@ export type Database = {
       }
       networks: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           name: string
           order: number | null
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           name: string
           order?: number | null
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           name?: string
           order?: number | null
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -97,7 +91,7 @@ export type Database = {
       nodes: {
         Row: {
           address: string | null
-          created_at: string | null
+          created_at: string
           date: string | null
           id: string
           image_url: string | null
@@ -106,13 +100,14 @@ export type Database = {
           notes: string | null
           profile_url: string | null
           type: string
-          updated_at: string | null
-          x_position: number
-          y_position: number
+          updated_at: string
+          x_position: number | null
+          y_position: number | null
+          color: string | null
         }
         Insert: {
           address?: string | null
-          created_at?: string | null
+          created_at?: string
           date?: string | null
           id?: string
           image_url?: string | null
@@ -121,13 +116,14 @@ export type Database = {
           notes?: string | null
           profile_url?: string | null
           type: string
-          updated_at?: string | null
-          x_position: number
-          y_position: number
+          updated_at?: string
+          x_position?: number | null
+          y_position?: number | null
+          color?: string | null
         }
         Update: {
           address?: string | null
-          created_at?: string | null
+          created_at?: string
           date?: string | null
           id?: string
           image_url?: string | null
@@ -136,9 +132,10 @@ export type Database = {
           notes?: string | null
           profile_url?: string | null
           type?: string
-          updated_at?: string | null
-          x_position?: number
-          y_position?: number
+          updated_at?: string
+          x_position?: number | null
+          y_position?: number | null
+          color?: string | null
         }
         Relationships: [
           {
@@ -179,31 +176,31 @@ export type Database = {
       }
       todos: {
         Row: {
-          completed: boolean | null
-          created_at: string | null
+          completed: boolean
+          created_at: string
           due_date: string | null
           id: string
           node_id: string
           text: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          completed?: boolean | null
-          created_at?: string | null
+          completed?: boolean
+          created_at?: string
           due_date?: string | null
           id?: string
           node_id: string
           text: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          completed?: boolean | null
-          created_at?: string | null
+          completed?: boolean
+          created_at?: string
           due_date?: string | null
           id?: string
           node_id?: string
           text?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
