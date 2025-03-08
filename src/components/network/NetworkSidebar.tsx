@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid, LogOut } from 'lucide-react';
+import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid, LogOut, Zap } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { SubscriptionModal } from "./SubscriptionModal";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -26,6 +29,8 @@ const NetworkSidebar = ({
   onNetworksReorder,
 }: NetworkSidebarProps) => {
   const navigate = useNavigate();
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const { isSubscribed } = useSubscription();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -166,8 +171,16 @@ const NetworkSidebar = ({
         </div>
       </div>
 
-      {/* Logout Button */}
+      {/* Upgrade and Logout Section */}
       <div className="mt-auto border-t">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start gap-3 h-12 text-sm font-medium text-[#0A2463] hover:bg-[#0A2463]/10"
+          onClick={() => setIsSubscriptionModalOpen(true)}
+        >
+          <Zap className="h-4 w-4" />
+          {isSubscribed ? 'Premium' : 'Upgrade'}
+        </Button>
         <Button 
           variant="ghost" 
           className="w-full justify-start gap-3 h-12 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10"
@@ -177,6 +190,11 @@ const NetworkSidebar = ({
           Logout
         </Button>
       </div>
+
+      <SubscriptionModal 
+        open={isSubscriptionModalOpen}
+        onOpenChange={setIsSubscriptionModalOpen}
+      />
     </div>
   );
 };

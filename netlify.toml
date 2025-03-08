@@ -1,4 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200 
+  status = 200
+
+[dev]
+  command = "npm run dev"
+  port = 8080
+  targetPort = 5173
+  publish = "dist"
+  framework = "#custom" 

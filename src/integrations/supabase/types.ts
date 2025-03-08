@@ -155,6 +155,7 @@ export interface Database {
           id: string
           updated_at: string | null
           username: string | null
+          subscription_status: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -163,6 +164,7 @@ export interface Database {
           id: string
           updated_at?: string | null
           username?: string | null
+          subscription_status?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -171,6 +173,7 @@ export interface Database {
           id?: string
           updated_at?: string | null
           username?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }

@@ -51,7 +51,7 @@ const LandingPage = () => {
             </div>
             <div className="flex-1 flex justify-center">
               <div className="hidden md:flex items-center gap-6">
-                <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+                <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
                   Pricing
                 </Link>
                 <Link to="#about" className="text-sm font-medium hover:text-primary transition-colors">
