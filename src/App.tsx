@@ -14,6 +14,7 @@ import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Pricing from "./pages/Pricing";
 import { AppLayout } from "./components/AppLayout";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
               <RegisterPage />
             </AppLayout>
           } />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/terms" element={
             <AppLayout>
               <TermsOfUse />
