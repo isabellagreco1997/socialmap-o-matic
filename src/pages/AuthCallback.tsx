@@ -16,7 +16,7 @@ const AuthCallback = () => {
 
         if (session) {
           // Successful login, redirect to dashboard
-          navigate('/dashboard');
+          navigate('/network');
         } else {
           // No session found, redirect to login
           navigate('/login');
