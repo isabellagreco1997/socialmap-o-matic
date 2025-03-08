@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid } from 'lucide-react';
+import { PlusIcon, MessageSquare, Menu, FileText, BookOpen, Users, LayoutGrid, LogOut } from 'lucide-react';
 import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -22,6 +25,13 @@ const NetworkSidebar = ({
   onEditNetwork,
   onNetworksReorder,
 }: NetworkSidebarProps) => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
@@ -56,6 +66,7 @@ const NetworkSidebar = ({
 
   return (
     <div className="flex flex-col h-full">
+      {/* Fixed Header Section */}
       <div className="p-3 space-y-3">
         <div className="flex flex-col gap-1">
           <CreateNetworkDialog 
@@ -86,20 +97,25 @@ const NetworkSidebar = ({
             AI Chat
           </Button>
         </div>
+      </div>
 
-        <div className="border-t -mx-3">
-          <div className="px-5 pt-3">
-            <div className="text-xs font-semibold text-muted-foreground/70">
-              Networks
-            </div>
-          </div>
+      {/* Networks Section with Title */}
+      <div className="px-5 pt-3 border-t">
+        <div className="text-xs font-semibold text-muted-foreground/70">
+          Networks
+        </div>
+      </div>
+
+      {/* Scrollable Networks List - with reduced height */}
+      <ScrollArea className="h-[25vh]">
+        <div className="px-2">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="networks">
               {(provided) => (
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="space-y-1 p-2"
+                  className="space-y-1 py-2"
                 >
                   {networks.map((network, index) => (
                     <Draggable key={network.id} draggableId={network.id} index={index}>
@@ -127,9 +143,10 @@ const NetworkSidebar = ({
             </Droppable>
           </DragDropContext>
         </div>
-      </div>
+      </ScrollArea>
 
-      <div className="mt-3 border-t">
+      {/* Discover Section */}
+      <div className="border-t">
         <div className="p-3 space-y-1">
           <div className="text-xs font-semibold text-muted-foreground/70 px-2 py-1.5">
             Discover
@@ -147,6 +164,18 @@ const NetworkSidebar = ({
             Community
           </Button>
         </div>
+      </div>
+
+      {/* Logout Button */}
+      <div className="mt-auto border-t">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start gap-3 h-12 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
       </div>
     </div>
   );

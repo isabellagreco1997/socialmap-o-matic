@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Pricing from "./pages/Pricing";
 import { AppLayout } from "./components/AppLayout";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,11 @@ const App = () => (
           <Route path="/privacy" element={
             <AppLayout>
               <PrivacyPolicy />
+            </AppLayout>
+          } />
+          <Route path="/pricing" element={
+            <AppLayout>
+              <Pricing />
             </AppLayout>
           } />
           <Route
