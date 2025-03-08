@@ -17,10 +17,14 @@ export const env = {
     test: {
       publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_TEST,
       secretKey: import.meta.env.VITE_STRIPE_SECRET_KEY_TEST,
+      priceMonthly: import.meta.env.VITE_STRIPE_PRICE_MONTHLY_TEST,
+      priceAnnual: import.meta.env.VITE_STRIPE_PRICE_ANNUAL_TEST,
     },
     live: {
       publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_LIVE,
       secretKey: import.meta.env.VITE_STRIPE_SECRET_KEY_LIVE,
+      priceMonthly: import.meta.env.VITE_STRIPE_PRICE_MONTHLY,
+      priceAnnual: import.meta.env.VITE_STRIPE_PRICE_ANNUAL,
     },
   },
 } as const;
@@ -42,10 +46,14 @@ const requiredEnvVars = [
   // Stripe Configuration - Test Keys
   'VITE_STRIPE_PUBLISHABLE_KEY_TEST',
   'VITE_STRIPE_SECRET_KEY_TEST',
+  'VITE_STRIPE_PRICE_MONTHLY_TEST',
+  'VITE_STRIPE_PRICE_ANNUAL_TEST',
   
   // Stripe Configuration - Live Keys
   'VITE_STRIPE_PUBLISHABLE_KEY_LIVE',
   'VITE_STRIPE_SECRET_KEY_LIVE',
+  'VITE_STRIPE_PRICE_MONTHLY',
+  'VITE_STRIPE_PRICE_ANNUAL',
 ] as const;
 
 for (const envVar of requiredEnvVars) {
