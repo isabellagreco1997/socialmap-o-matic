@@ -1,14 +1,15 @@
-
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { AppLayout } from "./AppLayout";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  includeFooter?: boolean;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, includeFooter = true }: ProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const location = useLocation();
 
@@ -41,7 +42,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <AppLayout includeFooter={includeFooter}>
+      {children}
+    </AppLayout>
+  );
 };
 
 export default ProtectedRoute;

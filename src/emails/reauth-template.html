@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm Reauthentication - RelMaps</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .email-body {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            background-color: #0A2463;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .brand-name {
+            color: #0A2463;
+            font-size: 24px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+        .token-container {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .token {
+            font-family: monospace;
+            font-size: 32px;
+            font-weight: 600;
+            color: #0A2463;
+            letter-spacing: 4px;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 20px 0;
+        }
+        .security-notice {
+            color: #6b7280;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-body">
+            <div class="logo-container">
+                <span class="logo">
+                    <!-- Simplified Share2 icon in SVG -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                </span>
+                <span class="brand-name">RelMaps</span>
+            </div>
+
+            <h1 style="text-align: center; color: #111827; margin-bottom: 20px;">Confirm Reauthentication</h1>
+            
+            <p style="text-align: center; color: #4b5563; margin-bottom: 30px;">
+                To continue, please enter the following code in the verification window:
+            </p>
+
+            <div class="token-container">
+                <div class="token">{{ .Token }}</div>
+            </div>
+
+            <p class="security-notice">
+                This code will expire in 10 minutes. If you didn't request this verification, please ignore this email.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 RelMaps. All rights reserved.</p>
+            <p>
+                <a href="https://relmaps.com/privacy" style="color: #0A2463; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
+                •
+                <a href="https://relmaps.com/terms" style="color: #0A2463; text-decoration: none; margin: 0 10px;">Terms of Service</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html> 

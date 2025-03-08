@@ -1,69 +1,53 @@
-# Welcome to your Lovable project
+# RelMaps
 
-## Project info
+<div align="center">
+  <img src="public/favicon.svg" alt="RelMaps Logo" width="120" height="120" />
+</div>
 
-**URL**: https://lovable.dev/projects/22614a53-28f4-4643-81f5-5fd686db2b93
+RelMaps is a powerful web application designed to help you map and visualize your professional connections. Whether you're tracking business relationships, organizing team structures, or mapping out your professional network, RelMaps provides an intuitive and beautiful interface to bring your connections to life.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- 🔍 **Interactive Network Visualization**: Create and explore dynamic network maps of your professional connections
+- 🏷️ **Smart Tagging**: Organize nodes with customizable tags for better categorization
+- 🎨 **Custom Styling**: Personalize your network with colors, labels, and different node types
+- 🔄 **Real-time Collaboration**: Work together with your team on shared network maps
+- 📱 **Responsive Design**: Access your networks from any device with a fully responsive interface
+- 🔒 **Secure**: Built with security in mind, using Supabase for authentication and data storage
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/22614a53-28f4-4643-81f5-5fd686db2b93) and start prompting.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/relmaps.git
+cd relmaps
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+2. Install dependencies:
+```bash
+npm install
+```
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open [http://localhost:5173](http://localhost:5173) in your browser to see the application.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Tech Stack
 
-**Use GitHub Codespaces**
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **State Management**: React Query
+- **UI Components**: Radix UI
+- **Network Visualization**: XY Flow
+- **Authentication & Database**: Supabase
+- **Build Tool**: Vite
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Contributing
 
-## What technologies are used for this project?
+We welcome contributions! Please feel free to submit a Pull Request.
 
-This project is built with .
+## License
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/22614a53-28f4-4643-81f5-5fd686db2b93) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

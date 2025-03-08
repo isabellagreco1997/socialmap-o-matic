@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,9 @@ import { Flow as NetworkMap } from "./pages/NetworkMap";
 import TodoDashboard from "./pages/TodoDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TermsOfUse from "./pages/TermsOfUse";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import { AppLayout } from "./components/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -22,12 +24,30 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={
+            <AppLayout includeFooter={false}>
+              <LoginPage />
+            </AppLayout>
+          } />
+          <Route path="/register" element={
+            <AppLayout includeFooter={false}>
+              <RegisterPage />
+            </AppLayout>
+          } />
+          <Route path="/terms" element={
+            <AppLayout>
+              <TermsOfUse />
+            </AppLayout>
+          } />
+          <Route path="/privacy" element={
+            <AppLayout>
+              <PrivacyPolicy />
+            </AppLayout>
+          } />
           <Route
             path="/network"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute includeFooter={false}>
                 <NetworkMap />
               </ProtectedRoute>
             }
@@ -40,7 +60,11 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={
+            <AppLayout>
+              <NotFound />
+            </AppLayout>
+          } />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

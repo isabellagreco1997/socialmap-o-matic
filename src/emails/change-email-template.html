@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm Your New Email Address - RelMaps</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .email-body {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            background-color: #0A2463;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .brand-name {
+            color: #0A2463;
+            font-size: 24px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+        .button {
+            background-color: #0A2463;
+            color: #ffffff !important;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .info-box h2 {
+            color: #0369a1;
+            font-size: 16px;
+            margin: 0 0 8px 0;
+        }
+        .info-box p {
+            color: #0c4a6e;
+            font-size: 14px;
+            margin: 0;
+        }
+        .email-change-details {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .email-label {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .email-value {
+            color: #111827;
+            font-size: 16px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-body">
+            <div class="logo-container">
+                <span class="logo">
+                    <!-- Simplified Share2 icon in SVG -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                </span>
+                <span class="brand-name">RelMaps</span>
+            </div>
+
+            <h1 style="text-align: center; color: #111827; margin-bottom: 20px;">Confirm Your New Email Address</h1>
+            
+            <p style="text-align: center; color: #4b5563; margin-bottom: 30px;">
+                Please confirm that you want to use this email address for your RelMaps account. This link will expire in 24 hours.
+            </p>
+
+            <div class="email-change-details">
+                <div style="margin-bottom: 12px;">
+                    <div class="email-label">Current Email:</div>
+                    <div class="email-value">{{ .CurrentEmail }}</div>
+                </div>
+                <div>
+                    <div class="email-label">New Email:</div>
+                    <div class="email-value">{{ .NewEmail }}</div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ .ConfirmationURL }}" class="button">Confirm Email Change</a>
+            </div>
+
+            <div class="info-box">
+                <h2>Important Information</h2>
+                <p>After confirming this change, you'll need to use your new email address to sign in to RelMaps. All future communications will be sent to your new email address.</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <p style="color: #6b7280; font-size: 14px;">
+                If you didn't request this email change, please contact our support team immediately as your account may be compromised.
+            </p>
+
+            <p style="color: #6b7280; font-size: 14px;">
+                For security reasons, this confirmation link will expire in 24 hours. Need a new link? Visit 
+                <a href="https://relmaps.com/settings/email" style="color: #0A2463; text-decoration: none;">account settings</a>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 RelMaps. All rights reserved.</p>
+            <p>
+                <a href="https://relmaps.com/privacy" style="color: #0A2463; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
+                •
+                <a href="https://relmaps.com/terms" style="color: #0A2463; text-decoration: none; margin: 0 10px;">Terms of Service</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html> 
