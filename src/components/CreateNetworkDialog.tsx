@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -17,11 +16,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface CreateNetworkDialogProps {
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
+  onNetworkCreated?: (networkId: string) => void;
 }
 
 export const CreateNetworkDialog = ({
   onOpenChange,
   trigger,
+  onNetworkCreated,
 }: CreateNetworkDialogProps) => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,6 +43,10 @@ export const CreateNetworkDialog = ({
         .single();
 
       if (error) throw error;
+
+      if (network) {
+        onNetworkCreated?.(network.id);
+      }
 
       if (!isBlank) {
         setIsGenerating(true);
@@ -78,8 +83,6 @@ export const CreateNetworkDialog = ({
     }
   };
 
-<<<<<<< HEAD
-=======
   const generateNetworkFromPrompt = async (networkId: string, prompt: string, industry: string) => {
     try {
       const networkData = await generateNetworkDataFromAI(prompt, industry);
@@ -249,7 +252,7 @@ export const CreateNetworkDialog = ({
 
       await Promise.all(edgePromises);
       setIsGenerating(false);
-      handleOpenChange(false);
+      onOpenChange?.(false);
       
       if (onNetworkCreated) {
         onNetworkCreated(networkId);
@@ -731,53 +734,46 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     }
   };
 
->>>>>>> a55cd2e (code)
   return (
     <Dialog onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        {trigger || <Button>Create Network</Button>}
+        {trigger || (
+          <Button variant="outline" className="w-full">
+            Create Network
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold tracking-tight">Create a new network</DialogTitle>
+          <DialogTitle>Create Network</DialogTitle>
         </DialogHeader>
-        <div className="space-y-8 py-4">
-          <div className="grid gap-6">
-            <div className="grid gap-4">
-              <div className="flex flex-col gap-2">
-                <Label className="text-base">What kind of network are you building?</Label>
-                <Textarea 
-                  placeholder="e.g. A network of renewable energy experts and organizations in California"
-                  className="min-h-[100px] resize-none text-base"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-4">
+            <Button
+              variant="outline"
+              className="justify-start gap-3"
+              onClick={() => createNetwork(true)}
+              disabled={isGenerating}
+            >
+              <PencilLine className="h-4 w-4" />
+              Create Blank Network
+            </Button>
+            <div className="space-y-2">
+              <Label htmlFor="prompt">Or generate from prompt:</Label>
+              <Textarea
+                id="prompt"
+                placeholder="Describe your network..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="h-24"
+              />
               <Button
-                variant="outline"
-                size="lg"
-                className="h-24 flex flex-col items-center justify-center gap-2 text-left"
-                onClick={() => createNetwork(true)}
-              >
-                <PencilLine className="h-8 w-8" />
-                <div>
-                  <div className="font-semibold">Start blank</div>
-                  <div className="text-sm text-muted-foreground">Create an empty network</div>
-                </div>
-              </Button>
-              <Button
-                size="lg"
-                className="h-24 flex flex-col items-center justify-center gap-2 text-left bg-[#0A2463] hover:bg-[#0A2463]/90"
+                className="w-full justify-start gap-3"
                 onClick={() => createNetwork(false)}
                 disabled={!prompt.trim() || isGenerating}
               >
-                <AudioWaveform className="h-8 w-8" />
-                <div>
-                  <div className="font-semibold">Generate network</div>
-                  <div className="text-sm">AI will help you build it</div>
-                </div>
+                <AudioWaveform className="h-4 w-4" />
+                {isGenerating ? 'Generating...' : 'Generate Network'}
               </Button>
             </div>
           </div>

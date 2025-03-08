@@ -50,13 +50,10 @@ const NetworkSidebar = ({
     }
   };
 
-<<<<<<< HEAD
-=======
   const handleNetworkCreated = (networkId: string) => {
     onNetworkSelect(networkId);
   };
 
->>>>>>> a55cd2e (code)
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
@@ -68,6 +65,7 @@ const NetworkSidebar = ({
                 Create Network
               </Button>
             }
+            onNetworkCreated={handleNetworkCreated}
           />
 
           <Button 
@@ -101,60 +99,24 @@ const NetworkSidebar = ({
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="pt-3 px-3 h-[calc(100vh-500px)] overflow-y-auto space-y-1"
+                  className="space-y-1 p-2"
                 >
                   {networks.map((network, index) => (
                     <Draggable key={network.id} draggableId={network.id} index={index}>
-                      {(provided, snapshot) => (
+                      {(provided) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          style={{
-                            ...provided.draggableProps.style,
-                            transform: provided.draggableProps.style?.transform,
-                            transition: 'box-shadow 0.1s ease'
-                          }}
-                          className={`border rounded-lg group relative will-change-transform ${
-                            snapshot.isDragging 
-                              ? 'shadow-lg ring-1 ring-primary/10 bg-white z-50' 
-                              : ''
-                          }`}
+                          {...provided.dragHandleProps}
                         >
-                          <div className="flex items-center w-full will-change-transform">
-                            <div 
-                              {...provided.dragHandleProps}
-                              className="p-2 rounded-l hover:bg-gray-50/80 flex-shrink-0 cursor-grab active:cursor-grabbing select-none"
-                              style={snapshot.isDragging ? { cursor: 'grabbing' } : undefined}
-                            >
-                              <Menu className={`h-4 w-4 will-change-transform ${
-                                snapshot.isDragging ? 'text-primary' : 'text-gray-400'
-                              }`} />
-                            </div>
-                            <Button 
-                              variant={network.id === currentNetworkId ? "default" : "ghost"} 
-                              className={`flex-1 justify-between h-9 text-sm font-medium rounded-r-lg select-none will-change-transform ${
-                                network.id === currentNetworkId 
-                                  ? 'bg-[#0F172A] text-white' 
-                                  : ''
-                              }`}
-                              onClick={() => onNetworkSelect(network.id)}
-                            >
-                              <div className="flex items-center w-full px-2">
-                                <span className="truncate max-w-[140px] text-left">{network.name}</span>
-                                <div className="ml-auto">
-                                  <div 
-                                    className="p-1 rounded hover:bg-gray-50/80 flex-shrink-0 select-none"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onEditNetwork(network);
-                                    }}
-                                  >
-                                    <FileText className="h-3.5 w-3.5" />
-                                  </div>
-                                </div>
-                              </div>
-                            </Button>
-                          </div>
+                          <Button
+                            variant={currentNetworkId === network.id ? "secondary" : "ghost"}
+                            className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
+                            onClick={() => onNetworkSelect(network.id)}
+                          >
+                            <Menu className="h-4 w-4" />
+                            {network.name}
+                          </Button>
                         </div>
                       )}
                     </Draggable>

@@ -32,22 +32,11 @@ export interface NodeData {
   todos?: TodoItem[];
   tags?: Tag[];
   color?: string;
-<<<<<<< HEAD
   [key: string]: unknown;
 }
 
 export interface EdgeData {
-  label?: string;
-  notes?: string;
-  labelPosition?: string | number; // Allow both string and number types
-=======
->>>>>>> a55cd2e (code)
-  [key: string]: unknown;
-}
-
-export interface EdgeData {
-  label?: string;
-  notes?: string;
+  label: string;
   labelPosition?: string | number;
   [key: string]: unknown;
 }

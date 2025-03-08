@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> a55cd2e (code)
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
@@ -94,8 +90,4 @@ const NodeColorPicker = ({ isOpen, onClose, currentColor, onColorChange }: NodeC
   );
 };
 
-<<<<<<< HEAD
 export default NodeColorPicker;
-=======
-export default NodeColorPicker; 
->>>>>>> a55cd2e (code)

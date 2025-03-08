@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> a55cd2e (code)
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -170,8 +166,4 @@ const NodeTagEditor = ({ isOpen, onClose, tags, onTagsChange }: NodeTagEditorPro
   );
 };
 
-<<<<<<< HEAD
 export default NodeTagEditor;
-=======
-export default NodeTagEditor; 
->>>>>>> a55cd2e (code)

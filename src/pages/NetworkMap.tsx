@@ -1,4 +1,3 @@
-
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState, useEffect, useCallback } from 'react';
@@ -13,7 +12,10 @@ import AddNodeDialog from '@/components/AddNodeDialog';
 import { CsvPreviewDialog } from '@/components/CsvPreviewDialog';
 import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
+import EdgeLabelDialog from '@/components/EdgeLabelDialog';
+import NetworkChat from '@/components/network/NetworkChat';
 import type { Network, NodeData, EdgeData } from '@/types/network';
+import type { EdgeData as DialogEdgeData } from '@/components/EdgeLabelDialog';
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -25,6 +27,9 @@ export const Flow = () => {
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isEdgeLabelDialogOpen, setIsEdgeLabelDialogOpen] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<Edge<EdgeData> | null>(null);
+  const [showChat, setShowChat] = useState(false);
   const {
     toast
   } = useToast();
@@ -33,12 +38,6 @@ export const Flow = () => {
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
-<<<<<<< HEAD
-=======
-  const [isEdgeLabelDialogOpen, setIsEdgeLabelDialogOpen] = useState(false);
-  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
-  const [showChat, setShowChat] = useState(true);
->>>>>>> a55cd2e (code)
 
   const {
     handleAddNode,
@@ -158,30 +157,6 @@ export const Flow = () => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
       try {
-<<<<<<< HEAD
-        const [nodesResponse, edgesResponse] = await Promise.all([supabase.from('nodes').select('*').eq('network_id', currentNetworkId), supabase.from('edges').select('*').eq('network_id', currentNetworkId)]);
-        if (nodesResponse.error) throw nodesResponse.error;
-        if (edgesResponse.error) throw edgesResponse.error;
-        const nodesTodosResponse = await Promise.all(nodesResponse.data.map(node => supabase.from('todos').select('*').eq('node_id', node.id)));
-        const nodesWithTodos = nodesResponse.data.map((node, index) => ({
-          id: node.id,
-          type: 'social',
-          position: {
-            x: node.x_position || Math.random() * 500,
-            y: node.y_position || Math.random() * 500
-          },
-          data: {
-            type: node.type,
-            name: node.name,
-            profileUrl: node.profile_url,
-            imageUrl: node.image_url,
-            date: node.date,
-            address: node.address,
-            todos: nodesTodosResponse[index].data || []
-          } as NodeData
-        }));
-        const formattedEdges = edgesResponse.data.map(edge => ({
-=======
         const [nodesResponse, edgesResponse] = await Promise.all([
           supabase.from('nodes')
             .select('*')
@@ -242,26 +217,15 @@ export const Flow = () => {
 
         setNodes(nodesWithTodos);
         setEdges(edgesResponse.data.map(edge => ({
->>>>>>> a55cd2e (code)
           id: edge.id,
           source: edge.source_id,
           target: edge.target_id,
           type: 'custom',
           data: {
-            label: edge.label || '',
-<<<<<<< HEAD
-            notes: edge.notes || '',
-            labelPosition: edge.label_position
-          } as EdgeData
-        }));
-        setNodes(nodesWithTodos);
-        setEdges(formattedEdges);
-=======
-            notes: '',
+            label: edge.label || 'Connection',
             labelPosition: 'center'
           }
         })));
->>>>>>> a55cd2e (code)
       } catch (error) {
         console.error('Error fetching network data:', error);
         toast({
@@ -279,8 +243,8 @@ export const Flow = () => {
       ...params,
       type: 'custom',
       data: {
-        label: '',
-        notes: ''
+        label: 'New Connection',
+        labelPosition: 'center'
       } as EdgeData
     }, eds));
   }, [setEdges]);
@@ -300,6 +264,24 @@ export const Flow = () => {
     };
     reader.readAsText(file);
   };
+
+  const handleEdgeLabelSave = useCallback((data: DialogEdgeData) => {
+    if (!selectedEdge) return;
+    
+    setEdges(eds => eds.map(edge => {
+      if (edge.id === selectedEdge.id) {
+        return {
+          ...edge,
+          data: {
+            ...edge.data,
+            label: data.label,
+            labelPosition: edge.data?.labelPosition || 'center'
+          }
+        };
+      }
+      return edge;
+    }));
+  }, [selectedEdge, setEdges]);
 
   return (
     <SidebarProvider defaultOpen>
@@ -366,8 +348,6 @@ export const Flow = () => {
             onDelete={handleDeleteNetwork} 
           />
           
-<<<<<<< HEAD
-=======
           <EdgeLabelDialog
             open={isEdgeLabelDialogOpen}
             onOpenChange={setIsEdgeLabelDialogOpen}
@@ -383,7 +363,6 @@ export const Flow = () => {
             edges={edges}
           />
           
->>>>>>> a55cd2e (code)
           <input 
             id="csv-input" 
             type="file" 
