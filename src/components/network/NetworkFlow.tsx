@@ -1,4 +1,4 @@
-import { ReactFlow, MarkerType, PanOnScrollMode } from '@xyflow/react';
+import { ReactFlow, MarkerType, PanOnScrollMode, ConnectionLineType, ConnectionMode } from '@xyflow/react';
 import SocialNode from '@/components/SocialNode';
 import CustomEdge from '@/components/network/CustomEdge';
 import NetworkTopBar from '@/components/network/NetworkTopBar';
@@ -36,9 +36,10 @@ const NetworkFlow = ({
 }: NetworkFlowProps) => {
   // Define the custom connection line as a styled component
   const connectionLineStyle = {
-    stroke: 'rgba(59, 130, 246, 0.5)',
+    stroke: 'rgba(59, 130, 246, 0.7)',
     strokeWidth: 2,
     strokeDasharray: '5,5',
+    animation: 'flowAnimation 1s linear infinite',
   };
 
   // Define default edge options with correct MarkerType
@@ -46,14 +47,21 @@ const NetworkFlow = ({
     type: 'custom',
     style: {
       strokeWidth: 2,
-      stroke: 'rgba(59, 130, 246, 0.6)',
+      stroke: 'rgba(59, 130, 246, 0.7)',
+      strokeDasharray: 5,
+      animation: 'flowAnimation 1s linear infinite'
     },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: 'rgba(59, 130, 246, 0.6)',
-      width: 20,
-      height: 20,
-    },
+    animated: true
+  };
+
+  // Enhanced node drag behavior for smoother movement
+  const proOptions = {
+    hideAttribution: true,
+    nodeDragThreshold: 0, // No threshold for immediate response
+    autoPanOnNodeDrag: true, // Auto-pan when dragging nodes to the edge
+    fitViewOnInit: true,
+    translateExtent: [[-Infinity, -Infinity], [Infinity, Infinity]], // Allow unlimited canvas size
+    smoothConnections: true,
   };
 
   return (
@@ -75,6 +83,7 @@ const NetworkFlow = ({
         fitView
         style={flowStyles}
         connectionLineStyle={connectionLineStyle}
+        connectionLineType={ConnectionLineType.Bezier}
         defaultEdgeOptions={defaultEdgeOptions}
         snapToGrid={false}
         nodesDraggable={true}
@@ -83,9 +92,12 @@ const NetworkFlow = ({
         panOnDrag={true}
         panOnScroll={true}
         panOnScrollMode={PanOnScrollMode.Free}
-        proOptions={{ hideAttribution: true }}
+        proOptions={proOptions}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         className="bg-gradient-to-br from-sky-50 to-indigo-50"
+        elevateNodesOnSelect={true}
+        elevateEdgesOnSelect={true}
+        connectionMode={ConnectionMode.Loose}
       >
         <NetworkTopBar
           currentNetwork={networks.find(n => n.id === currentNetworkId)}

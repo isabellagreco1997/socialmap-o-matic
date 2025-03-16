@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -12,7 +11,14 @@ const NetworkSearchHeader = ({ searchQuery, onSearchChange }: NetworkSearchHeade
   return (
     <div className="p-4 flex flex-col gap-3 border-b">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-sm">RelMaps</h2>
+        <div className="flex items-center gap-2">
+          <img 
+            src="/favicon.svg" 
+            alt="RelMaps Logo" 
+            className="h-5 w-5"
+          />
+          <h2 className="font-bold text-sm">RelMaps</h2>
+        </div>
         <SidebarTrigger />
       </div>
       <div className="relative">

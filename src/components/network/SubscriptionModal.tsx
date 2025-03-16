@@ -6,12 +6,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Calendar, CreditCard } from 'lucide-react';
 import { env } from "@/utils/env";
 import { redirectToCheckout } from "@/utils/stripe";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
+import { format } from "date-fns";
 
 interface SubscriptionModalProps {
   open: boolean;
@@ -31,17 +32,20 @@ const planFeatures = {
   ]
 };
 
+// Define environment
+const isDevelopment = import.meta.env.MODE === 'development';
+
 export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed, subscriptionDetails, customerDetails, isLoading: subscriptionLoading } = useSubscription();
 
   const handleSubscribe = async (isAnnual: boolean) => {
     try {
       setIsLoading(true);
       const priceId = isAnnual 
-        ? (import.meta.env.MODE === 'development' ? env.stripe.test.priceAnnual : env.stripe.live.priceAnnual)
-        : (import.meta.env.MODE === 'development' ? env.stripe.test.priceMonthly : env.stripe.live.priceMonthly);
+        ? (isDevelopment ? env.stripe.test.priceAnnual : env.stripe.live.priceAnnual)
+        : (isDevelopment ? env.stripe.test.priceMonthly : env.stripe.live.priceMonthly);
       
       await redirectToCheckout(priceId);
     } catch (error) {
@@ -56,10 +60,23 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
     }
   };
 
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMMM d, yyyy');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
-        {isSubscribed ? (
+        {subscriptionLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : isSubscribed ? (
           <>
             <DialogHeader className="space-y-1">
               <DialogTitle className="text-xl">Premium Subscription Active</DialogTitle>
@@ -67,7 +84,29 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
                 You're currently on the premium plan with access to all features
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
+            <div className="py-4 space-y-6">
+              {subscriptionDetails && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <h3 className="text-sm font-medium mb-3">Subscription Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs font-medium">Status</p>
+                        <p className="text-sm capitalize">{subscriptionDetails.status}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs font-medium">Next Billing Date</p>
+                        <p className="text-sm">{formatDate(subscriptionDetails.currentPeriodEnd)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="bg-background rounded-lg p-6 border">
                 <div className="flex items-center justify-center mb-6">
                   <CheckCircle2 className="w-12 h-12 text-[#0A2463]" />
@@ -81,6 +120,12 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
                     </li>
                   ))}
                 </ul>
+              </div>
+              
+              <div className="flex justify-center">
+                <Button variant="outline" size="sm">
+                  Manage Billing
+                </Button>
               </div>
             </div>
           </>

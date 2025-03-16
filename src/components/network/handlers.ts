@@ -10,15 +10,66 @@ export const useNetworkHandlers = (
   setEditingNetwork: React.Dispatch<React.SetStateAction<Network | null>>,
   networks: Network[]
 ) => {
-  const handleAddNode = ({ data }: { data: NodeData }) => {
+  const handleAddNode = async ({ data }: { data: NodeData }) => {
     try {
-      const id = `node-${Date.now()}`;
-      const newNode = {
-        id,
-        type: 'social',
-        position: { x: Math.random() * 500, y: Math.random() * 500 },
-        data
+      if (!networks || networks.length === 0) {
+        throw new Error('No active network selected');
+      }
+
+      // Validate that name is provided and not empty
+      if (!data.name || data.name.trim() === '') {
+        console.error('Attempted to add node with empty name:', data);
+        toast({
+          title: "Error",
+          description: "Node name cannot be empty",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const currentNetworkId = networks[0].id;
+      
+      // Create database object with snake_case properties
+      const dbNode = {
+        network_id: currentNetworkId,
+        name: data.name.trim(),
+        type: data.type, // Ensure type is included
+        profile_url: data.profileUrl,
+        image_url: data.imageUrl,
+        date: data.date,
+        address: data.address,
+        notes: data.contactDetails?.notes,
+        x_position: Math.random() * 500,
+        y_position: Math.random() * 500,
+        color: data.color
       };
+      
+      console.log('Inserting node with data:', dbNode);
+      
+      // Save to database first
+      const { data: savedNode, error } = await supabase
+        .from('nodes')
+        .insert(dbNode)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error inserting node:', error, 'Node data:', dbNode);
+        throw error;
+      }
+      
+      // Then update UI with the saved node
+      const newNode = {
+        id: savedNode.id,
+        type: 'social',
+        position: { x: savedNode.x_position, y: savedNode.y_position },
+        data: {
+          ...data,
+          // Ensure any database values are reflected in the UI
+          type: savedNode.type
+        }
+      };
+      
       setNodes(nodes => [...nodes, newNode]);
       setIsDialogOpen(false);
       toast({
@@ -96,6 +147,8 @@ export const useNetworkHandlers = (
 
   const handleTemplateSelect = async (template: any) => {
     try {
+      console.log('Template selected:', template);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
   
@@ -118,7 +171,19 @@ export const useNetworkHandlers = (
       const centerX = (gridSize * spacing) / 2;
       const centerY = (gridSize * spacing) / 2;
 
-      const nodesPromises = template.nodes.map((node: any, index: number) => {
+      // Filter out nodes without a valid name
+      const validNodes = template.nodes.filter((node: any) => 
+        node.name && typeof node.name === 'string' && node.name.trim() !== ''
+      );
+
+      console.log('Valid nodes count:', validNodes.length, 'Original nodes count:', template.nodes.length);
+      
+      if (validNodes.length === 0) {
+        console.error('No valid nodes found in template:', template);
+        throw new Error('No valid nodes found in template');
+      }
+
+      const nodesPromises = validNodes.map((node: any, index: number) => {
         const row = Math.floor(index / gridSize);
         const col = index % gridSize;
         
@@ -128,30 +193,46 @@ export const useNetworkHandlers = (
         const x_position = (col * spacing) - centerX + randomOffset();
         const y_position = (row * spacing) - centerY + randomOffset();
         
-        return supabase.from('nodes').insert({
+        const nodeData = {
           network_id: network.id,
-          name: node.name,
-          type: node.type,
+          name: node.name.trim(),
+          type: node.type || 'person',
           x_position,
           y_position,
           notes: node.notes,
           address: node.address,
           date: node.date,
           image_url: node.image_url
-        }).select();
+        };
+        
+        console.log('Inserting template node:', nodeData);
+        
+        return supabase.from('nodes').insert(nodeData).select();
       });
   
       const nodesResults = await Promise.all(nodesPromises);
       const createdNodes = nodesResults.map(result => result.data?.[0]);
+      
+      // Validate that all nodes were created successfully before creating edges
+      if (createdNodes.some(node => !node)) {
+        console.error('Some nodes failed to create properly:', createdNodes);
+        throw new Error('Failed to create all nodes properly');
+      }
   
-      const edgesPromises = template.edges.map((edge: any) => 
-        supabase.from('edges').insert({
+      const edgesPromises = template.edges.map((edge: any) => {
+        // Validate that source and target indices exist in the createdNodes array
+        if (!createdNodes[edge.source] || !createdNodes[edge.target]) {
+          console.error('Invalid edge reference:', edge, 'Available nodes:', createdNodes.length);
+          return Promise.resolve(null); // Skip this edge
+        }
+        
+        return supabase.from('edges').insert({
           network_id: network.id,
           source_id: createdNodes[edge.source].id,
           target_id: createdNodes[edge.target].id,
           label: edge.label
-        })
-      );
+        });
+      }).filter(Boolean); // Filter out any null promises
   
       await Promise.all(edgesPromises);
   
@@ -178,12 +259,20 @@ export const useNetworkHandlers = (
     date?: string;
     address?: string;
   }, currentNetworkId: string | null, csvHeaders: string[], csvRows: string[][]) => {
-    if (!currentNetworkId) return;
+    if (!currentNetworkId) {
+      console.error('No current network ID provided for CSV import');
+      return;
+    }
 
     try {
       console.log('Starting CSV import with mapping:', columnMapping);
       console.log('CSV Headers:', csvHeaders);
-      console.log('CSV Rows:', csvRows);
+      console.log('CSV Rows count:', csvRows.length);
+      
+      // Log a sample of rows for debugging
+      if (csvRows.length > 0) {
+        console.log('Sample row:', csvRows[0]);
+      }
 
       if (!columnMapping.name) {
         toast({
@@ -194,8 +283,30 @@ export const useNetworkHandlers = (
         return;
       }
 
-      const nodesToAdd = csvRows.map((row, index) => {
-        const nameIdx = csvHeaders.indexOf(columnMapping.name!);
+      const nameIdx = csvHeaders.indexOf(columnMapping.name!);
+      if (nameIdx === -1) {
+        console.error('Name column not found in headers:', columnMapping.name, 'Available headers:', csvHeaders);
+        toast({
+          variant: "destructive",
+          title: "Import Error",
+          description: "Could not find the selected Name column in the CSV headers"
+        });
+        return;
+      }
+
+      const filteredRows = csvRows.filter(row => {
+        // Filter out rows where the name is empty or undefined
+        const name = row[nameIdx]?.trim();
+        const isValid = name && name.length > 0;
+        if (!isValid) {
+          console.log('Filtering out row with invalid name:', row);
+        }
+        return isValid;
+      });
+      
+      console.log('Filtered rows count:', filteredRows.length, 'Original rows count:', csvRows.length);
+
+      const nodesToAdd = filteredRows.map((row, index) => {
         const typeIdx = columnMapping.type ? csvHeaders.indexOf(columnMapping.type) : -1;
         const profileIdx = columnMapping.profile ? csvHeaders.indexOf(columnMapping.profile) : -1;
         const imageIdx = columnMapping.image ? csvHeaders.indexOf(columnMapping.image) : -1;
@@ -206,20 +317,37 @@ export const useNetworkHandlers = (
         const xPos = (index % gridCols) * 200 + 100;
         const yPos = Math.floor(index / gridCols) * 200 + 100;
 
-        return {
+        const nodeData = {
           network_id: currentNetworkId,
-          name: row[nameIdx],
-          type: typeIdx >= 0 ? row[typeIdx].toLowerCase() : 'person',
-          profile_url: profileIdx >= 0 ? row[profileIdx] : null,
-          image_url: imageIdx >= 0 ? row[imageIdx] : null,
-          date: dateIdx >= 0 ? row[dateIdx] : null,
-          address: addressIdx >= 0 ? row[addressIdx] : null,
+          name: row[nameIdx].trim(),
+          type: typeIdx >= 0 && row[typeIdx]?.trim() ? row[typeIdx].toLowerCase().trim() : 'person',
+          profile_url: profileIdx >= 0 && row[profileIdx]?.trim() ? row[profileIdx].trim() : null,
+          image_url: imageIdx >= 0 && row[imageIdx]?.trim() ? row[imageIdx].trim() : null,
+          date: dateIdx >= 0 && row[dateIdx]?.trim() ? row[dateIdx].trim() : null,
+          address: addressIdx >= 0 && row[addressIdx]?.trim() ? row[addressIdx].trim() : null,
           x_position: xPos,
           y_position: yPos
         };
+        
+        return nodeData;
       });
 
-      console.log('Preparing to insert nodes:', nodesToAdd);
+      if (nodesToAdd.length === 0) {
+        console.error('No valid nodes found in CSV data');
+        toast({
+          variant: "destructive",
+          title: "Import Error",
+          description: "No valid nodes found in the CSV. Make sure the Name column has values."
+        });
+        return;
+      }
+
+      console.log('Preparing to insert nodes:', nodesToAdd.length);
+      
+      // Log a sample node for debugging
+      if (nodesToAdd.length > 0) {
+        console.log('Sample node to add:', nodesToAdd[0]);
+      }
 
       const { data: newNodes, error } = await supabase
         .from('nodes')
@@ -227,6 +355,7 @@ export const useNetworkHandlers = (
         .select();
 
       if (error) {
+        console.error('Error inserting nodes from CSV:', error);
         throw error;
       }
 

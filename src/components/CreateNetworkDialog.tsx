@@ -1,31 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AudioWaveform, PencilLine } from "lucide-react";
+import { 
+  AudioWaveform, 
+  PencilLine, 
+  FileUp, 
+  Sparkles, 
+  FileText, 
+  Upload,
+  Bot,
+  Loader2
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CreateNetworkDialogProps {
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
   onNetworkCreated?: (networkId: string) => void;
+  onImportCsv?: (file: File) => void;
 }
 
 export const CreateNetworkDialog = ({
   onOpenChange,
   trigger,
   onNetworkCreated,
+  onImportCsv
 }: CreateNetworkDialogProps) => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [industry, setIndustry] = useState("Technology");
+  const [networkName, setNetworkName] = useState("New Network");
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const createNetwork = async (isBlank: boolean = true) => {
@@ -36,7 +57,7 @@ export const CreateNetworkDialog = ({
       const { data: network, error } = await supabase
         .from('networks')
         .insert([{
-          name: isBlank ? 'New Network' : prompt,
+          name: isBlank ? networkName : prompt,
           user_id: user.id
         }])
         .select()
@@ -50,27 +71,47 @@ export const CreateNetworkDialog = ({
 
       if (!isBlank) {
         setIsGenerating(true);
-        // Here you would integrate with an AI service to generate the network
-        // For now, we'll just create a simple network
-        const nodes = [
-          { name: "Central Node", type: "person", x_position: 0, y_position: 0 },
-          { name: "Connected Node 1", type: "person", x_position: 200, y_position: 0 },
-          { name: "Connected Node 2", type: "person", x_position: -200, y_position: 0 },
-        ];
-
-        for (const node of nodes) {
-          await supabase.from('nodes').insert({
-            ...node,
-            network_id: network.id
+        try {
+          // Call the AI network generation function
+          await generateNetworkFromPrompt(network.id, prompt, industry);
+          
+          toast({
+            title: "Network generated",
+            description: "Created an AI-generated network based on your prompt"
           });
-        }
-        setIsGenerating(false);
-      }
+        } catch (genError) {
+          console.error('Error generating AI network:', genError);
+          toast({
+            variant: "destructive",
+            title: "Generation Error",
+            description: "Failed to generate AI network, but created a basic network"
+          });
+          
+          // Fallback to creating a simple network if AI generation fails
+          const nodes = [
+            { name: "Central Node", type: "person", x_position: 0, y_position: 0 },
+            { name: "Connected Node 1", type: "person", x_position: 200, y_position: 0 },
+            { name: "Connected Node 2", type: "person", x_position: -200, y_position: 0 },
+          ];
 
-      toast({
-        title: "Network created",
-        description: isBlank ? "Created a blank network" : "Generated network from prompt"
-      });
+          for (const node of nodes) {
+            if (node.name && node.name.trim() !== '') {
+              await supabase.from('nodes').insert({
+                ...node,
+                name: node.name.trim(),
+                network_id: network.id
+              });
+            }
+          }
+        } finally {
+          setIsGenerating(false);
+        }
+      } else {
+        toast({
+          title: "Network created",
+          description: "Created a blank network"
+        });
+      }
 
       onOpenChange?.(false);
     } catch (error) {
@@ -79,6 +120,59 @@ export const CreateNetworkDialog = ({
         variant: "destructive",
         title: "Error",
         description: "Failed to create network"
+      });
+      setIsGenerating(false);
+    }
+  };
+
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      // Create a blank network first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data: network, error } = await supabase
+        .from('networks')
+        .insert([{
+          name: file.name.split('.')[0] || "Imported Network",
+          user_id: user.id
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (network) {
+        onNetworkCreated?.(network.id);
+      }
+
+      // Close the dialog
+      onOpenChange?.(false);
+      
+      // Trigger the CSV import dialog from the parent component
+      if (onImportCsv) {
+        onImportCsv(file);
+      }
+      
+      toast({
+        title: "Network created",
+        description: "Please configure your CSV import in the next step"
+      });
+    } catch (error) {
+      console.error('Error creating network for import:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create network for import"
       });
     }
   };
@@ -127,36 +221,46 @@ export const CreateNetworkDialog = ({
       
       // Create first level nodes with even spacing around the circle
       const firstLevelPromises = firstLevelNodes.map((node, i) => {
+        // Skip nodes without a valid name
+        if (!node.name || typeof node.name !== 'string' || node.name.trim() === '') {
+          return Promise.resolve(null);
+        }
+        
         // Calculate position in a circle with even spacing
         const angle = (i * 2 * Math.PI) / firstLevelNodes.length;
         const x_position = Math.cos(angle) * firstLevelRadius;
         const y_position = Math.sin(angle) * firstLevelRadius;
         
         return new Promise<any>((resolve) => {
-          supabase
-            .from('nodes')
-            .insert({
-              name: node.name,
-              type: node.type,
-              network_id: networkId,
-              x_position,
-              y_position,
-              notes: node.notes,
-              address: node.address,
-              date: node.date
-            })
-            .select()
-            .single()
-            .then(result => {
-              if (result.data) {
-                createdFirstLevel.push({
-                  ...result.data,
-                  originalIndex: i,
-                  angle
-                });
-              }
-              resolve(result);
-            });
+          try {
+            supabase
+              .from('nodes')
+              .insert({
+                name: node.name.trim(),
+                type: node.type || 'person',
+                network_id: networkId,
+                x_position,
+                y_position,
+                notes: node.notes,
+                address: node.address,
+                date: node.date
+              })
+              .select()
+              .single()
+              .then(result => {
+                if (result.data) {
+                  createdFirstLevel.push({
+                    ...result.data,
+                    originalIndex: i,
+                    angle
+                  });
+                }
+                resolve(result);
+              });
+          } catch (error) {
+            console.error('Error creating first level node:', error);
+            resolve(null);
+          }
         });
       });
       
@@ -184,6 +288,11 @@ export const CreateNetworkDialog = ({
         const secondLevelRadius = 600; // Distance from parent node (increased)
         
         childNodes.forEach((node, j) => {
+          // Skip nodes without a valid name
+          if (!node.name || typeof node.name !== 'string' || node.name.trim() === '') {
+            return;
+          }
+          
           // Calculate position for this child
           const childAngle = parentAngle - spreadAngle/2 + (j * spreadAngle / Math.max(1, childNodes.length - 1));
           
@@ -192,29 +301,34 @@ export const CreateNetworkDialog = ({
           const childY = parentNode.y_position + Math.sin(childAngle) * secondLevelRadius;
           
           const promise = new Promise<any>((resolve) => {
-            supabase
-              .from('nodes')
-              .insert({
-                name: node.name,
-                type: node.type,
-                network_id: networkId,
-                x_position: childX,
-                y_position: childY,
-                notes: node.notes,
-                address: node.address,
-                date: node.date
-              })
-              .select()
-              .single()
-              .then(result => {
-                if (result.data) {
-                  createdSecondLevel.push({
-                    ...result.data,
-                    parentId: parentNode.id
-                  });
-                }
-                resolve(result);
-              });
+            try {
+              supabase
+                .from('nodes')
+                .insert({
+                  name: node.name.trim(),
+                  type: node.type || 'person',
+                  network_id: networkId,
+                  x_position: childX,
+                  y_position: childY,
+                  notes: node.notes,
+                  address: node.address,
+                  date: node.date
+                })
+                .select()
+                .single()
+                .then(result => {
+                  if (result.data) {
+                    createdSecondLevel.push({
+                      ...result.data,
+                      parentId: parentNode.id
+                    });
+                  }
+                  resolve(result);
+                });
+            } catch (error) {
+              console.error('Error creating second level node:', error);
+              resolve(null);
+            }
           });
           
           secondLevelPromises.push(promise);
@@ -228,26 +342,30 @@ export const CreateNetworkDialog = ({
       
       // Connect "You" to all first level nodes
       createdFirstLevel.forEach(node => {
-        edgePromises.push(
-          supabase.from('edges').insert({
-            network_id: networkId,
-            source_id: centralNode.id,
-            target_id: node.id,
-            label: getActionLabel(node)
-          })
-        );
+        if (node && node.id && centralNode && centralNode.id) {
+          edgePromises.push(
+            supabase.from('edges').insert({
+              network_id: networkId,
+              source_id: centralNode.id,
+              target_id: node.id,
+              label: getActionLabel(node)
+            })
+          );
+        }
       });
       
       // Connect first level nodes to their children
       createdSecondLevel.forEach(node => {
-        edgePromises.push(
-          supabase.from('edges').insert({
-            network_id: networkId,
-            source_id: node.parentId,
-            target_id: node.id,
-            label: getRelationshipLabel('organization', node.type)
-          })
-        );
+        if (node && node.id && node.parentId) {
+          edgePromises.push(
+            supabase.from('edges').insert({
+              network_id: networkId,
+              source_id: node.parentId,
+              target_id: node.id,
+              label: getRelationshipLabel('organization', node.type)
+            })
+          );
+        }
       });
 
       await Promise.all(edgePromises);
@@ -399,6 +517,17 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
           throw new Error('Invalid network data structure from AI');
         }
         
+        // Filter out any nodes with empty or missing names
+        networkData.nodes = networkData.nodes.filter(node => 
+          node && node.name && typeof node.name === 'string' && node.name.trim() !== ''
+        );
+        
+        // If no valid nodes remain, throw an error
+        if (networkData.nodes.length === 0) {
+          console.error("No valid nodes found in AI response");
+          throw new Error('No valid nodes found in AI response');
+        }
+        
         return networkData;
       } catch (parseError) {
         console.error("JSON parse error:", parseError, "for content:", jsonMatch[0]);
@@ -432,11 +561,13 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     };
     
     // Industry-specific organizations
-    const organizations = getDefaultOrganizationsForIndustry(industry);
+    const organizations = getDefaultOrganizationsForIndustry(industry)
+      .filter(org => org && org.name && typeof org.name === 'string' && org.name.trim() !== '');
+    
     organizations.forEach((org, index) => {
       const pos = generatePosition(index, organizations.length, 300);
       nodes.push({
-        name: org.name,
+        name: org.name.trim(),
         type: "organization",
         x_position: pos.x,
         y_position: pos.y,
@@ -452,12 +583,14 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     });
     
     // Industry-specific people
-    const people = getDefaultPeopleForIndustry(industry);
+    const people = getDefaultPeopleForIndustry(industry)
+      .filter(person => person && person.name && typeof person.name === 'string' && person.name.trim() !== '');
+    
     const peopleStartIndex = nodes.length;
     people.forEach((person, index) => {
       const pos = generatePosition(index, people.length, 500);
       nodes.push({
-        name: person.name,
+        name: person.name.trim(),
         type: "person",
         x_position: pos.x,
         y_position: pos.y,
@@ -475,12 +608,14 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     });
     
     // Industry-specific events
-    const events = getDefaultEventsForIndustry(industry);
+    const events = getDefaultEventsForIndustry(industry)
+      .filter(event => event && event.name && typeof event.name === 'string' && event.name.trim() !== '');
+    
     const eventsStartIndex = nodes.length;
     events.forEach((event, index) => {
       const pos = generatePosition(index, events.length, 700);
       nodes.push({
-        name: event.name,
+        name: event.name.trim(),
         type: "event",
         x_position: pos.x,
         y_position: pos.y,
@@ -497,12 +632,14 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     });
     
     // Industry-specific venues
-    const venues = getDefaultVenuesForIndustry(industry);
+    const venues = getDefaultVenuesForIndustry(industry)
+      .filter(venue => venue && venue.name && typeof venue.name === 'string' && venue.name.trim() !== '');
+    
     const venuesStartIndex = nodes.length;
     venues.forEach((venue, index) => {
       const pos = generatePosition(index, venues.length, 600);
       nodes.push({
-        name: venue.name,
+        name: venue.name.trim(),
         type: "venue",
         x_position: pos.x,
         y_position: pos.y,
@@ -525,14 +662,16 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
 
   // Default organizations (fallback)
   const getDefaultOrganizationsForIndustry = (industry: string) => {
+    const defaultOrgs = [
+      { name: "Google", description: "Tech giant with strong networking opportunities" },
+      { name: "Microsoft", description: "Major tech company with extensive partner network" },
+      { name: "Amazon Web Services", description: "Cloud provider with partner programs" },
+      { name: "TechCrunch", description: "Tech media company hosting networking events" },
+      { name: "Y Combinator", description: "Startup accelerator with strong alumni network" }
+    ];
+    
     const industryMap: Record<string, any[]> = {
-      "Technology": [
-        { name: "Google", description: "Tech giant with strong networking opportunities" },
-        { name: "Microsoft", description: "Major tech company with extensive partner network" },
-        { name: "Amazon Web Services", description: "Cloud provider with partner programs" },
-        { name: "TechCrunch", description: "Tech media company hosting networking events" },
-        { name: "Y Combinator", description: "Startup accelerator with strong alumni network" }
-      ],
+      "Technology": defaultOrgs,
       "Finance": [
         { name: "Goldman Sachs", description: "Investment banking firm" },
         { name: "JP Morgan Chase", description: "Global financial services firm" },
@@ -564,19 +703,24 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     };
     
     // Return industry-specific organizations or default to Technology
-    return industryMap[industry] || industryMap["Technology"];
+    const result = industryMap[industry] || defaultOrgs;
+    
+    // Ensure we always return an array with at least one valid organization
+    return result.length > 0 ? result : defaultOrgs;
   };
 
   // Default people (fallback)
   const getDefaultPeopleForIndustry = (industry: string) => {
+    const defaultPeople = [
+      { name: "Sarah Chen", role: "CTO at Tech Innovators" },
+      { name: "Michael Rodriguez", role: "Venture Capitalist at Sequoia" },
+      { name: "Priya Patel", role: "Engineering Director at Google" },
+      { name: "David Kim", role: "Startup Founder" },
+      { name: "Lisa Johnson", role: "Tech Recruiter" }
+    ];
+    
     const industryMap: Record<string, any[]> = {
-      "Technology": [
-        { name: "Sarah Chen", role: "CTO at Tech Innovators" },
-        { name: "Michael Rodriguez", role: "Venture Capitalist at Sequoia" },
-        { name: "Priya Patel", role: "Engineering Director at Google" },
-        { name: "David Kim", role: "Startup Founder" },
-        { name: "Lisa Johnson", role: "Tech Recruiter" }
-      ],
+      "Technology": defaultPeople,
       "Finance": [
         { name: "James Wilson", role: "Investment Banker" },
         { name: "Emma Thompson", role: "Financial Analyst" },
@@ -608,7 +752,10 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     };
     
     // Return industry-specific people or default to Technology
-    return industryMap[industry] || industryMap["Technology"];
+    const result = industryMap[industry] || defaultPeople;
+    
+    // Ensure we always return an array with at least one valid person
+    return result.length > 0 ? result : defaultPeople;
   };
 
   // Default events (fallback)
@@ -621,12 +768,14 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
       return futureDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
     };
     
+    const defaultEvents = [
+      { name: "TechCrunch Disrupt", date: getRandomFutureDate(), description: "Startup and tech conference" },
+      { name: "Web Summit", date: getRandomFutureDate(), description: "Global technology conference" },
+      { name: "Developer Conference", date: getRandomFutureDate(), description: "Annual coding and development event" }
+    ];
+    
     const industryMap: Record<string, any[]> = {
-      "Technology": [
-        { name: "TechCrunch Disrupt", date: getRandomFutureDate(), description: "Startup and tech conference" },
-        { name: "Web Summit", date: getRandomFutureDate(), description: "Global technology conference" },
-        { name: "Developer Conference", date: getRandomFutureDate(), description: "Annual coding and development event" }
-      ],
+      "Technology": defaultEvents,
       "Finance": [
         { name: "Financial Innovation Summit", date: getRandomFutureDate(), description: "Conference on financial technology" },
         { name: "Investment Forum", date: getRandomFutureDate(), description: "Meeting of investment professionals" },
@@ -650,16 +799,21 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     };
     
     // Return industry-specific events or default to Technology
-    return industryMap[industry] || industryMap["Technology"];
+    const result = industryMap[industry] || defaultEvents;
+    
+    // Ensure we always return an array with at least one valid event
+    return result.length > 0 ? result : defaultEvents;
   };
 
   // Default venues (fallback)
   const getDefaultVenuesForIndustry = (industry: string) => {
+    const defaultVenues = [
+      { name: "Innovation Hub", address: "123 Tech Blvd, San Francisco, CA", description: "Coworking space for tech startups" },
+      { name: "Convention Center", address: "456 Expo Ave, Las Vegas, NV", description: "Large venue for tech conferences" }
+    ];
+    
     const industryMap: Record<string, any[]> = {
-      "Technology": [
-        { name: "Innovation Hub", address: "123 Tech Blvd, San Francisco, CA", description: "Coworking space for tech startups" },
-        { name: "Convention Center", address: "456 Expo Ave, Las Vegas, NV", description: "Large venue for tech conferences" }
-      ],
+      "Technology": defaultVenues,
       "Finance": [
         { name: "Financial District Club", address: "789 Wall St, New York, NY", description: "Exclusive club for finance professionals" },
         { name: "Investment Conference Center", address: "101 Finance Rd, Chicago, IL", description: "Venue for financial events" }
@@ -679,11 +833,18 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     };
     
     // Return industry-specific venues or default to Technology
-    return industryMap[industry] || industryMap["Technology"];
+    const result = industryMap[industry] || defaultVenues;
+    
+    // Ensure we always return an array with at least one valid venue
+    return result.length > 0 ? result : defaultVenues;
   };
 
   // Generate relationship labels based on node types (fallback)
   const getRelationshipLabel = (sourceType: string, targetType: string) => {
+    // Ensure we have valid types
+    const validSourceType = sourceType && typeof sourceType === 'string' ? sourceType.toLowerCase() : 'person';
+    const validTargetType = targetType && typeof targetType === 'string' ? targetType.toLowerCase() : 'person';
+    
     const relationshipMap: Record<string, Record<string, string[]>> = {
       "person": {
         "person": ["Colleague", "Mentor", "Friend", "Former classmate", "Professional contact"],
@@ -711,16 +872,27 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
       }
     };
     
-    // Get possible relationships based on node types
-    const possibleRelationships = relationshipMap[sourceType]?.[targetType] || ["Connected to"];
+    // Default relationship if nothing matches
+    const defaultRelationship = "Connected to";
     
-    // Return a random relationship from the possibilities
-    return possibleRelationships[Math.floor(Math.random() * possibleRelationships.length)];
+    // Get possible relationships based on node types
+    const possibleRelationships = relationshipMap[validSourceType]?.[validTargetType] || [defaultRelationship];
+    
+    // Return a random relationship from the possibilities or the default
+    return possibleRelationships[Math.floor(Math.random() * possibleRelationships.length)] || defaultRelationship;
   };
 
   // Helper function for action-oriented labels
   const getActionLabel = (targetNode: any) => {
-    switch(targetNode.type) {
+    // Default action if node is invalid or type is missing
+    if (!targetNode || !targetNode.type) {
+      return 'Connect with';
+    }
+    
+    // Ensure we have a valid type string
+    const nodeType = typeof targetNode.type === 'string' ? targetNode.type.toLowerCase() : '';
+    
+    switch(nodeType) {
       case 'person':
         return 'Meet with';
       case 'organization':
@@ -735,50 +907,169 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
   };
 
   return (
-    <Dialog onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" className="w-full">
-            Create Network
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create Network</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-4">
-            <Button
-              variant="outline"
-              className="justify-start gap-3"
-              onClick={() => createNetwork(true)}
-              disabled={isGenerating}
-            >
-              <PencilLine className="h-4 w-4" />
-              Create Blank Network
+    <>
+      <Dialog onOpenChange={onOpenChange}>
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="outline" className="w-full">
+              Create Network
             </Button>
-            <div className="space-y-2">
-              <Label htmlFor="prompt">Or generate from prompt:</Label>
-              <Textarea
-                id="prompt"
-                placeholder="Describe your network..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="h-24"
-              />
-              <Button
-                className="w-full justify-start gap-3"
-                onClick={() => createNetwork(false)}
-                disabled={!prompt.trim() || isGenerating}
+          )}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+          <DialogHeader className="px-4 pt-4 pb-2 border-b">
+            <DialogTitle className="text-xl font-bold">Create New Network</DialogTitle>
+          </DialogHeader>
+          
+          <div className="p-4">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">Choose how to create your network:</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {/* AI Generated Network Option */}
+              <div 
+                className="border rounded-lg overflow-hidden cursor-pointer hover:border-blue-400 transition-colors"
+                onClick={() => {
+                  setShowAIDialog(true);
+                  onOpenChange?.(false);
+                }}
               >
-                <AudioWaveform className="h-4 w-4" />
-                {isGenerating ? 'Generating...' : 'Generate Network'}
-              </Button>
+                <div className="bg-blue-50 dark:bg-blue-950/20 p-4 flex items-center gap-3">
+                  <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+                    <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-blue-600 dark:text-blue-400">AI Generated Network</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Let AI create a professional network based on your description
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Blank Network Option */}
+              <div 
+                className="border rounded-lg overflow-hidden cursor-pointer hover:border-green-400 transition-colors"
+                onClick={() => createNetwork(true)}
+              >
+                <div className="bg-green-50 dark:bg-green-950/20 p-4 flex items-center gap-3">
+                  <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
+                    <PencilLine className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-green-600 dark:text-green-400">Blank Network</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Start with an empty network and add nodes manually
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CSV/Excel Import Option */}
+              <div 
+                className="border rounded-lg overflow-hidden cursor-pointer hover:border-orange-400 transition-colors"
+                onClick={handleFileUpload}
+              >
+                <div className="bg-orange-50 dark:bg-orange-950/20 p-4 flex items-center gap-3">
+                  <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-full">
+                    <FileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-orange-600 dark:text-orange-400">Import Data</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Import from CSV or Excel file with existing data
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                onChange={handleFileChange}
+              />
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Network Generation Dialog */}
+      <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-500" />
+              Generate AI Network
+            </DialogTitle>
+            <DialogDescription>
+              Describe the professional network you want to create
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="ai-prompt">Your network description</Label>
+              <Textarea
+                id="ai-prompt"
+                placeholder="E.g., 'A professional network for a software engineer in San Francisco' or 'A network for a healthcare startup founder'"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="h-24 resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Be specific about industry, roles, and connections you're interested in.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="industry">Industry</Label>
+              <Select value={industry} onValueChange={setIndustry}>
+                <SelectTrigger id="industry">
+                  <SelectValue placeholder="Select industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Technology">Technology</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="Healthcare">Healthcare</SelectItem>
+                  <SelectItem value="Education">Education</SelectItem>
+                  <SelectItem value="Entertainment">Entertainment</SelectItem>
+                  <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                  <SelectItem value="Retail">Retail</SelectItem>
+                  <SelectItem value="Real Estate">Real Estate</SelectItem>
+                  <SelectItem value="Legal">Legal</SelectItem>
+                  <SelectItem value="Consulting">Consulting</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAIDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => createNetwork(false)} 
+              disabled={!prompt.trim() || isGenerating}
+              className="gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Generate Network
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

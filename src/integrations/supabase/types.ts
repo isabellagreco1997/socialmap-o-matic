@@ -18,6 +18,8 @@ export interface Database {
           source_id: string
           target_id: string
           updated_at: string
+          color: string | null
+          notes: string | null
         }
         Insert: {
           created_at?: string
@@ -27,6 +29,8 @@ export interface Database {
           source_id: string
           target_id: string
           updated_at?: string
+          color?: string | null
+          notes?: string | null
         }
         Update: {
           created_at?: string
@@ -36,6 +40,8 @@ export interface Database {
           source_id?: string
           target_id?: string
           updated_at?: string
+          color?: string | null
+          notes?: string | null
         }
         Relationships: [
           {

@@ -9,8 +9,21 @@
   status = 200
 
 [dev]
-  command = "npm run dev"
-  port = 8080
+  command = "vite"
+  port = 8888
   targetPort = 5173
   publish = "dist"
-  framework = "#custom" 
+  framework = "#custom"
+
+# Ensure environment variables are passed to functions
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["stripe"]
+
+# Add CORS headers for functions
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS" 

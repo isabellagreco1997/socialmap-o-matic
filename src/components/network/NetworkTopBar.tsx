@@ -50,9 +50,6 @@ const NetworkTopBar = ({
         <span className="text-lg font-medium">
           {currentNetwork?.name || 'Network 1'}
         </span>
-        <Button variant="ghost" size="icon" className="h-8 w-8 ml-1">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
       </Panel>
       
       <Panel position="top-right" className="flex gap-2 m-4 z-50">
@@ -64,10 +61,11 @@ const NetworkTopBar = ({
           <FileText className="h-4 w-4 mr-2" />
           Import CSV
         </Button>
-        <Button variant="outline" className="bg-white shadow-lg" onClick={() => toggleOverview()}>
+        {/* disabled for now */}
+        {/* <Button variant="outline" className="bg-white shadow-lg" onClick={() => toggleOverview()}>
           <LayoutPanelTop className="h-4 w-4 mr-2" />
           Overview
-        </Button>
+        </Button> */}
       </Panel>
 
       <Sheet open={isOverviewOpen} modal={false}>

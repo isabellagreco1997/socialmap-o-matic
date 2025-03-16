@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Pricing from "./pages/Pricing";
+import Account from "./pages/Account";
 import { AppLayout } from "./components/AppLayout";
 import AuthCallback from "./pages/AuthCallback";
 
@@ -51,6 +52,11 @@ const App = () => (
             <AppLayout>
               <Pricing />
             </AppLayout>
+          } />
+          <Route path="/account" element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
           } />
           <Route
             path="/network"

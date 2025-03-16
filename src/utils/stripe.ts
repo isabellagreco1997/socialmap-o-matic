@@ -2,9 +2,12 @@ import { loadStripe } from '@stripe/stripe-js';
 import { env } from '@/utils/env';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define environment
+const isDevelopment = import.meta.env.MODE === 'development';
+
 // Initialize Stripe
 const stripePromise = loadStripe(
-  import.meta.env.MODE === 'development'
+  isDevelopment
     ? env.stripe.test.publishableKey
     : env.stripe.live.publishableKey
 );
@@ -17,6 +20,15 @@ export async function redirectToCheckout(priceId: string) {
     // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
+
+    console.log('Redirecting to checkout with:', {
+      environment: isDevelopment ? 'development' : 'production',
+      priceId,
+      user: {
+        id: user.id,
+        email: user.email
+      }
+    });
 
     const { error } = await stripe.redirectToCheckout({
       mode: 'subscription',

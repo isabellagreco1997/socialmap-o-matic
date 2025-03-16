@@ -14,6 +14,7 @@ import { TemplatesDialog } from '@/components/TemplatesDialog';
 import { useNetworkHandlers } from '@/components/network/handlers';
 import EdgeLabelDialog from '@/components/EdgeLabelDialog';
 import NetworkChat from '@/components/network/NetworkChat';
+import { useFluidNodeMovement } from '@/hooks/useFluidNodeMovement';
 import type { Network, NodeData, EdgeData } from '@/types/network';
 import type { EdgeData as DialogEdgeData } from '@/components/EdgeLabelDialog';
 
@@ -49,6 +50,8 @@ export const Flow = () => {
     handleNetworksReorder
   } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks);
 
+  const { handleNodesChange } = useFluidNodeMovement();
+
   const filteredNetworks = networks.filter(network => network.name.toLowerCase().includes(searchQuery.toLowerCase())).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   useEffect(() => {
@@ -79,84 +82,40 @@ export const Flow = () => {
     fetchNetworks();
   }, [currentNetworkId, toast]);
 
-  const handleNodesChange = useCallback(async (changes: any) => {
-    // Apply changes to local state immediately
-    onNodesChange(changes);
+  const handleNodeChanges = useCallback((changes: any) => {
+    handleNodesChange(changes, onNodesChange, currentNetworkId, nodes);
+  }, [handleNodesChange, onNodesChange, currentNetworkId, nodes]);
 
-    // Only update positions when dragging ends
-    const positionChanges = changes.filter((change: any) => 
-      change.type === 'position' && 
-      change.dragging === false && 
-      typeof change.position?.x === 'number' && 
-      typeof change.position?.y === 'number'
-    );
+  // Custom handler for edge changes that saves to the database
+  const handleEdgesChange = useCallback((changes: any) => {
+    // Apply changes to the React Flow state
+    onEdgesChange(changes);
 
-    if (positionChanges.length > 0 && currentNetworkId) {
-      try {
-        // Batch update all position changes
-        const updates = await Promise.all(positionChanges.map(async change => {
-          // First fetch the existing node to preserve all fields
-          const { data: existingNode } = await supabase
-            .from('nodes')
-            .select('*')
-            .eq('id', change.id)
-            .single();
-
-          return {
-            ...existingNode,
-            id: change.id,
-            network_id: currentNetworkId,
-            x_position: Math.round(change.position.x),
-            y_position: Math.round(change.position.y),
-            updated_at: new Date().toISOString()
-          };
-        }));
-
-        const { error } = await supabase
-          .from('nodes')
-          .upsert(
-            updates,
-            {
-              onConflict: 'id',
-              ignoreDuplicates: false
+    // Process changes that need to be saved to the database
+    changes.forEach(change => {
+      if (change.type === 'remove') {
+        // When an edge is removed, delete it from the database
+        supabase.from('edges').delete().eq('id', change.id)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error deleting edge from database:', error);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to delete connection from database"
+              });
             }
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        // Update local state to match database
-        setNodes(nodes => 
-          nodes.map(node => {
-            const update = updates.find(u => u.id === node.id);
-            if (update) {
-              return {
-                ...node,
-                position: {
-                  x: update.x_position,
-                  y: update.y_position
-                }
-              };
-            }
-            return node;
-          })
-        );
-      } catch (error) {
-        console.error('Error updating node positions:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to save node positions"
-        });
+          });
       }
-    }
-  }, [currentNetworkId, onNodesChange, setNodes, toast]);
+    });
+  }, [onEdgesChange, toast]);
 
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!currentNetworkId) return;
       try {
+        console.log('Fetching network data for network:', currentNetworkId);
+        
         const [nodesResponse, edgesResponse] = await Promise.all([
           supabase.from('nodes')
             .select('*')
@@ -168,6 +127,8 @@ export const Flow = () => {
         
         if (nodesResponse.error) throw nodesResponse.error;
         if (edgesResponse.error) throw edgesResponse.error;
+        
+        console.log('Nodes from database:', nodesResponse.data);
         
         const nodesTodosPromises = nodesResponse.data.map(node => 
           supabase.from('todos').select('*').eq('node_id', node.id)
@@ -201,19 +162,21 @@ export const Flow = () => {
               imageUrl: node.image_url,
               date: node.date,
               address: node.address,
-              color: node.color,
+              color: node.color || '',
               contactDetails: {
                 notes: node.notes
               },
               todos: todoItems
             },
-            style: node.color ? {
+            style: node.color && typeof node.color === 'string' && node.color.trim() !== '' ? {
               backgroundColor: `${node.color}15`,
               borderColor: node.color,
               borderWidth: 2,
             } : undefined
           };
         });
+        
+        console.log('Nodes with todos:', nodesWithTodos);
 
         setNodes(nodesWithTodos);
         setEdges(edgesResponse.data.map(edge => ({
@@ -223,6 +186,8 @@ export const Flow = () => {
           type: 'custom',
           data: {
             label: edge.label || 'Connection',
+            color: edge.color || '#3b82f6',
+            notes: edge.notes || '',
             labelPosition: 'center'
           }
         })));
@@ -238,16 +203,80 @@ export const Flow = () => {
     fetchNetworkData();
   }, [currentNetworkId, setNodes, setEdges, toast]);
 
-  const onConnect = useCallback((params: Connection) => {
-    setEdges(eds => addEdge({
-      ...params,
-      type: 'custom',
-      data: {
-        label: 'New Connection',
-        labelPosition: 'center'
-      } as EdgeData
-    }, eds));
-  }, [setEdges]);
+  const onConnect = useCallback(async (params: Connection) => {
+    try {
+      // First, check if we have a valid network ID
+      if (!currentNetworkId) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No network selected. Please select a network first."
+        });
+        return;
+      }
+
+      // Save the edge to the database
+      const { data: newEdge, error } = await supabase
+        .from('edges')
+        .insert({
+          network_id: currentNetworkId,
+          source_id: params.source,
+          target_id: params.target,
+          label: 'New Connection',
+          color: '#3b82f6' // Default blue color
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving edge to database:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save connection to database"
+        });
+        return;
+      }
+
+      // Update the React Flow state with the edge from the database
+      setEdges(eds => addEdge({
+        ...params,
+        id: newEdge.id, // Use the database-generated ID
+        type: 'custom',
+        data: {
+          label: newEdge.label || 'New Connection',
+          labelPosition: 'center'
+        } as EdgeData
+      }, eds));
+
+      toast({
+        title: "Connection Created",
+        description: "Connection has been saved to the database"
+      });
+    } catch (error) {
+      console.error('Error in onConnect:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create connection"
+      });
+    }
+  }, [currentNetworkId, setEdges, toast]);
+
+  const handleImportCsvFromDialog = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      const headers = lines[0].split('\t').map(header => header.trim());
+      const dataRows = lines.slice(1).map(row => row.split('\t').map(cell => cell.trim())).filter(row => row.length === headers.length);
+      setCsvHeaders(headers);
+      setCsvRows(dataRows);
+      setIsCsvDialogOpen(true);
+    };
+    reader.readAsText(file);
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -265,23 +294,131 @@ export const Flow = () => {
     reader.readAsText(file);
   };
 
-  const handleEdgeLabelSave = useCallback((data: DialogEdgeData) => {
+  const handleEdgeLabelSave = useCallback(async (data: DialogEdgeData) => {
     if (!selectedEdge) return;
     
-    setEdges(eds => eds.map(edge => {
-      if (edge.id === selectedEdge.id) {
-        return {
-          ...edge,
-          data: {
-            ...edge.data,
-            label: data.label,
-            labelPosition: edge.data?.labelPosition || 'center'
-          }
-        };
+    try {
+      // Update the edge in the database
+      const { error } = await supabase
+        .from('edges')
+        .update({
+          label: data.label,
+          notes: data.notes,
+          color: data.color
+        })
+        .eq('id', selectedEdge.id);
+      
+      if (error) {
+        console.error('Error updating edge in database:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save connection details to database"
+        });
+        return;
       }
-      return edge;
-    }));
-  }, [selectedEdge, setEdges]);
+      
+      // Update the React Flow state
+      setEdges(eds => eds.map(edge => {
+        if (edge.id === selectedEdge.id) {
+          return {
+            ...edge,
+            data: {
+              ...edge.data,
+              label: data.label,
+              notes: data.notes,
+              labelPosition: edge.data?.labelPosition || 'center'
+            }
+          };
+        }
+        return edge;
+      }));
+      
+      toast({
+        title: "Connection Updated",
+        description: "Connection details have been saved to the database"
+      });
+    } catch (error) {
+      console.error('Error in handleEdgeLabelSave:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save connection details"
+      });
+    }
+  }, [selectedEdge, setEdges, toast]);
+
+  // Listen for todo-completed events from the NetworkSidebar component
+  useEffect(() => {
+    const handleTodoCompleted = (event: CustomEvent) => {
+      const { taskId, nodeId } = event.detail;
+      
+      // Update the node's todos
+      setNodes(prevNodes => 
+        prevNodes.map(node => {
+          if (node.id === nodeId && node.data.todos) {
+            // Update the todo in the node's data
+            const updatedTodos = node.data.todos.map(todo => 
+              todo.id === taskId ? { ...todo, completed: true } : todo
+            );
+            
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                todos: updatedTodos
+              }
+            };
+          }
+          return node;
+        })
+      );
+    };
+    
+    // Add event listener
+    window.addEventListener('todo-completed', handleTodoCompleted as EventListener);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('todo-completed', handleTodoCompleted as EventListener);
+    };
+  }, [setNodes]);
+
+  // Listen for todo-deleted events from the NetworkSidebar component
+  useEffect(() => {
+    const handleTodoDeleted = (event: CustomEvent) => {
+      const { taskId, nodeId } = event.detail;
+      
+      // Update the node's todos
+      setNodes(prevNodes => 
+        prevNodes.map(node => {
+          if (node.id === nodeId && node.data.todos) {
+            // Remove the todo from the node's data
+            const updatedTodos = node.data.todos.filter(todo => 
+              todo.id !== taskId
+            );
+            
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                todos: updatedTodos
+              }
+            };
+          }
+          return node;
+        })
+      );
+    };
+    
+    // Add event listener
+    window.addEventListener('todo-deleted', handleTodoDeleted as EventListener);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('todo-deleted', handleTodoDeleted as EventListener);
+    };
+  }, [setNodes]);
 
   return (
     <SidebarProvider defaultOpen>
@@ -297,7 +434,8 @@ export const Flow = () => {
               onNetworkSelect={setCurrentNetworkId} 
               onEditNetwork={setEditingNetwork} 
               onOpenTemplates={() => setIsTemplatesDialogOpen(true)} 
-              onNetworksReorder={handleNetworksReorder} 
+              onNetworksReorder={handleNetworksReorder}
+              onImportCsv={handleImportCsvFromDialog}
             />
           </SidebarContent>
         </Sidebar>
@@ -309,11 +447,11 @@ export const Flow = () => {
               edges={edges} 
               networks={networks} 
               currentNetworkId={currentNetworkId} 
-              onNodesChange={handleNodesChange} 
-              onEdgesChange={onEdgesChange} 
+              onNodesChange={handleNodeChanges} 
+              onEdgesChange={handleEdgesChange} 
               onConnect={onConnect} 
               onAddNode={() => setIsDialogOpen(true)} 
-              onImportCsv={() => document.getElementById('csv-input')?.click()} 
+              onImportCsv={() => setIsCsvDialogOpen(true)} 
             />
           </ReactFlowProvider>
 
