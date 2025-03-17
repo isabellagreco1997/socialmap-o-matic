@@ -38,6 +38,10 @@ export interface NodeData {
 export interface EdgeData {
   label: string;
   labelPosition?: string | number;
+  color?: string;
+  notes?: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
   [key: string]: unknown;
 }
 

@@ -31,7 +31,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
  
-    --ring: 215 20.2% 65.1%;
+    --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
   }
@@ -62,9 +62,9 @@
     --accent-foreground: 210 40% 98%;
  
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
+    --destructive-foreground: 210 40% 98%;
  
-    --ring: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
  
@@ -413,4 +413,43 @@
 
 [data-sidebar="sidebar"] {
   @apply bg-background text-foreground;
+}
+
+/* Progress bar indeterminate animation */
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+    width: 40%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    transform: translateX(100%);
+    width: 40%;
+  }
+}
+
+.animate-progress-indeterminate {
+  animation: progress-indeterminate 2s infinite linear;
+}
+
+/* Subtle network icon pulse animation */
+@keyframes network-pulse {
+  0% {
+    opacity: 0.15;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.15;
+    transform: scale(0.95);
+  }
+}
+
+.animate-network-pulse {
+  animation: network-pulse 3s infinite ease-in-out;
 }

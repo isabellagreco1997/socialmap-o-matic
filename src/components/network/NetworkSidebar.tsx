@@ -23,6 +23,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AccountModal } from "./AccountModal";
+import { toast } from "@/components/ui/use-toast";
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -34,6 +35,7 @@ interface NetworkSidebarProps {
   onOpenTemplates: () => void;
   onNetworksReorder: (networks: Network[]) => void;
   onImportCsv?: (file: File) => void;
+  onNetworkCreated?: (id: string, isAI: boolean) => void;
 }
 
 interface TodoItem {
@@ -89,7 +91,8 @@ const NetworkSidebar = ({
   onNetworkSelect,
   onEditNetwork,
   onNetworksReorder,
-  onImportCsv
+  onImportCsv,
+  onNetworkCreated
 }: NetworkSidebarProps) => {
   const navigate = useNavigate();
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
@@ -247,8 +250,17 @@ const NetworkSidebar = ({
     });
   };
 
-  const handleNetworkCreated = (networkId: string) => {
+  const handleNetworkCreated = (networkId: string, isAI: boolean = false) => {
+    console.log('NetworkSidebar: handleNetworkCreated called with', {networkId, isAI});
+    
+    // Select the network first
     onNetworkSelect(networkId);
+    
+    // Forward the event to the parent component, preserving the isAI flag
+    if (onNetworkCreated) {
+      console.log('NetworkSidebar: Forwarding to parent with isAI =', isAI);
+      onNetworkCreated(networkId, isAI);
+    }
   };
 
   const fetchNetworkTasks = async (networkId: string) => {
@@ -715,7 +727,10 @@ const NetworkSidebar = ({
                   Create Network
                 </Button>
               }
-              onNetworkCreated={handleNetworkCreated}
+              onNetworkCreated={(id, isAI) => {
+                console.log('NetworkSidebar: onNetworkCreated callback with id =', id, 'isAI =', isAI);
+                handleNetworkCreated(id, isAI);
+              }}
               onImportCsv={onImportCsv}
             />
 
@@ -747,8 +762,8 @@ const NetworkSidebar = ({
         </div>
       </div>
 
-      {/* Networks list - expanded to fill remaining space */}
-      <ScrollArea className="flex-1">
+      {/* Networks list with fixed height */}
+      <ScrollArea className="h-[300px] overflow-y-auto">
         <div className="px-2">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="networks">
@@ -830,6 +845,34 @@ const NetworkSidebar = ({
           >
             <User className="h-4 w-4" />
             Account
+          </Button>
+          
+          {/* Add divider before logout button */}
+          <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
+          
+          <Button 
+            variant="destructive" 
+            className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg"
+            onClick={async () => {
+              try {
+                await supabase.auth.signOut();
+                navigate('/login');
+                toast({
+                  title: "Logged out",
+                  description: "You have been successfully logged out"
+                });
+              } catch (error) {
+                console.error('Error signing out:', error);
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Failed to sign out"
+                });
+              }
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
           </Button>
         </div>
       </div>

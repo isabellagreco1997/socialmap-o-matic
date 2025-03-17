@@ -20,6 +20,8 @@ export interface Database {
           updated_at: string
           color: string | null
           notes: string | null
+          source_handle: string | null
+          target_handle: string | null
         }
         Insert: {
           created_at?: string
@@ -31,6 +33,8 @@ export interface Database {
           updated_at?: string
           color?: string | null
           notes?: string | null
+          source_handle?: string | null
+          target_handle?: string | null
         }
         Update: {
           created_at?: string
@@ -42,6 +46,8 @@ export interface Database {
           updated_at?: string
           color?: string | null
           notes?: string | null
+          source_handle?: string | null
+          target_handle?: string | null
         }
         Relationships: [
           {

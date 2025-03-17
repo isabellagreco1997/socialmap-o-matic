@@ -23,6 +23,8 @@ export interface EdgeData {
   label: string;
   notes?: string;
   color?: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
 }
 
 interface EdgeLabelDialogProps {
@@ -37,6 +39,8 @@ const EdgeLabelDialog = ({ open, onOpenChange, onSave, initialData }: EdgeLabelD
     label: initialData?.label || '',
     notes: initialData?.notes || '',
     color: initialData?.color || '#3b82f6',
+    sourceHandle: initialData?.sourceHandle || null,
+    targetHandle: initialData?.targetHandle || null,
   });
 
   const handleSave = () => {

@@ -63,6 +63,19 @@ const NetworkFlow = ({
     translateExtent: [[-Infinity, -Infinity], [Infinity, Infinity]], // Allow unlimited canvas size
     smoothConnections: true,
   };
+  
+  // Connection validation function to ensure proper handle connections
+  const isValidConnection = (connection: Connection) => {
+    // Ensure sourceHandle contains "source" and targetHandle contains "target"
+    if (connection.sourceHandle && connection.targetHandle) {
+      const isSourceHandleValid = connection.sourceHandle.includes('source');
+      const isTargetHandleValid = connection.targetHandle.includes('target');
+      
+      return isSourceHandleValid && isTargetHandleValid;
+    }
+    
+    return true; // Default to true if handles aren't specified
+  };
 
   return (
     <div className="h-full">
@@ -97,7 +110,8 @@ const NetworkFlow = ({
         className="bg-gradient-to-br from-sky-50 to-indigo-50"
         elevateNodesOnSelect={true}
         elevateEdgesOnSelect={true}
-        connectionMode={ConnectionMode.Loose}
+        connectionMode={ConnectionMode.Strict}
+        isValidConnection={isValidConnection}
       >
         <NetworkTopBar
           currentNetwork={networks.find(n => n.id === currentNetworkId)}

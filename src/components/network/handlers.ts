@@ -164,7 +164,7 @@ export const useNetworkHandlers = (
       if (networkError) throw networkError;
   
       // Increased spacing between nodes
-      const spacing = 300; // Increased from 200
+      const spacing = 500; // Increased from 300 to 500 for better visibility
       const gridSize = Math.ceil(Math.sqrt(template.nodes.length));
       
       // Calculate the center position to place nodes around
@@ -188,7 +188,7 @@ export const useNetworkHandlers = (
         const col = index % gridSize;
         
         // Add some random offset to avoid perfect grid alignment
-        const randomOffset = () => (Math.random() - 0.5) * 100; // Increased randomness
+        const randomOffset = () => (Math.random() - 0.5) * 200; // Increased from 100 to 200 for more organic layout
         
         const x_position = (col * spacing) - centerX + randomOffset();
         const y_position = (row * spacing) - centerY + randomOffset();
