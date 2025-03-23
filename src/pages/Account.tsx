@@ -20,6 +20,7 @@ export default function Account() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
   const { toast } = useToast();
   const { isSubscribed, subscriptionDetails, customerDetails, isLoading: subscriptionLoading } = useSubscription();
 
@@ -44,11 +45,33 @@ export default function Account() {
     fetchUser();
   }, []);
 
+  const checkUsernameExists = async (username: string, userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .neq('id', userId)
+      .single();
+    
+    return !!data;
+  };
+
   const handleUpdateProfile = async () => {
     if (!user) return;
     
     setUpdating(true);
+    setUsernameError("");
+    
     try {
+      // Check if the username already exists (but belongs to another user)
+      const usernameExists = await checkUsernameExists(username, user.id);
+      
+      if (usernameExists) {
+        setUsernameError("This username is already taken. Please try another one.");
+        setUpdating(false);
+        return;
+      }
+      
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: fullName,
@@ -76,6 +99,14 @@ export default function Account() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // Handle username change - clear error when user starts typing
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (usernameError) {
+      setUsernameError("");
     }
   };
 
@@ -161,8 +192,12 @@ export default function Account() {
                   <Input
                     id="username"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={handleUsernameChange}
+                    className={usernameError ? "border-red-500" : ""}
                   />
+                  {usernameError && (
+                    <p className="text-red-500 text-sm mt-1">{usernameError}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>

@@ -25,6 +25,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const { toast } = useToast();
   const { isSubscribed, subscriptionDetails, customerDetails, isLoading: subscriptionLoading } = useSubscription();
@@ -53,11 +54,33 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
     fetchUser();
   }, [open]);
 
+  const checkUsernameExists = async (username: string, userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .neq('id', userId)
+      .single();
+    
+    return !!data;
+  };
+
   const handleUpdateProfile = async () => {
     if (!user) return;
     
     setUpdating(true);
+    setUsernameError("");
+    
     try {
+      // Check if the username already exists (but belongs to another user)
+      const usernameExists = await checkUsernameExists(username, user.id);
+      
+      if (usernameExists) {
+        setUsernameError("This username is already taken. Please try another one.");
+        setUpdating(false);
+        return;
+      }
+      
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: fullName,
@@ -115,6 +138,14 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
     return "bg-green-100 text-green-800";
   };
 
+  // Handle username change - clear error when user starts typing
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (usernameError) {
+      setUsernameError("");
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,8 +198,12 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                       <Input
                         id="username"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={handleUsernameChange}
+                        className={usernameError ? "border-red-500" : ""}
                       />
+                      {usernameError && (
+                        <p className="text-red-500 text-sm mt-1">{usernameError}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>

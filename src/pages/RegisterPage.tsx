@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const RegisterPage = () => {
@@ -15,14 +14,56 @@ const RegisterPage = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Password validation criteria
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  
+  const isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+
+  const checkUsernameExists = async (username: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .single();
+    
+    return !!data;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check password validity before proceeding
+    if (!isPasswordValid) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Password",
+        description: "Please ensure your password meets all the requirements.",
+      });
+      return;
+    }
+    
     setIsLoading(true);
+    setUsernameError("");
 
     try {
+      // Check if username already exists
+      const usernameExists = await checkUsernameExists(username);
+      
+      if (usernameExists) {
+        setUsernameError("This username is already taken. Please try another one.");
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -84,6 +125,26 @@ const RegisterPage = () => {
     }
   };
 
+  // Handle username change - clear error when user starts typing
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (usernameError) {
+      setUsernameError("");
+    }
+  };
+
+  // Password validation component
+  const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
+    <div className="flex items-center gap-2 text-sm">
+      {met ? (
+        <CheckCircle2 className="h-4 w-4 text-green-500" />
+      ) : (
+        <XCircle className="h-4 w-4 text-red-500" />
+      )}
+      <span className={met ? "text-green-700" : "text-red-700"}>{text}</span>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Link to="/" className="p-4">
@@ -120,9 +181,13 @@ const RegisterPage = () => {
                 type="text"
                 placeholder="johndoe"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={handleUsernameChange}
                 required
+                className={usernameError ? "border-red-500" : ""}
               />
+              {usernameError && (
+                <p className="text-red-500 text-sm mt-1">{usernameError}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -143,8 +208,21 @@ const RegisterPage = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 required
+                className={passwordFocused && !isPasswordValid ? "border-red-500" : ""}
               />
+              {passwordFocused && (
+                <div className="mt-2 p-3 bg-muted rounded-md space-y-2">
+                  <p className="text-sm font-medium mb-2">Password must have:</p>
+                  <PasswordRequirement met={hasMinLength} text="At least 8 characters" />
+                  <PasswordRequirement met={hasUppercase} text="At least one uppercase letter (A-Z)" />
+                  <PasswordRequirement met={hasLowercase} text="At least one lowercase letter (a-z)" />
+                  <PasswordRequirement met={hasNumber} text="At least one number (0-9)" />
+                  <PasswordRequirement met={hasSpecialChar} text="At least one special character (!@#$%^&*)" />
+                </div>
+              )}
             </div>
             <Button
               type="submit"
