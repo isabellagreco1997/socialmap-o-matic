@@ -9,6 +9,45 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      ai_network_usage: {
+        Row: {
+          id: string
+          user_id: string
+          network_name: string
+          created_at: string
+          network_id: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          network_name: string
+          created_at?: string
+          network_id?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          network_name?: string
+          created_at?: string
+          network_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_network_usage_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_network_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       edges: {
         Row: {
           created_at: string
@@ -81,6 +120,7 @@ export interface Database {
           order: number | null
           updated_at: string
           user_id: string
+          is_ai: boolean | null
         }
         Insert: {
           created_at?: string
@@ -89,6 +129,7 @@ export interface Database {
           order?: number | null
           updated_at?: string
           user_id: string
+          is_ai?: boolean | null
         }
         Update: {
           created_at?: string
@@ -97,6 +138,7 @@ export interface Database {
           order?: number | null
           updated_at?: string
           user_id?: string
+          is_ai?: boolean | null
         }
         Relationships: []
       }

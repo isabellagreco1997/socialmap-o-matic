@@ -5,7 +5,7 @@ import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { SubscriptionModal } from "./SubscriptionModal";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -24,6 +24,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { AccountModal } from "./AccountModal";
 import { toast } from "@/components/ui/use-toast";
+import { env } from "@/utils/env";
+import { redirectToCheckout } from "@/utils/stripe";
 
 interface NetworkSidebarProps {
   networks: Network[];
@@ -95,8 +97,9 @@ const NetworkSidebar = ({
   onNetworkCreated
 }: NetworkSidebarProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed, isLoading: isSubscriptionLoading } = useSubscription();
   const [editingNetwork, setEditingNetwork] = useState<Network | null>(null);
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
@@ -130,6 +133,11 @@ const NetworkSidebar = ({
   });
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [currentNetworkStats, setCurrentNetworkStats] = useState({
+    nodes: 0,
+    edges: 0,
+    tasks: 0
+  });
 
   // Define an extended network type that includes optional description
   type ExtendedNetwork = Network & {
@@ -199,6 +207,68 @@ const NetworkSidebar = ({
       window.removeEventListener('todo-completed', handleTodoCompleted as EventListener);
     };
   }, []);
+
+  // Check for fromLogin parameter and directly redirect to Stripe checkout
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const fromLogin = searchParams.get('fromLogin');
+    
+    if (fromLogin === 'true') {
+      console.log("Detected fromLogin=true parameter", { 
+        isSubscriptionLoading, 
+        isSubscribed 
+      });
+      
+      // Remove the query parameter from URL without refreshing the page
+      navigate(location.pathname, { replace: true });
+      
+      // Always show the checkout for free users regardless of loading state
+      // This ensures free users can subscribe without waiting for subscription check
+      const redirectToStripeCheckout = async () => {
+        try {
+          const isDevelopment = import.meta.env.MODE === 'development';
+          
+          // Get price ID - use any to bypass typescript checking for now
+          const stripeEnv = env as any;
+          const priceId = isDevelopment 
+            ? stripeEnv.stripe.test.priceMonthly 
+            : stripeEnv.stripe.live.priceMonthly;
+          
+          console.log("Redirecting to checkout with price ID:", priceId);
+          await redirectToCheckout(priceId);
+        } catch (error) {
+          console.error('Error redirecting to checkout:', error);
+          
+          // If redirect fails, show the subscription modal as fallback
+          setIsSubscriptionModalOpen(true);
+          
+          toast({
+            title: "Checkout Error",
+            description: "Could not redirect to checkout. Please try again.",
+            variant: "destructive",
+          });
+        }
+      };
+      
+      // Handle different states based on subscription loading/status
+      if (isSubscriptionLoading) {
+        // While loading, assume user is free and show subscription modal
+        console.log("Subscription status is still loading, showing subscription modal as fallback");
+        setIsSubscriptionModalOpen(true);
+      } else if (isSubscribed) {
+        // User is already subscribed, show a welcoming toast
+        console.log("User already has an active subscription - not redirecting to checkout");
+        toast({
+          title: "Welcome back!",
+          description: "You're already subscribed to our premium plan. Enjoy all features!",
+        });
+      } else {
+        // User is not subscribed, redirect to checkout
+        console.log("User is not subscribed - redirecting to checkout");
+        redirectToStripeCheckout();
+      }
+    }
+  }, [location, navigate, isSubscribed, isSubscriptionLoading, toast]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -331,6 +401,11 @@ const NetworkSidebar = ({
     // Fetch network-specific tasks
     fetchNetworkTasks(network.id);
     
+    // Fetch network stats
+    getNetworkStats(network.id).then(stats => {
+      setCurrentNetworkStats(stats);
+    });
+    
     // If we haven't fetched all tasks yet, fetch them to ensure global state is up-to-date
     if (allTasks.length === 0) {
       fetchAllTasks();
@@ -342,6 +417,11 @@ const NetworkSidebar = ({
     setNetworkName("");
     setNetworkDescription("");
     setIsDeleteAlertOpen(false);
+    setCurrentNetworkStats({
+      nodes: 0,
+      edges: 0,
+      tasks: 0
+    });
   };
 
   const handleSaveNetwork = async () => {
@@ -386,6 +466,20 @@ const NetworkSidebar = ({
     if (!editingNetwork) return;
     
     try {
+      // Check if the network is AI-generated before deleting it
+      const { data: networkData, error: fetchError } = await supabase
+        .from('networks')
+        .select('is_ai')
+        .eq('id', editingNetwork.id)
+        .single();
+      
+      if (fetchError) {
+        console.error('Error fetching network data:', fetchError);
+      }
+      
+      // Store the AI status before deletion
+      const isAINetwork = networkData?.is_ai === true;
+      
       // Delete all nodes and edges in this network
       await supabase
         .from('nodes')
@@ -409,25 +503,79 @@ const NetworkSidebar = ({
       const updatedNetworks = networks.filter(network => network.id !== editingNetwork.id);
       onNetworksReorder(updatedNetworks);
       
-      // If the deleted network was selected, select another one
-      if (currentNetworkId === editingNetwork.id && updatedNetworks.length > 0) {
-        onNetworkSelect(updatedNetworks[0].id);
+      // If the deleted network was selected, select another one or clear selection
+      if (currentNetworkId === editingNetwork.id) {
+        if (updatedNetworks.length > 0) {
+          onNetworkSelect(updatedNetworks[0].id);
+        } else {
+          // If no networks left, explicitly select null to clear the canvas
+          onNetworkSelect(null as any);
+        }
       }
       
       closeEditPanel();
+      
+      // Dispatch an event to notify other components about the network deletion
+      // Include whether it was an AI-generated network
+      console.log('Dispatching network-deleted event from NetworkSidebar');
+      window.dispatchEvent(new CustomEvent('network-deleted', { 
+        detail: { 
+          networkId: editingNetwork.id,
+          isAI: isAINetwork
+        }
+      }));
     } catch (error) {
       console.error('Error deleting network:', error);
     }
   };
 
-  // Function to get network stats (this would be replaced with actual data in a real implementation)
-  const getNetworkStats = (networkId: string) => {
-    // This is a placeholder - in a real implementation, you would fetch this data from your database
-    return {
-      nodes: 12,
-      edges: 18,
-      tasks: 5
-    };
+  // Function to get network stats for a specific network
+  const getNetworkStats = async (networkId: string) => {
+    try {
+      // Get nodes for this network
+      const { data: nodes, error: nodesError } = await supabase
+        .from('nodes')
+        .select('id, type')
+        .eq('network_id', networkId);
+      
+      if (nodesError) throw nodesError;
+      
+      // Get edges for this network
+      const { data: edges, error: edgesError } = await supabase
+        .from('edges')
+        .select('id')
+        .eq('network_id', networkId);
+      
+      if (edgesError) throw edgesError;
+      
+      // Get tasks for this network's nodes
+      const nodeIds = nodes?.map(node => node.id) || [];
+      
+      let tasks = [];
+      if (nodeIds.length > 0) {
+        const { data: todoData, error: todosError } = await supabase
+          .from('todos')
+          .select('id, completed')
+          .in('node_id', nodeIds);
+        
+        if (todosError) throw todosError;
+        tasks = todoData || [];
+      }
+      
+      return {
+        nodes: nodes?.length || 0,
+        edges: edges?.length || 0,
+        tasks: tasks.length || 0
+      };
+    } catch (error) {
+      console.error('Error fetching network stats:', error);
+      // Return default values if there's an error
+      return {
+        nodes: 0,
+        edges: 0,
+        tasks: 0
+      };
+    }
   };
 
   // Function to mark a task as complete
@@ -646,15 +794,56 @@ const NetworkSidebar = ({
           };
         });
       
-      // Combine with other events (in a real implementation, you'd fetch these from your database)
-      setCalendarEvents(taskEvents);
+      // Fetch event nodes from all networks
+      const eventNodes = await fetchEventNodes();
+      
+      // Combine tasks and event nodes
+      setCalendarEvents([...taskEvents, ...eventNodes]);
       
       // Update date events if a date is selected
       if (selectedDate) {
-        updateDateEvents(selectedDate, taskEvents);
+        updateDateEvents(selectedDate, [...taskEvents, ...eventNodes]);
       }
     } catch (error) {
       console.error('Error fetching all tasks:', error);
+    }
+  };
+  
+  // Function to fetch event nodes from all networks
+  const fetchEventNodes = async (): Promise<CalendarEvent[]> => {
+    try {
+      // Get all nodes of type "event" that have a date field
+      const { data: events, error } = await supabase
+        .from('nodes')
+        .select('id, name, network_id, date, notes')
+        .eq('type', 'event')
+        .not('date', 'is', null);
+      
+      if (error) throw error;
+      
+      if (!events || events.length === 0) {
+        return [];
+      }
+      
+      // Transform events into CalendarEvent format
+      const eventNodes = events.map(event => {
+        const network = networks.find(n => n.id === event.network_id);
+        return {
+          id: event.id,
+          title: event.name,
+          date: new Date(event.date as string),
+          networkId: event.network_id,
+          networkName: network?.name || 'Unknown',
+          nodeId: event.id,
+          nodeName: event.name,
+          type: 'event' as const
+        };
+      });
+      
+      return eventNodes;
+    } catch (error) {
+      console.error('Error fetching event nodes:', error);
+      return [];
     }
   };
   
@@ -952,15 +1141,15 @@ const NetworkSidebar = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-muted/50 p-4 rounded-lg flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold">{getNetworkStats(editingNetwork.id).nodes}</span>
+                      <span className="text-2xl font-bold">{currentNetworkStats.nodes}</span>
                       <span className="text-sm text-muted-foreground">Nodes</span>
                     </div>
                     <div className="bg-muted/50 p-4 rounded-lg flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold">{getNetworkStats(editingNetwork.id).edges}</span>
+                      <span className="text-2xl font-bold">{currentNetworkStats.edges}</span>
                       <span className="text-sm text-muted-foreground">Connections</span>
                     </div>
                     <div className="bg-muted/50 p-4 rounded-lg flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold">{getNetworkStats(editingNetwork.id).tasks}</span>
+                      <span className="text-2xl font-bold">{currentNetworkStats.tasks}</span>
                       <span className="text-sm text-muted-foreground">Tasks</span>
                     </div>
                   </div>
@@ -1290,9 +1479,19 @@ const NetworkSidebar = ({
                             onSelect={(date) => date && updateDateEvents(date)}
                             className="rounded-md"
                             modifiers={{
-                              event: calendarEvents.map(event => new Date(event.date))
+                              task: calendarEvents
+                                .filter(event => event.type === 'task')
+                                .map(event => new Date(event.date)),
+                              event: calendarEvents
+                                .filter(event => event.type === 'event')
+                                .map(event => new Date(event.date))
                             }}
                             modifiersStyles={{
+                              task: {
+                                fontWeight: 'bold',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                borderRadius: '50%'
+                              },
                               event: {
                                 fontWeight: 'bold',
                                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -1313,6 +1512,22 @@ const NetworkSidebar = ({
                             </div>
                           ) : (
                             <div className="space-y-2">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs text-muted-foreground">
+                                  Showing {dateEvents.length} {dateEvents.length === 1 ? 'item' : 'items'}
+                                </span>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                                    <span>Tasks</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                    <span>Events</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
                               {dateEvents.map(event => (
                                 <div key={event.id} className="p-2 border rounded-md">
                                   <div className="flex items-start gap-2">
@@ -1322,10 +1537,15 @@ const NetworkSidebar = ({
                                     )} />
                                     <div>
                                       <p className="text-sm font-medium">{event.title}</p>
-                                      <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <Badge variant="outline" className="text-xs">
                                           {event.type === 'task' ? 'Task' : 'Event'}
                                         </Badge>
+                                        {event.nodeName && event.type === 'task' && (
+                                          <Badge variant="outline" className="text-xs">
+                                            {event.nodeName}
+                                          </Badge>
+                                        )}
                                         <Badge variant="secondary" className="text-xs">
                                           {event.networkName}
                                         </Badge>

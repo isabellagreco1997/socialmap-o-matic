@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -15,8 +15,8 @@ const AuthCallback = () => {
         if (error) throw error;
 
         if (session) {
-          // Successful login, redirect to dashboard
-          navigate('/network');
+          // Successful login, redirect to dashboard with fromLogin parameter
+          navigate('/network?fromLogin=true');
         } else {
           // No session found, redirect to login
           navigate('/login');

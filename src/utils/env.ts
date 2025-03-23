@@ -10,8 +10,13 @@ export const env = {
     anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
   },
   app: {
-    name: import.meta.env.VITE_APP_NAME,
+    name: import.meta.env.VITE_APP_NAME || 'RelMaps',
     url: import.meta.env.VITE_APP_URL,
+    supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'support@relmaps.com',
+    privacyEmail: import.meta.env.VITE_PRIVACY_EMAIL || 'privacy@relmaps.com',
+  },
+  brand: {
+    color: import.meta.env.VITE_BRAND_COLOR || '#0A2463',
   },
   stripe: {
     test: {
@@ -58,6 +63,6 @@ const requiredEnvVars = [
 
 for (const envVar of requiredEnvVars) {
   if (!import.meta.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
+    console.warn(`Missing environment variable: ${envVar}. Using default value if available.`);
   }
 } 

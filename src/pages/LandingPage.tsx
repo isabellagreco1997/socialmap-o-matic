@@ -1,14 +1,39 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, Network, Route, Share2, Star } from "lucide-react";
+import { CheckCircle2, Network, Route, Share2, Star, Menu, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const LandingPage = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isYearlyBilling, setIsYearlyBilling] = useState(false);
+  
+  // Add smooth scrolling effect with scroll padding to account for fixed header
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    document.documentElement.style.scrollPaddingTop = '80px'; // Add padding to account for fixed header
+    
+    // Cleanup function to reset scroll behavior when component unmounts
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      document.documentElement.style.scrollPaddingTop = '0';
+    };
+  }, []);
+  
+  // Handle anchor link click to scroll smoothly and close mobile menu
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const href = e.currentTarget.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      setMobileMenuOpen(false);
+    }
+  };
+
   // Structured data for Google
   const structuredData = {
     "@context": "https://schema.org",
@@ -44,37 +69,96 @@ const LandingPage = () => {
           <div className="container mx-auto">
             <nav className="flex h-16 items-center justify-between" aria-label="Main navigation">
               <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#0A2463] flex items-center justify-center text-white">
-                <Share2 className="w-5 h-5 rotate-90" />
+                <div className="w-8 h-8 rounded-lg bg-[#0A2463] flex items-center justify-center text-white">
+                  <Share2 className="w-5 h-5 rotate-90" />
+                </div>
+                <span className="text-xl font-semibold">RelMaps</span>
               </div>
-              <span className="text-xl font-semibold">RelMaps</span>
-            </div>
+              
               <div className="hidden md:flex items-center gap-8">
-                <Link to="/pricing" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors">
-                  Pricing
-                </Link>
-                <Link to="#features" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors">
+                <a href="#features" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors" onClick={handleAnchorClick}>
                   Features
-                </Link>
-                <Link to="#faq" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors">
+                </a>
+                <a href="#testimonials" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors" onClick={handleAnchorClick}>
+                  Testimonials
+                </a>
+                <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors" onClick={handleAnchorClick}>
+                  Pricing
+                </a>
+                <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors" onClick={handleAnchorClick}>
                   FAQs
-                </Link>
+                </a>
               </div>
-              <div className="flex gap-3">
-                <Button variant="outline" asChild className="rounded-full">
-                <Link to="/login">Log In</Link>
-              </Button>
-                <Button className="bg-[#0A2463] hover:bg-[#0A2463]/90 rounded-full" asChild>
-                <Link to="/login">Get Started</Link>
-              </Button>
-            </div>
-          </nav>
+              
+              <div className="flex items-center gap-3">
+                <div className="md:hidden">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle menu"
+                  >
+                    {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                  </Button>
+                </div>
+                <Button variant="outline" asChild className="rounded-full hidden md:inline-flex">
+                  <Link to="/login">Log In</Link>
+                </Button>
+                <Button className="bg-[#0A2463] hover:bg-[#0A2463]/90 rounded-full hidden md:inline-flex" asChild>
+                  <Link to="/login">Get Started</Link>
+                </Button>
+              </div>
+            </nav>
           </div>
+          
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden py-4 px-4 bg-white border-b">
+              <nav className="flex flex-col space-y-4">
+                <a 
+                  href="#features" 
+                  className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors py-2"
+                  onClick={handleAnchorClick}
+                >
+                  Features
+                </a>
+                <a 
+                  href="#testimonials" 
+                  className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors py-2"
+                  onClick={handleAnchorClick}
+                >
+                  Testimonials
+                </a>
+                <a 
+                  href="#pricing" 
+                  className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors py-2"
+                  onClick={handleAnchorClick}
+                >
+                  Pricing
+                </a>
+                <a 
+                  href="#faq" 
+                  className="text-sm font-medium text-gray-600 hover:text-[#0A2463] transition-colors py-2"
+                  onClick={handleAnchorClick}
+                >
+                  FAQs
+                </a>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" asChild className="rounded-full flex-1">
+                    <Link to="/login">Log In</Link>
+                  </Button>
+                  <Button className="bg-[#0A2463] hover:bg-[#0A2463]/90 rounded-full flex-1" asChild>
+                    <Link to="/login">Get Started</Link>
+                  </Button>
+                </div>
+              </nav>
+            </div>
+          )}
         </header>
 
         <main>
           {/* Hero Section */}
-          <section className="py-24 md:py-32 px-4 bg-gradient-to-b from-white to-blue-50" aria-labelledby="hero-heading">
+          <section className="py-24 md:py-32 px-4 bg-gradient-to-b from-white to-blue-50" id="hero" aria-labelledby="hero-heading">
             <div className="container mx-auto">
               <div className="max-w-3xl mx-auto text-center space-y-8">
                 <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold tracking-tight text-gray-900">
@@ -88,7 +172,7 @@ const LandingPage = () => {
                     <Link to="/network">Start Mapping</Link>
                   </Button>
                   <Button size="lg" variant="outline" className="text-lg h-14 px-10 rounded-full" asChild>
-                    <Link to="#features">Learn More</Link>
+                    <a href="#features" onClick={handleAnchorClick}>Learn More</a>
                   </Button>
                 </div>
               </div>
@@ -147,7 +231,7 @@ const LandingPage = () => {
           </section>
 
           {/* Testimonials Section */}
-          <section className="py-24 px-4 bg-blue-50">
+          <section id="testimonials" className="py-24 px-4 bg-blue-50">
             <div className="container mx-auto">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
@@ -224,13 +308,30 @@ const LandingPage = () => {
           </section>
 
           {/* Pricing Section */}
-          <section className="py-24 px-4 bg-white">
+          <section id="pricing" className="py-24 px-4 bg-white">
             <div className="container mx-auto">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simple Pricing</h2>
                 <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                   Choose the plan that works best for you and your network.
                 </p>
+                
+                <div className="flex items-center justify-center mt-8 gap-4">
+                  <span className={`text-sm font-medium ${!isYearlyBilling ? 'text-[#0A2463]' : 'text-gray-500'}`}>
+                    Monthly
+                  </span>
+                  <Switch
+                    checked={isYearlyBilling}
+                    onCheckedChange={setIsYearlyBilling}
+                    id="billing-toggle"
+                  />
+                  <Label 
+                    htmlFor="billing-toggle" 
+                    className={`text-sm font-medium ${isYearlyBilling ? 'text-[#0A2463]' : 'text-gray-500'}`}
+                  >
+                    Yearly <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full ml-1">Save 40%</span>
+                  </Label>
+                </div>
               </div>
               
               <div className="flex flex-col md:flex-row justify-center gap-8 max-w-4xl mx-auto">
@@ -248,7 +349,7 @@ const LandingPage = () => {
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5 text-[#0A2463]" />
-                      <span>Task management</span>
+                      <span>Basic task management</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5 text-[#0A2463]" />
@@ -256,17 +357,26 @@ const LandingPage = () => {
                     </li>
                   </ul>
                   <Button className="w-full rounded-full" variant="outline" asChild>
-                    <Link to="/network">Get Started</Link>
+                    <Link to="/login">Get Started</Link>
                   </Button>
                 </div>
                 
-                <div className="bg-[#0A2463] p-8 rounded-xl shadow-xl text-white text-center flex-1 transform md:scale-105">
+                <div className="bg-[#0A2463] p-8 rounded-xl shadow-xl text-white text-center flex-1 transform md:scale-105 relative">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm">Most Popular</span>
                     </div>
-                    <h3 className="text-xl font-semibold mb-4">Master Networker</h3>
-                  <p className="text-3xl font-bold mb-6">$12<span className="text-base font-normal text-blue-200">/month</span></p>
-                  <p className="text-sm text-blue-200 mb-4">Billed annually at $144</p>
+                    <h3 className="text-xl font-semibold mb-4">RelMaps Pro</h3>
+                  {isYearlyBilling ? (
+                    <>
+                      <p className="text-3xl font-bold mb-2">$144<span className="text-base font-normal text-blue-200">/year</span></p>
+                      <p className="text-sm text-blue-200 mb-4">Just $12/month, billed annually</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-3xl font-bold mb-6">$20<span className="text-base font-normal text-blue-200">/month</span></p>
+                      <p className="text-sm text-blue-200 mb-4">Billed monthly</p>
+                    </>
+                  )}
                   <ul className="space-y-4 mb-8 text-left">
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5 text-blue-300" />
@@ -289,7 +399,9 @@ const LandingPage = () => {
                         <span>Priority support</span>
                       </li>
                     </ul>
-                  <Button className="w-full bg-white text-[#0A2463] hover:bg-blue-50 rounded-full">Subscribe Now</Button>
+                  <Button className="w-full bg-white text-[#0A2463] hover:bg-blue-50 rounded-full" asChild>
+                    <Link to="/login">Get Started</Link>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -335,14 +447,14 @@ const LandingPage = () => {
           </section>
 
           {/* CTA Section */}
-          <section className="py-24 px-4 bg-[#0A2463] text-white">
+          <section id="cta" className="py-24 px-4 bg-[#0A2463] text-white">
             <div className="container mx-auto max-w-4xl text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to map your network?</h2>
               <p className="text-xl text-blue-200 mb-10 max-w-2xl mx-auto">
                 Start visualizing your professional connections today and unlock new opportunities.
               </p>
               <Button size="lg" className="bg-white text-[#0A2463] hover:bg-blue-50 text-lg h-14 px-10 rounded-full" asChild>
-                <Link to="/network">Get Started for Free</Link>
+                <Link to="/login">Get Started for Free</Link>
               </Button>
             </div>
           </section>

@@ -1,6 +1,6 @@
 import { ReactFlowProvider, addEdge, useNodesState, useEdgesState, Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,9 @@ import { useFluidNodeMovement } from '@/hooks/useFluidNodeMovement';
 import NetworkLoadingOverlay from '@/components/network/NetworkLoadingOverlay';
 import type { Network, NodeData, EdgeData } from '@/types/network';
 import type { EdgeData as DialogEdgeData } from '@/components/EdgeLabelDialog';
+import { LayoutGrid, PlusIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CreateNetworkDialog } from '@/components/CreateNetworkDialog';
 
 export const Flow = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -42,6 +45,8 @@ export const Flow = () => {
   const [networkName, setNetworkName] = useState("");
   const [networkDescription, setNetworkDescription] = useState("");
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const createDialogTriggerRef = useRef<HTMLButtonElement>(null);
 
   const {
     handleAddNode,
@@ -57,6 +62,18 @@ export const Flow = () => {
 
   const filteredNetworks = networks.filter(network => network.name.toLowerCase().includes(searchQuery.toLowerCase())).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
+  // Auto-open create dialog when no networks exist
+  useEffect(() => {
+    if (!isLoading && networks.length === 0) {
+      // Use a short timeout to ensure the ref is available
+      setTimeout(() => {
+        if (createDialogTriggerRef.current) {
+          createDialogTriggerRef.current.click();
+        }
+      }, 500);
+    }
+  }, [isLoading, networks.length]);
+
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
@@ -70,6 +87,9 @@ export const Flow = () => {
         setNetworks(networksData);
         if (networksData.length > 0 && !currentNetworkId) {
           setCurrentNetworkId(networksData[0].id);
+        } else if (networksData.length === 0) {
+          // Clear the current network ID when there are no networks
+          setCurrentNetworkId(null);
         }
       } catch (error) {
         console.error('Error fetching networks:', error);
@@ -115,7 +135,13 @@ export const Flow = () => {
 
   useEffect(() => {
     const fetchNetworkData = async () => {
-      if (!currentNetworkId) return;
+      if (!currentNetworkId) {
+        // Clear nodes and edges when no network is selected
+        setNodes([]);
+        setEdges([]);
+        return;
+      }
+      
       try {
         console.log('Fetching network data for network:', currentNetworkId);
         
@@ -668,6 +694,35 @@ export const Flow = () => {
     };
   }, []);
 
+  // Listen for network deletion events
+  useEffect(() => {
+    const handleNetworkDeleted = (event: CustomEvent) => {
+      const { networkId } = event.detail;
+      console.log('Network deleted event received in NetworkMap:', networkId);
+      
+      // If the deleted network is the current one, clear the selection
+      if (networkId === currentNetworkId) {
+        // Find next available network to select
+        const nextNetwork = networks.find(network => network.id !== networkId);
+        if (nextNetwork) {
+          setCurrentNetworkId(nextNetwork.id);
+        } else {
+          // No networks left, clear the current selection
+          setCurrentNetworkId(null);
+          // Clear the canvas
+          setNodes([]);
+          setEdges([]);
+        }
+      }
+    };
+
+    window.addEventListener('network-deleted', handleNetworkDeleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('network-deleted', handleNetworkDeleted as EventListener);
+    };
+  }, [currentNetworkId, networks]);
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -692,19 +747,45 @@ export const Flow = () => {
         <div className="flex-1 relative">
           <NetworkLoadingOverlay isGenerating={isGeneratingNetwork} />
           
-          <ReactFlowProvider>
-            <NetworkFlow 
-              nodes={nodes} 
-              edges={edges} 
-              networks={networks} 
-              currentNetworkId={currentNetworkId} 
-              onNodesChange={handleNodeChanges} 
-              onEdgesChange={handleEdgesChange} 
-              onConnect={onConnect} 
-              onAddNode={() => setIsDialogOpen(true)} 
-              onImportCsv={() => setIsCsvDialogOpen(true)} 
-            />
-          </ReactFlowProvider>
+          {/* Empty state when there are no networks */}
+          {networks.length === 0 && !isLoading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
+              <div className="text-center max-w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                <LayoutGrid className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold mb-2">No Networks Found</h2>
+                <p className="text-muted-foreground mb-6">
+                  Get started by creating your first network to map out your connections.
+                </p>
+                <CreateNetworkDialog 
+                  trigger={
+                    <Button 
+                      className="w-full"
+                      ref={createDialogTriggerRef}
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Create Your First Network
+                    </Button>
+                  }
+                  onNetworkCreated={handleNetworkCreated}
+                  onImportCsv={handleImportCsvFromDialog}
+                />
+              </div>
+            </div>
+          ) : (
+            <ReactFlowProvider>
+              <NetworkFlow 
+                nodes={nodes} 
+                edges={edges} 
+                networks={networks} 
+                currentNetworkId={currentNetworkId} 
+                onNodesChange={handleNodeChanges} 
+                onEdgesChange={handleEdgesChange} 
+                onConnect={onConnect} 
+                onAddNode={() => setIsDialogOpen(true)} 
+                onImportCsv={() => setIsCsvDialogOpen(true)} 
+              />
+            </ReactFlowProvider>
+          )}
 
           <AddNodeDialog 
             open={isDialogOpen} 

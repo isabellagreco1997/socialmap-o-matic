@@ -39,7 +39,7 @@ const LoginPage = () => {
           title: "Success",
           description: "Successfully logged in!",
         });
-        navigate("/network");
+        navigate("/network?fromLogin=true");
       }
     } catch (error) {
       toast({

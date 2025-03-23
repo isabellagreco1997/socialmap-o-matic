@@ -9,7 +9,8 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, includeFooter = true }: AppLayoutProps) {
   const location = useLocation();
-  const showNavbar = location.pathname !== "/network";
+  // Don't show navbar on network, login, and register pages
+  const showNavbar = !(["/network", "/login", "/register"].includes(location.pathname));
 
   return (
     <div className="min-h-screen flex flex-col">

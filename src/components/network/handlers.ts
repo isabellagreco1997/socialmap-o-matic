@@ -397,6 +397,18 @@ export const useNetworkHandlers = (
 
   const handleDeleteNetwork = async (networkId: string) => {
     try {
+      // Check if the network is AI-generated before deleting it
+      const { data: networkData, error: fetchError } = await supabase
+        .from('networks')
+        .select('is_ai')
+        .eq('id', networkId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Store the AI status before deletion
+      const isAINetwork = networkData?.is_ai === true;
+      
       const { error } = await supabase
         .from('networks')
         .delete()
@@ -404,12 +416,21 @@ export const useNetworkHandlers = (
       
       if (error) throw error;
 
-      setNetworks(networks.filter(network => network.id !== networkId));
+      // Update local state
+      const updatedNetworks = networks.filter(network => network.id !== networkId);
+      setNetworks(updatedNetworks);
       setEditingNetwork(null);
+      
       toast({
         title: "Network deleted",
         description: "Network has been successfully deleted"
       });
+      
+      // Dispatch an event to notify other components about the network deletion
+      // Include whether it was an AI-generated network
+      window.dispatchEvent(new CustomEvent('network-deleted', { 
+        detail: { networkId, isAI: isAINetwork }
+      }));
     } catch (error) {
       console.error('Error deleting network:', error);
       toast({

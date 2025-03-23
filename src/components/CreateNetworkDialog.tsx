@@ -58,22 +58,57 @@ export const CreateNetworkDialog = ({
   const canUseAI = isSubscribed || userNetworkCount < FREE_NETWORK_LIMIT;
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
-  // Fetch user's network count
+  // Add this function to fetch AI network count reliably
+  const getAINetworkCount = async (userId: string): Promise<number> => {
+    // First try the ai_network_usage table (preferred)
+    try {
+      // Use simple query with count method
+      const { data, error } = await supabase
+        .from('ai_network_usage')
+        .select('id')
+        .eq('user_id', userId);
+      
+      if (!error && data) {
+        console.log('AI network usage count from usage table:', data.length);
+        return data.length;
+      }
+    } catch (e) {
+      console.error('Error querying ai_network_usage table:', e);
+    }
+    
+    // Fall back to networks with is_ai=true
+    try {
+      const { data, error } = await supabase
+        .from('networks')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_ai', true);
+      
+      if (!error && data) {
+        console.log('AI network count from networks table:', data.length);
+        return data.length;
+      }
+    } catch (e) {
+      console.error('Error querying networks table for AI networks:', e);
+    }
+    
+    // Default to 0 if all else fails
+    return 0;
+  };
+
+  // Update the fetchUserNetworkCount function
   useEffect(() => {
     const fetchUserNetworkCount = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-
-        const { count, error } = await supabase
-          .from('networks')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setUserNetworkCount(count || 0);
+        
+        // Use the reliable function to get AI network count
+        const count = await getAINetworkCount(user.id);
+        setUserNetworkCount(count);
       } catch (error) {
         console.error('Error fetching network count:', error);
+        setUserNetworkCount(0);
       }
     };
 
@@ -81,6 +116,44 @@ export const CreateNetworkDialog = ({
       fetchUserNetworkCount();
     }
   }, [isOpen, showAIDialog]);
+
+  // Add a network deletion listener to refresh counts
+  useEffect(() => {
+    // Listen for network deletion events
+    const handleNetworkDelete = (event: CustomEvent) => {
+      console.log('Network deleted event received:', event.detail);
+      
+      // IMPORTANT: We should NOT update the count when an AI network is deleted 
+      // That's because we want to keep track of ALL AI networks ever created
+      // So we will explicitly ignore this event for counting purposes
+
+      // Instead, we'll verify the current count is correct from the database
+      // But we won't decrement the count just because a network was deleted
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          // Just verify the count is correct, but deletion should not change it
+          getAINetworkCount(user.id).then(count => {
+            // Only update if the count is HIGHER than what we have
+            // This ensures we never decrease the count when networks are deleted
+            if (count > userNetworkCount) {
+              console.log('Updating AI network count to reflect new records:', count);
+              setUserNetworkCount(count);
+            } else {
+              console.log('Ignoring network deletion for AI count purposes');
+            }
+          });
+        }
+      });
+    };
+
+    // Add event listener for network deletion
+    window.addEventListener('network-deleted', handleNetworkDelete as EventListener);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('network-deleted', handleNetworkDelete as EventListener);
+    };
+  }, [userNetworkCount]);
 
   const createNetwork = async (isBlank: boolean = true) => {
     console.log('CreateNetworkDialog: createNetwork called with isBlank =', isBlank);
@@ -101,87 +174,37 @@ export const CreateNetworkDialog = ({
         }
       }
 
-      const { data: network, error } = await supabase
-        .from('networks')
-        .insert([{
-          name: isBlank ? networkName : prompt,
-          user_id: user.id
-        }])
-        .select()
-        .single();
+      // Try to insert with the is_ai field
+      try {
+        const { data: network, error } = await supabase
+          .from('networks')
+          .insert([{
+            name: isBlank ? networkName : prompt,
+            user_id: user.id,
+            is_ai: !isBlank // Mark AI-generated networks
+          }])
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Close the dialog for blank networks immediately
-      if (isBlank) {
-        console.log('CreateNetworkDialog: Creating blank network with ID:', network?.id);
-        setIsOpen(false);
-        onOpenChange?.(false);
+        handleNetworkCreated(network, isBlank);
+      } catch (insertError) {
+        console.error('Error inserting network with is_ai field:', insertError);
         
-        // Call onNetworkCreated with explicit isAI=false parameter for blank networks
-        if (network && onNetworkCreated) {
-          console.log('CreateNetworkDialog: Calling onNetworkCreated for blank network with isAI=false');
-          onNetworkCreated(network.id, false);
-        }
+        // Fall back to inserting without the is_ai field
+        const { data: network, error } = await supabase
+          .from('networks')
+          .insert([{
+            name: isBlank ? networkName : prompt,
+            user_id: user.id
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
         
-        toast({
-          title: "Network created",
-          description: "Created a blank network"
-        });
-        return;
-      }
-
-      if (!isBlank) {
-        setIsGenerating(true);
-        try {
-          // Close both dialogs immediately when generation starts
-          setShowAIDialog(false);
-          setIsOpen(false);
-          onOpenChange?.(false);
-          
-          // Call onNetworkCreated with isAI=true parameter to indicate this is an AI-generated network
-          if (onNetworkCreated && network) {
-            console.log("Starting AI network generation for network:", network.id);
-            onNetworkCreated(network.id, true);
-          }
-          
-          // Call the AI network generation function
-          await generateNetworkFromPrompt(network.id, prompt, industry);
-          
-          // No need to call onNetworkCreated again here as it would trigger another network selection
-          // The network-generation-complete event will handle refreshing the data
-          
-          toast({
-            title: "Network generated",
-            description: "Created an AI-generated network based on your prompt"
-          });
-        } catch (genError) {
-          console.error('Error generating AI network:', genError);
-          toast({
-            variant: "destructive",
-            title: "Generation Error",
-            description: "Failed to generate AI network, but created a basic network"
-          });
-          
-          // Fallback to creating a simple network if AI generation fails
-          const nodes = [
-            { name: "Central Node", type: "person", x_position: 0, y_position: 0 },
-            { name: "Connected Node 1", type: "person", x_position: 200, y_position: 0 },
-            { name: "Connected Node 2", type: "person", x_position: -200, y_position: 0 },
-          ];
-
-          for (const node of nodes) {
-            if (node.name && node.name.trim() !== '') {
-              await supabase.from('nodes').insert({
-                ...node,
-                name: node.name.trim(),
-                network_id: network.id
-              });
-            }
-          }
-        } finally {
-          setIsGenerating(false);
-        }
+        handleNetworkCreated(network, isBlank);
       }
     } catch (error) {
       console.error('Error creating network:', error);
@@ -194,6 +217,140 @@ export const CreateNetworkDialog = ({
       // Close the dialog even if there's an error
       setIsOpen(false);
       onOpenChange?.(false);
+    }
+  };
+
+  // Helper function to handle network creation success
+  const handleNetworkCreated = (network: any, isBlank: boolean) => {
+    // Close the dialog for blank networks immediately
+    if (isBlank) {
+      console.log('CreateNetworkDialog: Creating blank network with ID:', network?.id);
+      setIsOpen(false);
+      onOpenChange?.(false);
+      
+      // Call onNetworkCreated with explicit isAI=false parameter for blank networks
+      if (network && onNetworkCreated) {
+        console.log('CreateNetworkDialog: Calling onNetworkCreated for blank network with isAI=false');
+        onNetworkCreated(network.id, false);
+      }
+      
+      toast({
+        title: "Network created",
+        description: "Created a blank network"
+      });
+      return;
+    }
+
+    if (!isBlank) {
+      // Record AI network usage - this persists even if the network is deleted later
+      recordAINetworkUsage(network);
+      
+      setIsGenerating(true);
+      try {
+        // Close both dialogs immediately when generation starts
+        setShowAIDialog(false);
+        setIsOpen(false);
+        onOpenChange?.(false);
+        
+        // Call onNetworkCreated with isAI=true parameter to indicate this is an AI-generated network
+        if (onNetworkCreated && network) {
+          console.log("Starting AI network generation for network:", network.id);
+          onNetworkCreated(network.id, true);
+        }
+        
+        // Call the AI network generation function
+        generateNetworkFromPrompt(network.id, prompt, industry)
+          .then(() => {
+            toast({
+              title: "Network generated",
+              description: "Created an AI-generated network based on your prompt"
+            });
+          })
+          .catch((genError) => {
+            console.error('Error generating AI network:', genError);
+            toast({
+              variant: "destructive",
+              title: "Generation Error",
+              description: "Failed to generate AI network, but created a basic network"
+            });
+            
+            // Fallback to creating a simple network if AI generation fails
+            const nodes = [
+              { name: "Central Node", type: "person", x_position: 0, y_position: 0 },
+              { name: "Connected Node 1", type: "person", x_position: 200, y_position: 0 },
+              { name: "Connected Node 2", type: "person", x_position: -200, y_position: 0 },
+            ];
+
+            Promise.all(nodes.map(node => {
+              if (node.name && node.name.trim() !== '') {
+                return supabase.from('nodes').insert({
+                  ...node,
+                  name: node.name.trim(),
+                  network_id: network.id
+                });
+              }
+              return Promise.resolve();
+            }));
+          })
+          .finally(() => {
+            setIsGenerating(false);
+          });
+      } catch (error) {
+        console.error('Error starting AI generation:', error);
+        setIsGenerating(false);
+      }
+    }
+  };
+
+  // Record AI network usage in the persistent tracking table
+  const recordAINetworkUsage = async (network: any) => {
+    if (!network || !network.id) return;
+    
+    console.log('Recording AI network usage for:', network.name, network.id);
+    
+    try {
+      // Insert record into the tracking table - this is the source of truth
+      const { data, error } = await supabase
+        .from('ai_network_usage')
+        .insert({
+          user_id: network.user_id,
+          network_name: network.name,
+          network_id: network.id
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error recording AI network usage in usage table:', error);
+        
+        // Ensure the network itself is at least marked as AI-generated
+        await supabase
+          .from('networks')
+          .update({ is_ai: true })
+          .eq('id', network.id);
+      } else {
+        console.log('Successfully recorded AI network usage:', data);
+        
+        // Also update userNetworkCount to reflect the change immediately
+        setUserNetworkCount(prev => prev + 1);
+        
+        // Dispatch an event to notify other components that AI network usage was recorded
+        window.dispatchEvent(new CustomEvent('ai-network-recorded', { 
+          detail: { networkId: network.id, networkName: network.name }
+        }));
+      }
+    } catch (error) {
+      console.error('Exception recording AI network usage:', error);
+      
+      // Ensure the network itself is at least marked as AI-generated as fallback
+      try {
+        await supabase
+          .from('networks')
+          .update({ is_ai: true })
+          .eq('id', network.id);
+      } catch (e) {
+        console.error('Could not update network is_ai flag as fallback:', e);
+      }
     }
   };
 
@@ -212,39 +369,69 @@ export const CreateNetworkDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      const { data: network, error } = await supabase
-        .from('networks')
-        .insert([{
-          name: file.name.split('.')[0] || "Imported Network",
-          user_id: user.id
-        }])
-        .select()
-        .single();
+      // Try to explicitly set is_ai=false for imported networks
+      try {
+        const { data: network, error } = await supabase
+          .from('networks')
+          .insert([{
+            name: file.name.split('.')[0] || "Imported Network",
+            user_id: user.id,
+            is_ai: false // Explicitly mark as not AI-generated
+          }])
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (network) {
-        onNetworkCreated?.(network.id, false);
-      }
+        if (network) {
+          onNetworkCreated?.(network.id, false);
+        }
 
-      // Close the dialog
-      setIsOpen(false);
-      onOpenChange?.(false);
-      
-      // Call onNetworkCreated with explicit isAI=false parameter for file imports
-      if (network) {
-        onNetworkCreated?.(network.id, false);
+        // Close the dialog
+        setIsOpen(false);
+        onOpenChange?.(false);
+        
+        // Trigger the CSV import dialog from the parent component
+        if (onImportCsv) {
+          onImportCsv(file);
+        }
+        
+        toast({
+          title: "Network created",
+          description: "Please configure your CSV import in the next step"
+        });
+      } catch (insertError) {
+        console.error('Error inserting network with is_ai field:', insertError);
+        // Fall back to the old method without the is_ai field
+        const { data: network, error } = await supabase
+          .from('networks')
+          .insert([{
+            name: file.name.split('.')[0] || "Imported Network",
+            user_id: user.id
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        if (network) {
+          onNetworkCreated?.(network.id, false);
+        }
+
+        // Close the dialog
+        setIsOpen(false);
+        onOpenChange?.(false);
+        
+        // Trigger the CSV import dialog from the parent component
+        if (onImportCsv) {
+          onImportCsv(file);
+        }
+        
+        toast({
+          title: "Network created",
+          description: "Please configure your CSV import in the next step"
+        });
       }
-      
-      // Trigger the CSV import dialog from the parent component
-      if (onImportCsv) {
-        onImportCsv(file);
-      }
-      
-      toast({
-        title: "Network created",
-        description: "Please configure your CSV import in the next step"
-      });
     } catch (error) {
       console.error('Error creating network for import:', error);
       toast({
@@ -681,7 +868,7 @@ The JSON structure must follow this exact format:
       "label": "Strategic partnership",
       "notes": "Joint AI research initiative"
     }
-  ]
+  ],
 }
 
 Your response must be a valid JSON object starting with '{' and ending with '}' - nothing else. Do not include anything before or after the JSON.
@@ -1374,7 +1561,7 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
                         "Let AI create a professional network based on your description" :
                         isSubscribed ? 
                           "Let AI create a professional network based on your description" :
-                          `Free limit: ${userNetworkCount}/${FREE_NETWORK_LIMIT} networks used`
+                          `Free limit: ${userNetworkCount}/${FREE_NETWORK_LIMIT} AI networks used`
                       }
                     </p>
                   </div>
@@ -1403,34 +1590,9 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
                 </div>
               </div>
 
-              {/* CSV/Excel Import Option */}
-              <div 
-                className="border rounded-lg overflow-hidden cursor-pointer hover:border-orange-400 transition-colors"
-                onClick={() => {
-                  handleFileUpload();
-                  setIsOpen(false);
-                }}
-              >
-                <div className="bg-orange-50 dark:bg-orange-950/20 p-4 flex items-center gap-3">
-                  <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-full">
-                    <FileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-orange-600 dark:text-orange-400">Import Data</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Import from CSV or Excel file with existing data
-                    </p>
-                  </div>
-                </div>
-              </div>
+        
               
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+         
             </div>
           </div>
         </DialogContent>
@@ -1454,7 +1616,7 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
               <div className="bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-800 rounded-md p-3 text-xs">
                 <p className="font-medium text-amber-800 dark:text-amber-400">Free Plan Limit</p>
                 <p className="text-amber-700 dark:text-amber-500 mt-1">
-                  You can create {FREE_NETWORK_LIMIT} AI networks for free. You've used {userNetworkCount}/{FREE_NETWORK_LIMIT}.
+                  You can create {FREE_NETWORK_LIMIT} AI-generated networks for free. You've used {userNetworkCount}/{FREE_NETWORK_LIMIT}.
                 </p>
               </div>
             )}
