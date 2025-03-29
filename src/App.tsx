@@ -10,6 +10,7 @@ import { Flow as NetworkMap } from "./pages/NetworkMap";
 import TodoDashboard from "./pages/TodoDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SubscriptionProtectedRoute from "./components/SubscriptionProtectedRoute";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Pricing from "./pages/Pricing";
@@ -61,17 +62,17 @@ const App = () => (
           <Route
             path="/network"
             element={
-              <ProtectedRoute includeFooter={false}>
+              <SubscriptionProtectedRoute includeFooter={false}>
                 <NetworkMap />
-              </ProtectedRoute>
+              </SubscriptionProtectedRoute>
             }
           />
           <Route
             path="/todos"
             element={
-              <ProtectedRoute>
+              <SubscriptionProtectedRoute>
                 <TodoDashboard />
-              </ProtectedRoute>
+              </SubscriptionProtectedRoute>
             }
           />
           <Route path="*" element={
