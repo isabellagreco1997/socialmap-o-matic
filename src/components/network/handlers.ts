@@ -8,11 +8,12 @@ export const useNetworkHandlers = (
   setIsDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
   setNetworks: React.Dispatch<React.SetStateAction<Network[]>>,
   setEditingNetwork: React.Dispatch<React.SetStateAction<Network | null>>,
-  networks: Network[]
+  networks: Network[],
+  currentNetworkId: string | null
 ) => {
   const handleAddNode = async ({ data }: { data: NodeData }) => {
     try {
-      if (!networks || networks.length === 0) {
+      if (!currentNetworkId) {
         throw new Error('No active network selected');
       }
 
@@ -27,8 +28,6 @@ export const useNetworkHandlers = (
         return;
       }
 
-      const currentNetworkId = networks[0].id;
-      
       // Create database object with snake_case properties
       const dbNode = {
         network_id: currentNetworkId,
@@ -156,13 +155,20 @@ export const useNetworkHandlers = (
         .from('networks')
         .insert([{
           name: template.name,
-          user_id: user.id
+          user_id: user.id,
+          is_ai: false
         }])
         .select()
         .single();
   
       if (networkError) throw networkError;
-  
+      
+      // Log the created network
+      console.log('Created template network:', network);
+      
+      // Add to local state immediately
+      setNetworks(prev => [...prev, network]);
+
       // Increased spacing between nodes
       const spacing = 500; // Increased from 300 to 500 for better visibility
       const gridSize = Math.ceil(Math.sqrt(template.nodes.length));
@@ -236,7 +242,6 @@ export const useNetworkHandlers = (
   
       await Promise.all(edgesPromises);
   
-      setNetworks(prev => [...prev, network]);
       toast({
         title: "Template Applied",
         description: `Created new network from ${template.name} template`

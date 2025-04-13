@@ -25,17 +25,53 @@ export interface SubscriptionData {
   debug?: any;
 }
 
+// Cache subscription data
+const CACHE_KEY = 'subscription-data';
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+let cachedData: {
+  data: SubscriptionData;
+  timestamp: number;
+} | null = null;
+
 export function useSubscription(stripeEmail?: string) {
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
-    isSubscribed: false,
-    customerDetails: null,
-    subscriptionDetails: null
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>(() => {
+    // Try to use cached data on initial load
+    if (cachedData && Date.now() - cachedData.timestamp < CACHE_EXPIRY) {
+      return cachedData.data;
+    }
+    
+    // Check localStorage for cached data
+    const storedData = localStorage.getItem(CACHE_KEY);
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        if (parsed && parsed.timestamp && Date.now() - parsed.timestamp < CACHE_EXPIRY) {
+          cachedData = parsed;
+          return parsed.data;
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+    
+    return {
+      isSubscribed: false,
+      customerDetails: null,
+      subscriptionDetails: null
+    };
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  const [isLoading, setIsLoading] = useState<boolean>(!cachedData);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetched, setLastFetched] = useState<number>(cachedData?.timestamp || 0);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Don't refetch if we've fetched recently
+    if (Date.now() - lastFetched < CACHE_EXPIRY) {
+      return;
+    }
+    
     const checkSubscription = async () => {
       try {
         setIsLoading(true);
@@ -44,11 +80,22 @@ export function useSubscription(stripeEmail?: string) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           console.log('No user found, setting isSubscribed to false');
-          setSubscriptionData({
+          const newData = {
             isSubscribed: false,
             customerDetails: null,
             subscriptionDetails: null
-          });
+          };
+          
+          setSubscriptionData(newData);
+          
+          // Update cache
+          cachedData = {
+            data: newData,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
+          
+          setLastFetched(Date.now());
           setIsLoading(false);
           return;
         }
@@ -103,13 +150,23 @@ export function useSubscription(stripeEmail?: string) {
         console.log('Subscription check response:', data);
         
         // Store the full subscription data
-        setSubscriptionData({
+        const newData = {
           isSubscribed: data.isSubscribed,
           customerDetails: data.customerDetails,
           subscriptionDetails: data.subscriptionDetails,
           debug: data.debug
-        });
+        };
         
+        setSubscriptionData(newData);
+        
+        // Update cache
+        cachedData = {
+          data: newData,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
+        
+        setLastFetched(Date.now());
         console.log('Updated subscription status:', data.isSubscribed);
       } catch (error) {
         console.error('Error checking subscription:', error);
@@ -132,8 +189,11 @@ export function useSubscription(stripeEmail?: string) {
 
     checkSubscription();
 
-    // Subscribe to auth state changes
+    // Only subscribe to auth changes, not on every render
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      // Clear cache on auth state change to force refetching
+      cachedData = null;
+      localStorage.removeItem(CACHE_KEY);
       console.log('Auth state changed, rechecking subscription');
       checkSubscription();
     });
@@ -142,7 +202,7 @@ export function useSubscription(stripeEmail?: string) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [stripeEmail, toast]);
+  }, [stripeEmail, toast, lastFetched]);
 
   // For backward compatibility
   const { isSubscribed } = subscriptionData;

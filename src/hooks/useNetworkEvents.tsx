@@ -127,18 +127,47 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
       const { networkId } = event.detail;
       console.log('Network deleted event received in NetworkMap:', networkId);
       
-      // If the deleted network is the current one, clear the selection
-      if (networkId === currentNetworkId) {
-        // Find next available network to select
-        const nextNetwork = networks.find(network => network.id !== networkId);
-        if (nextNetwork) {
-          setCurrentNetworkId(nextNetwork.id);
+      try {
+        // If the deleted network is the current one, select another one
+        if (networkId === currentNetworkId) {
+          console.log('Current network was deleted, selecting another one');
+          
+          // Make sure we have the most up-to-date network list
+          const remainingNetworks = networks.filter(network => network.id !== networkId);
+          
+          if (remainingNetworks.length > 0) {
+            // Select the first available network after filtering out the deleted one
+            const nextNetworkId = remainingNetworks[0].id;
+            console.log(`Selecting next available network: ${nextNetworkId}`);
+            
+            // Clear the old network's data from state
+            setNodes([]);
+            
+            // Use a small delay before switching networks to ensure clean state
+            setTimeout(() => {
+              // Set the new network ID
+              setCurrentNetworkId(nextNetworkId);
+              
+              // Force refresh
+              setRefreshCounter(prev => prev + 1);
+            }, 10);
+          } else {
+            // No networks left, clear the current selection
+            console.log('No networks left after deletion, clearing state');
+            setCurrentNetworkId(null);
+            
+            // Clear the canvas
+            setNodes([]);
+          }
         } else {
-          // No networks left, clear the current selection
-          setCurrentNetworkId(null);
-          // Clear the canvas
-          setNodes([]);
+          // The deleted network wasn't the current one, just refresh to update the list
+          console.log('Refreshing network data after network deletion');
+          setRefreshCounter(prev => prev + 1);
         }
+      } catch (error) {
+        console.error('Error handling network deletion:', error);
+        // Force a refresh as a fallback
+        setRefreshCounter(prev => prev + 1);
       }
     };
 
@@ -147,13 +176,21 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     return () => {
       window.removeEventListener('network-deleted', handleNetworkDeleted as EventListener);
     };
-  }, [currentNetworkId, networks, setCurrentNetworkId, setNodes]);
+  }, [currentNetworkId, networks, setCurrentNetworkId, setNodes, setRefreshCounter]);
 
   const handleNetworkSelect = useCallback((id: string) => {
+    // Skip if already selected
+    if (id === currentNetworkId) {
+      console.log(`Network ${id} is already selected, skipping selection`);
+      return;
+    }
+    
+    console.log(`Selecting network ${id}`);
     setCurrentNetworkId(id);
+    
     // Increment the refresh counter to force data refetching
     setRefreshCounter(prev => prev + 1);
-  }, [setCurrentNetworkId, setRefreshCounter]);
+  }, [currentNetworkId, setCurrentNetworkId, setRefreshCounter]);
   
   const handleNetworkCreated = useCallback((id: string, isAI: boolean = false) => {
     console.log('NetworkMap: Network created', {id, isAI});

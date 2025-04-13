@@ -25,6 +25,11 @@ export default function Account() {
   const { isSubscribed, subscriptionDetails, customerDetails, isLoading: subscriptionLoading } = useSubscription();
 
   useEffect(() => {
+    // Set a timeout to prevent the loading state from being shown indefinitely
+    const loadingTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000); // Force loading to end after 5 seconds
+    
     const fetchUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -39,10 +44,15 @@ export default function Account() {
         console.error("Error fetching user:", error);
       } finally {
         setLoading(false);
+        clearTimeout(loadingTimeout);
       }
     };
 
     fetchUser();
+    
+    return () => {
+      clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const checkUsernameExists = async (username: string, userId: string) => {
@@ -121,6 +131,7 @@ export default function Account() {
 
   // Function to get plan name
   const getPlanName = () => {
+    if (subscriptionLoading) return "Loading..."; 
     if (!isSubscribed) return "Free Plan";
     if (subscriptionDetails?.status === "trialing") return "Pro Plan (Trial)";
     return "Pro Plan";
@@ -128,6 +139,7 @@ export default function Account() {
 
   // Function to get plan badge color
   const getPlanBadgeClass = () => {
+    if (subscriptionLoading) return "bg-gray-100 text-gray-800";
     if (!isSubscribed) return "bg-primary/10 text-primary";
     if (subscriptionDetails?.status === "trialing") return "bg-yellow-100 text-yellow-800";
     return "bg-green-100 text-green-800";

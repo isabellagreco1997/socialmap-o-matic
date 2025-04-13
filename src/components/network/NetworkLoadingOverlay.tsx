@@ -1,52 +1,57 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Network, Sparkles } from "lucide-react";
+import { useNetworkMap } from "@/context/NetworkMapContext";
 
 interface NetworkLoadingOverlayProps {
   isGenerating: boolean;
 }
 
 const NetworkLoadingOverlay: React.FC<NetworkLoadingOverlayProps> = ({ isGenerating }) => {
+  const { currentNetworkId, isLoading, networks, setIsLoading } = useNetworkMap();
   const [visible, setVisible] = useState(false);
   
-  // Use a delayed appearance to avoid flashing for quick operations
-  // And a delayed disappearance for smoother transitions
+  // Simple effect to force loading to false on tab visibility change
   useEffect(() => {
-    console.log('NetworkLoadingOverlay: isGenerating changed to', isGenerating);
-    let appearTimeout: NodeJS.Timeout;
-    let disappearTimeout: NodeJS.Timeout;
-    
-    if (isGenerating) {
-      // Show after a tiny delay to prevent flash
-      console.log('NetworkLoadingOverlay: Scheduling appearance');
-      appearTimeout = setTimeout(() => {
-        console.log('NetworkLoadingOverlay: Setting visible to true');
-        setVisible(true);
-      }, 200);
-    } else {
-      // Hide after delay to ensure smooth transition
-      console.log('NetworkLoadingOverlay: Scheduling disappearance');
-      disappearTimeout = setTimeout(() => {
-        console.log('NetworkLoadingOverlay: Setting visible to false');
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // When returning to tab, force loading to false
+        setIsLoading(false);
         setVisible(false);
-      }, 300);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setIsLoading]);
+
+  // Only show loading for initial network generation or when there's no cached data
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
+    if (isGenerating && !currentNetworkId) {
+      // Only show loader after a small delay to prevent flashing
+      timeout = setTimeout(() => setVisible(true), 200);
+    } else {
+      timeout = setTimeout(() => setVisible(false), 100);
     }
     
-    return () => {
-      clearTimeout(appearTimeout);
-      clearTimeout(disappearTimeout);
-    };
-  }, [isGenerating]);
+    return () => clearTimeout(timeout);
+  }, [isGenerating, currentNetworkId]);
   
-  // Only render if we need to show the overlay
-  if (!visible && !isGenerating) {
-    console.log('NetworkLoadingOverlay: Not rendering (visible:', visible, ', isGenerating:', isGenerating, ')');
+  // Don't even render if we have networks or we're not generating or loading
+  if (
+    networks.length > 0 || 
+    (!isLoading && !isGenerating) ||
+    !visible
+  ) {
     return null;
   }
-
-  console.log('NetworkLoadingOverlay: Rendering overlay (visible:', visible, ', isGenerating:', isGenerating, ')');
+  
+  // Only show for initial network generation
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000] transition-opacity duration-300 ease-in-out"
-         style={{ opacity: visible ? 1 : 0 }}>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000]">
       <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl flex flex-col items-center max-w-md mx-4 relative overflow-hidden">
         {/* Decorative top border with gradient */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500"></div>

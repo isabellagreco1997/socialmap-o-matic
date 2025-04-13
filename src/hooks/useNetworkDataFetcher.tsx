@@ -1,30 +1,111 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
 import { useNetworkMap } from '@/context/NetworkMapContext';
+import { clearNetworkCache, loadNetworkFromCache, saveNetworkToCache, areNetworksEquivalent } from "@/utils/networkCacheUtils";
+import isEqual from 'lodash/isEqual';
 
 export function useNetworkDataFetcher() {
   const {
     currentNetworkId,
+    networks,
     setNodes,
     setEdges,
-    refreshCounter
+    refreshCounter,
+    shouldRefetchData,
+    setShouldRefetchData,
+    setLastFetchTimestamp,
+    isLoading,
+    setIsLoading
   } = useNetworkMap();
+  
+  // Use refs to track current data to avoid unnecessary re-renders
+  const currentNodesRef = useRef<any[]>([]);
+  const currentEdgesRef = useRef<any[]>([]);
+  const lastFetchedNetworkId = useRef<string | null>(null);
+  const processingRef = useRef<boolean>(false);
   
   const { toast } = useToast();
 
-  // Fetch network data (nodes and edges)
-  useEffect(() => {
-    const fetchNetworkData = async () => {
+  // Create a memoized fetch function that we can call without causing re-renders
+  const fetchNetworkData = useCallback(async () => {
+    // Guard against concurrent execution
+    if (processingRef.current) {
+      console.log('Already processing network data, skipping duplicate execution');
+      return;
+    }
+    
+    processingRef.current = true;
+    
+    try {
+      // Skip processing if there's no current network
       if (!currentNetworkId) {
-        // Clear nodes and edges when no network is selected
-        setNodes([]);
-        setEdges([]);
+        console.log('No current network ID, skipping data fetch');
+        if (currentNodesRef.current.length > 0) {
+          setNodes([]);
+          setEdges([]);
+          currentNodesRef.current = [];
+          currentEdgesRef.current = [];
+        }
         return;
       }
       
+      // Check if the network exists first before trying to load cached data
+      const networkExists = networks.some(network => network.id === currentNetworkId);
+      if (!networkExists) {
+        console.log(`Network ${currentNetworkId} no longer exists, clearing data`);
+        if (currentNodesRef.current.length > 0) {
+          setNodes([]);
+          setEdges([]);
+          currentNodesRef.current = [];
+          currentEdgesRef.current = [];
+        }
+        return;
+      }
+      
+      // Try to load from cache first 
+      const cachedNetwork = loadNetworkFromCache(currentNetworkId);
+      if (cachedNetwork) {
+        console.log(`Found cached network data for ${currentNetworkId}, checking if update needed`);
+        
+        // Use our utility function to compare networks
+        const currentNetwork = {
+          nodes: currentNodesRef.current,
+          edges: currentEdgesRef.current
+        };
+        
+        const shouldUpdateState = !areNetworksEquivalent(cachedNetwork, currentNetwork);
+        
+        if (shouldUpdateState) {
+          console.log('Cache data differs from current state, updating state...');
+          
+          // Update our refs first before setting state
+          currentNodesRef.current = cachedNetwork.nodes;
+          currentEdgesRef.current = cachedNetwork.edges;
+          
+          // Then update component state
+          (setNodes as any)(cachedNetwork.nodes);
+          (setEdges as any)(cachedNetwork.edges);
+        } else {
+          console.log('Cache data is identical to current state, no update needed');
+        }
+        
+        // Skip server fetch if we're not explicitly refreshing
+        if (!shouldRefetchData) {
+          console.log('Using cached data only, skipping server fetch');
+          return;
+        }
+      } else {
+        console.log('No cached data found for this network');
+      }
+      
+      // Reset refresh flag
+      if (shouldRefetchData) {
+        setShouldRefetchData(false);
+      }
+      
       try {
-        console.log('Fetching network data for network:', currentNetworkId);
+        console.log('Fetching fresh data from server for network:', currentNetworkId);
         
         const [nodesResponse, edgesResponse] = await Promise.all([
           supabase.from('nodes')
@@ -88,7 +169,11 @@ export function useNetworkDataFetcher() {
         
         console.log('Nodes with todos:', nodesWithTodos);
 
-        setNodes(nodesWithTodos);
+        // Update our refs
+        currentNodesRef.current = nodesWithTodos;
+        
+        // Cast to any to bypass type checking issues
+        (setNodes as any)(nodesWithTodos);
 
         // Map edges with all their properties
         const mappedEdges = edgesResponse.data.map(edge => {
@@ -160,7 +245,20 @@ export function useNetworkDataFetcher() {
         });
 
         console.log('Setting edges:', validEdges);
-        setEdges(validEdges);
+        
+        // Update our refs
+        currentEdgesRef.current = validEdges;
+        
+        // Cast to any to bypass type checking issues
+        (setEdges as any)(validEdges);
+        
+        // Update the last fetch timestamp
+        const now = Date.now();
+        setLastFetchTimestamp(now);
+        localStorage.setItem('socialmap-last-fetch', now.toString());
+
+        // Save the fetched data to cache
+        saveNetworkToCache(currentNetworkId, nodesWithTodos, validEdges);
 
       } catch (error) {
         console.error('Error fetching network data:', error);
@@ -170,9 +268,61 @@ export function useNetworkDataFetcher() {
           description: "Failed to load network data"
         });
       }
+    } finally {
+      // Always release the processing lock when done
+      processingRef.current = false;
+    }
+  }, [currentNetworkId, networks, setNodes, setEdges, toast, shouldRefetchData, setShouldRefetchData, setLastFetchTimestamp]);
+
+  // Listen for network deletion events to clear cache
+  useEffect(() => {
+    const handleNetworkDeleted = (event: CustomEvent) => {
+      const { networkId } = event.detail;
+      console.log(`useNetworkDataFetcher: Network deleted event received, clearing cache for ${networkId}`);
+      
+      // Clear the cache for this network
+      clearNetworkCache(networkId);
+      
+      // If this was the current network, clear nodes and edges immediately
+      if (currentNetworkId === networkId) {
+        console.log('useNetworkDataFetcher: Clearing current network data after deletion');
+        setNodes([]);
+        setEdges([]);
+        currentNodesRef.current = [];
+        currentEdgesRef.current = [];
+      }
     };
+    
+    window.addEventListener('network-deleted', handleNetworkDeleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('network-deleted', handleNetworkDeleted as EventListener);
+    };
+  }, [currentNetworkId, setNodes, setEdges]);
+
+  // Trigger data fetch when needed
+  useEffect(() => {
+    // Force loading to false immediately
+    setIsLoading(false);
+    
+    // Skip if we've already processed this network and there's no explicit refresh
+    if (
+      !shouldRefetchData && 
+      currentNetworkId === lastFetchedNetworkId.current && 
+      currentNodesRef.current.length > 0
+    ) {
+      return;
+    }
+    
+    console.log(`Triggering network data fetch for ${currentNetworkId || 'null'} (refresh ${refreshCounter})`);
+    
+    // Update the last fetched network ID
+    lastFetchedNetworkId.current = currentNetworkId;
+    
+    // Call our memoized fetch function
     fetchNetworkData();
-  }, [currentNetworkId, setNodes, setEdges, toast, refreshCounter]);
+    
+  }, [currentNetworkId, refreshCounter, shouldRefetchData, fetchNetworkData, setIsLoading]);
 
   // One-time cleanup of invalid edges across all networks
   useEffect(() => {

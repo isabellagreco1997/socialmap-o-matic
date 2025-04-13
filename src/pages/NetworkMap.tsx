@@ -1,6 +1,6 @@
 import { ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import NetworkSidebar from '@/components/network/NetworkSidebar';
 import NetworkSearchHeader from '@/components/network/NetworkSearchHeader';
@@ -20,6 +20,11 @@ import { NetworkMapProvider, useNetworkMap } from '@/context/NetworkMapContext';
 import { useNetworkEvents } from '@/hooks/useNetworkEvents';
 import { useNetworkDataFetcher } from '@/hooks/useNetworkDataFetcher';
 import { useNetworkConnections } from '@/hooks/useNetworkConnections';
+
+// Create a global variable to track if we've loaded networks before
+const hasLoadedNetworks = {
+  value: false
+};
 
 const NetworkMapContent = () => {
   // Refs
@@ -52,6 +57,7 @@ const NetworkMapContent = () => {
     setShowChat,
     isGeneratingNetwork,
     isLoading,
+    setIsLoading,
     isTemplatesDialogOpen,
     setIsTemplatesDialogOpen,
     editingNetwork,
@@ -77,7 +83,7 @@ const NetworkMapContent = () => {
     handleCsvImport,
     handleDeleteNetwork,
     handleNetworksReorder
-  } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks);
+  } = useNetworkHandlers(setNodes, setIsDialogOpen, setNetworks, setEditingNetwork, networks, currentNetworkId);
 
   const { handleNodesChange } = useFluidNodeMovement();
 
@@ -105,6 +111,80 @@ const NetworkMapContent = () => {
     reader.readAsText(file);
   }, [setCsvHeaders, setCsvRows, setIsCsvDialogOpen]);
 
+  // // Pre-render effect to ensure isLoading is false
+  // useLayoutEffect(() => {
+  //   // Always set loading to false - this runs before the first paint
+  //   setIsLoading(false);
+  // }, [setIsLoading]);
+
+  // // Use effect to mark that we've loaded networks 
+  // useEffect(() => {
+  //   if (networks.length > 0) {
+  //     hasLoadedNetworks.value = true;
+  //   }
+  // }, [networks]);
+
+  // Handle tab visibility changes to avoid unnecessary loading states
+  useEffect(() => {
+    // Force loading state to false on mount - this ensures we don't show loading on initial load
+    setIsLoading(false);
+    
+    const handleVisibilityChange = () => {
+      // When returning to the tab, check if we have cached data
+      if (document.visibilityState === 'visible') {
+        // Immediately set loading to false on tab return
+        console.log('NetworkMap: Tab visibility changed to visible, forcing loading state to false');
+        setIsLoading(false);
+        
+        // Immediately set loading to false if we have any network data
+        if (networks.length > 0) {
+          console.log('NetworkMap: Tab visibility changed to visible, networks exist, setting loading false');
+          setIsLoading(false);
+        }
+        
+        // If we have a current network, check for cached data
+        if (currentNetworkId) {
+          const hasCachedData = 
+            localStorage.getItem(`socialmap-nodes-${currentNetworkId}`) && 
+            localStorage.getItem(`socialmap-edges-${currentNetworkId}`);
+            
+          if (hasCachedData) {
+            console.log('NetworkMap: Tab visibility changed, found cached data, setting loading false');
+            setIsLoading(false);
+          }
+        }
+      }
+    };
+    
+    // Force loading to false after initial render too
+    const initialTimout = setTimeout(() => {
+      // If we have cached data or networks, force loading to false
+      console.log('NetworkMap: Initial timeout forcing loading false');
+      setIsLoading(false);
+    }, 500); // Reduced from 1000ms to 500ms
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Immediately set up a MutationObserver to detect any loading overlay and remove it
+    const observer = new MutationObserver((mutations) => {
+      // Look for any loading overlay elements in the DOM
+      const loadingOverlays = document.querySelectorAll('[class*="backdrop-blur"]');
+      if (loadingOverlays.length > 0) {
+        console.log('NetworkMap: MutationObserver detected loading overlay, forcing removal');
+        setIsLoading(false);
+      }
+    });
+    
+    // Start observing the document body for added nodes
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearTimeout(initialTimout);
+      observer.disconnect();
+    };
+  }, [currentNetworkId, setIsLoading, networks]);
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -127,6 +207,13 @@ const NetworkMapContent = () => {
         </Sidebar>
 
         <div className="flex-1 relative">
+          {/* Hidden div that forces loading state to false on visibility change */}
+          {document.visibilityState === 'visible' && (
+            <div style={{ display: 'none' }} 
+                 onLoad={() => setIsLoading(false)}
+                 ref={(el) => el && setTimeout(() => setIsLoading(false), 0)} />
+          )}
+          
           <NetworkLoadingOverlay isGenerating={isGeneratingNetwork} />
           
           {/* Empty state when there are no networks */}
@@ -215,3 +302,4 @@ const Flow = () => {
 };
 
 export default Flow;
+                        
