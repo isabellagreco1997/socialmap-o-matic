@@ -127,4 +127,20 @@ export function areNetworksEquivalent(
   // Compare nodes and edges using deep equality
   return isEqual(networkA.nodes, networkB.nodes) && 
          isEqual(networkA.edges, networkB.edges);
+}
+
+/**
+ * Clears the nodes and edges from cache for a network without deleting the network itself
+ * @param networkId The network ID
+ */
+export function clearNetworkNodesEdgesCache(networkId: string): void {
+  if (!networkId) return;
+  
+  try {
+    localStorage.removeItem(`socialmap-nodes-${networkId}`);
+    localStorage.removeItem(`socialmap-edges-${networkId}`);
+    console.log(`Cleared nodes and edges cache for network: ${networkId}`);
+  } catch (error) {
+    console.error('Error clearing network nodes and edges cache:', error);
+  }
 } 

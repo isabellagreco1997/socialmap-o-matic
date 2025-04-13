@@ -2,6 +2,7 @@ import { useEffect, useCallback, RefObject } from 'react';
 import { Edge, Node } from '@xyflow/react';
 import { useNetworkMap } from '@/context/NetworkMapContext';
 import type { Network, NodeData, EdgeData } from '@/types/network';
+import { clearNetworkNodesEdgesCache } from '@/utils/networkCacheUtils';
 
 export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonElement>) {
   const {
@@ -11,6 +12,7 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     nodes,
     setNodes,
     edges,
+    setEdges,
     refreshCounter,
     setRefreshCounter,
     isLoading,
@@ -195,6 +197,15 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
   const handleNetworkCreated = useCallback((id: string, isAI: boolean = false) => {
     console.log('NetworkMap: Network created', {id, isAI});
     
+    // For blank networks, clear any cached nodes and edges from localStorage
+    if (!isAI) {
+      clearNetworkNodesEdgesCache(id);
+    }
+    
+    // Clear existing nodes and edges before switching to the new network
+    setNodes([]);
+    setEdges([]);
+    
     // Always update the current network ID
     setCurrentNetworkId(id);
     
@@ -223,7 +234,7 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     
     // Force an immediate refresh of network data
     setRefreshCounter(prev => prev + 1);
-  }, [setCurrentNetworkId, setIsGeneratingNetwork, setRefreshCounter]);
+  }, [setCurrentNetworkId, setIsGeneratingNetwork, setRefreshCounter, setNodes, setEdges]);
 
   return {
     handleNetworkSelect,

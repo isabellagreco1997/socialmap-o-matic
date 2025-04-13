@@ -39,33 +39,27 @@ const NetworkItem = memo(({
   // Counter to force re-renders when needed
   const [updateCounter, setUpdateCounter] = useState(0);
   
-  // Force update display name when network changes or network.name changes
+  // Single consolidated effect to handle name updates
   useEffect(() => {
-    console.log('NetworkItem: useEffect triggered for network:', network.id, network.name);
-    // Always update to the latest network name to ensure we stay in sync with parent components
-    if (network.name !== "Loading..." && network.name !== displayName) {
-      console.log('NetworkItem: updating display name from network object:', network.name);
-      setDisplayName(network.name);
-      // Also update cache
-      cachedNetworkNames.set(network.id, network.name);
-    }
-  }, [network, network.name, displayName, updateCounter]);
-  
-  // Simple effect to update the display name when the network name changes
-  // or when the cached name changes, but only once
-  useEffect(() => {
+    // Skip logging to reduce console noise
+    // console.log('NetworkItem: useEffect triggered for network:', network.id, network.name);
+    
     const cachedName = cachedNetworkNames.get(network.id);
-    // Prefer cached name over network name (except for Loading state)
-    if (cachedName && cachedName !== displayName && network.name !== "Loading...") {
-      console.log('NetworkItem: updating display name from cache:', cachedName);
-      setDisplayName(cachedName);
-    } else if (network.name !== "Loading..." && network.name !== displayName) {
-      console.log('NetworkItem: updating display name from network:', network.name);
-      setDisplayName(network.name);
-      // Update the cache with the latest name
-      cachedNetworkNames.set(network.id, network.name);
+    
+    // Only update if needed to avoid infinite loop
+    if (network.name !== "Loading..." && displayName !== network.name && displayName !== cachedName) {
+      // Prefer cached name over network name
+      if (cachedName && cachedName !== displayName) {
+        // console.log('NetworkItem: updating display name from cache:', cachedName);
+        setDisplayName(cachedName);
+      } else if (network.name !== displayName) {
+        // console.log('NetworkItem: updating display name from network:', network.name);
+        setDisplayName(network.name);
+        // Update the cache with the latest name
+        cachedNetworkNames.set(network.id, network.name);
+      }
     }
-  }, [network.id, network.name, displayName, updateCounter]);
+  }, [network.id, network.name, displayName]);
   
   // Simple listener for network-renamed events
   useEffect(() => {
@@ -77,10 +71,6 @@ const NetworkItem = memo(({
         cachedNetworkNames.set(networkId, newName);
         // Force update the component
         setDisplayName(newName);
-        // Also update the network object directly
-        network.name = newName;
-        // Increment counter to force re-render
-        setUpdateCounter(prev => prev + 1);
       }
     };
     
@@ -92,12 +82,6 @@ const NetworkItem = memo(({
         cachedNetworkNames.set(networkId, newName);
         // Force update the component
         setDisplayName(newName);
-        // Also directly update the network object name
-        if (network && network.name !== newName) {
-          network.name = newName;
-        }
-        // Increment counter to force re-render
-        setUpdateCounter(prev => prev + 1);
       }
     };
     
@@ -108,7 +92,7 @@ const NetworkItem = memo(({
       window.removeEventListener('network-renamed' as any, handleNetworkRenamed as any);
       window.removeEventListener('force-network-update' as any, handleForceUpdate as any);
     };
-  }, [network, network.id]);
+  }, [network.id]); // Only depend on network.id, not the entire network object
   
   // Determine the actual display name and loading state
   const isLoadingState = displayName === "Loading..." || network.name === "Loading...";
@@ -192,43 +176,28 @@ export function NetworkList({
   useEffect(() => {
     const handleForceUpdate = (event: CustomEvent) => {
       const { networkId, newName } = event.detail;
-      console.log('NetworkList: received force update event for:', networkId, newName);
+      // console.log('NetworkList: received force update event for:', networkId, newName);
       
       // Only proceed if this affects one of our networks
       if (!networkId || !newName || !stableNetworks.some(n => n.id === networkId)) {
         return;
       }
       
-      // Update cache first
-      cachedNetworkNames.set(networkId, newName);
-      
-      // DIRECT UPDATE: Find and update each network in the arrays
-      networks.forEach(network => {
+      // Update the network in our stable networks
+      const updatedNetworks = stableNetworks.map(network => {
         if (network.id === networkId) {
-          console.log('NetworkList: directly updating network name to:', newName);
-          network.name = newName;
+          // Update cache for future use
+          cachedNetworkNames.set(networkId, newName);
+          // Return a new object with the updated name
+          return { ...network, name: newName };
         }
+        return network;
       });
       
-      // Immediately update UI with the newest names for all components
-      const updatedNetworks = networks.map(network => 
-        network.id === networkId 
-          ? { ...network, name: newName } 
-          : network
-      );
-      
-      // Directly set both arrays with the updated networks
-      setStableNetworks(updatedNetworks);
-      
-      // Also update the stable networks directly to ensure the UI refreshes
-      stableNetworks.forEach(network => {
-        if (network.id === networkId) {
-          network.name = newName;
-        }
-      });
-      
-      // Force a re-render by creating a new array with all the same objects
-      setStableNetworks([...stableNetworks]);
+      // Only update state if we actually changed something
+      if (updatedNetworks.some((network, index) => network.name !== stableNetworks[index].name)) {
+        setStableNetworks(updatedNetworks);
+      }
     };
     
     window.addEventListener('force-network-update' as any, handleForceUpdate as any);
@@ -236,7 +205,7 @@ export function NetworkList({
     return () => {
       window.removeEventListener('force-network-update' as any, handleForceUpdate as any);
     };
-  }, [stableNetworks, networks, setStableNetworks]);
+  }, [stableNetworks]);
   
   // Keep a map of networks by ID for fast lookup
   useEffect(() => {
@@ -274,57 +243,71 @@ export function NetworkList({
   
   // Smart merge of networks that preserves stability for unchanged items
   const mergeNetworks = useCallback((newNetworks: Network[]) => {
-    // If the lengths don't match, we need to do full reconciliation
-    if (stableNetworks.length !== newNetworks.length) {
-      // Create a map of cached network names
-      const cachedNames = new Map<string, string>();
-      stableNetworks.forEach(network => {
-        const cachedName = cachedNetworkNames.get(network.id);
-        if (cachedName) {
-          cachedNames.set(network.id, cachedName);
-        }
-      });
+    try {
+      // Handle edge cases
+      if (!newNetworks || newNetworks.length === 0) {
+        return [];
+      }
       
-      // Apply cached names to new networks where applicable
-      return newNetworks.map(network => {
-        const cachedName = cachedNames.get(network.id) || cachedNetworkNames.get(network.id);
-        if (cachedName && network.name !== "Loading...") {
-          return { ...network, name: cachedName };
+      if (!stableNetworks || stableNetworks.length === 0) {
+        return [...newNetworks];
+      }
+      
+      // If the lengths don't match, we need to do full reconciliation
+      if (stableNetworks.length !== newNetworks.length) {
+        // Create a simple map of new networks for lookup
+        const newNetworksMap = new Map(newNetworks.map(n => [n.id, n]));
+        
+        // Create a result that preserves stable references when possible
+        const result: Network[] = [];
+        
+        // For each stable network, check if it exists in new networks
+        for (const stable of stableNetworks) {
+          if (newNetworksMap.has(stable.id)) {
+            // Use the stable version to maintain reference equality
+            result.push(stable);
+            // Remove from map to mark as processed
+            newNetworksMap.delete(stable.id);
+          }
         }
-        return network;
+        
+        // Add any remaining new networks
+        for (const [id, network] of newNetworksMap.entries()) {
+          result.push(network);
+        }
+        
+        // Return sorted by original new networks order
+        return result.sort((a, b) => {
+          const aIndex = newNetworks.findIndex(n => n.id === a.id);
+          const bIndex = newNetworks.findIndex(n => n.id === b.id);
+          return aIndex - bIndex;
+        });
+      }
+      
+      // If lengths match, do a simple map with stable preservation
+      // Create a map for faster lookups
+      const newNetworkMap = new Map(newNetworks.map(n => [n.id, n]));
+      
+      return stableNetworks.map(stableNetwork => {
+        // Find matching network in new networks
+        const newNetwork = newNetworkMap.get(stableNetwork.id);
+        if (!newNetwork) return stableNetwork;
+        
+        // If the network name has changed and isn't a loading state, update it
+        if (stableNetwork.name !== newNetwork.name && 
+            newNetwork.name !== "Loading...") {
+          // Create a new object with the updated name but preserve other properties
+          return {...stableNetwork, name: newNetwork.name};
+        }
+        
+        // Otherwise keep stable version to avoid unnecessary updates
+        return stableNetwork;
       });
+    } catch (error) {
+      console.error('Error in mergeNetworks:', error);
+      // Fall back to just returning new networks if anything goes wrong
+      return [...newNetworks];
     }
-    
-    // If lengths match, do a simple map with stable preservation
-    return stableNetworks.map(stableNetwork => {
-      // Find matching network in new networks
-      const newNetwork = newNetworks.find(n => n.id === stableNetwork.id);
-      if (!newNetwork) return stableNetwork;
-      
-      // Check for cached name
-      const cachedName = cachedNetworkNames.get(stableNetwork.id);
-      
-      // If we have a cached name, use it (unless it's loading)
-      if (cachedName && stableNetwork.name !== "Loading..." && newNetwork.name !== "Loading...") {
-        return { ...stableNetwork, name: cachedName };
-      }
-      
-      // If the network name has changed, use the new name to avoid flicker
-      if (stableNetwork.name !== newNetwork.name && 
-          stableNetwork.name !== "Loading..." && 
-          newNetwork.name !== "Loading...") {
-        // Create a new object with the updated name but preserve other properties
-        return {...stableNetwork, name: newNetwork.name};
-      }
-      
-      // If loading state changed, update it
-      if (stableNetwork.name === "Loading..." && newNetwork.name !== "Loading...") {
-        return newNetwork;
-      }
-      
-      // Otherwise keep stable version to avoid unnecessary updates
-      return stableNetwork;
-    });
   }, [stableNetworks]);
   
   // Update stable networks only when networks actually change
