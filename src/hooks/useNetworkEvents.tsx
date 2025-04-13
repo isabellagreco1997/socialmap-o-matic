@@ -107,12 +107,76 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
   useEffect(() => {
     console.log('NetworkMap: Setting up network-generation-complete event listener');
     
-    const handleNetworkGenerationComplete = () => {
-      console.log('NetworkMap: network-generation-complete event received');
-      // Ensure the generating state is false
+    const handleNetworkGenerationComplete = (event: CustomEvent) => {
+      console.log('NetworkMap: network-generation-complete event received', event.detail);
+      const { networkId, forceServerRefresh = true } = event.detail;
+      
+      // Implement a series of refresh attempts with increasing delays
+      // First immediate clear and refresh
+      setNodes([]);
+      setEdges([]);
       setIsGeneratingNetwork(false);
-      // Force a refresh of the network data
+      
+      // First attempt - immediately
+      console.log('NetworkMap: First refresh attempt - immediate');
       setRefreshCounter(prev => prev + 1);
+      window.dispatchEvent(new CustomEvent('force-network-update', {
+        detail: { 
+          networkId,
+          timestamp: Date.now(),
+          forceServerRefresh,
+          attempt: 1
+        }
+      }));
+
+      // Second attempt - after 500ms
+      setTimeout(() => {
+        console.log('NetworkMap: Second refresh attempt - 500ms');
+        setRefreshCounter(prev => prev + 1);
+        window.dispatchEvent(new CustomEvent('force-network-update', {
+          detail: { 
+            networkId,
+            timestamp: Date.now(),
+            forceServerRefresh,
+            attempt: 2
+          }
+        }));
+        
+        // Third attempt - after 1.5s
+        setTimeout(() => {
+          console.log('NetworkMap: Third refresh attempt - 1.5s');
+          // Force localStorage clear
+          localStorage.removeItem(`socialmap-nodes-${networkId}`);
+          localStorage.removeItem(`socialmap-edges-${networkId}`);
+          setRefreshCounter(prev => prev + 1);
+          window.dispatchEvent(new CustomEvent('force-network-update', {
+            detail: { 
+              networkId,
+              timestamp: Date.now(),
+              forceServerRefresh: true, // Always force on final attempt
+              attempt: 3
+            }
+          }));
+          
+          // Fourth and final attempt - after 3s
+          setTimeout(() => {
+            console.log('NetworkMap: Final refresh attempt - 3s');
+            // Reload the page if all else fails
+            window.dispatchEvent(new CustomEvent('force-network-update', {
+              detail: { 
+                networkId,
+                timestamp: Date.now(),
+                forceServerRefresh: true,
+                attempt: 4,
+                finalAttempt: true
+              }
+            }));
+            
+            // Set a flag in localStorage to indicate a reload might be needed
+            localStorage.setItem('network-generation-reload-needed', networkId);
+          }, 1500);
+        }, 1000);
+      }, 500);
     };
     
     window.addEventListener('network-generation-complete', handleNetworkGenerationComplete);
@@ -121,7 +185,7 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
       console.log('NetworkMap: Removing network-generation-complete event listener');
       window.removeEventListener('network-generation-complete', handleNetworkGenerationComplete);
     };
-  }, [setIsGeneratingNetwork, setRefreshCounter]);
+  }, [setIsGeneratingNetwork, setRefreshCounter, setNodes, setEdges]);
 
   // Listen for network deletion events
   useEffect(() => {
@@ -179,6 +243,30 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
       window.removeEventListener('network-deleted', handleNetworkDeleted as EventListener);
     };
   }, [currentNetworkId, networks, setCurrentNetworkId, setNodes, setRefreshCounter]);
+
+  // Listen for pre-network-generation-complete event to clear state
+  useEffect(() => {
+    console.log('NetworkMap: Setting up pre-network-generation-complete event listener');
+    
+    const handlePreNetworkGenerationComplete = (event: CustomEvent) => {
+      const { networkId, action } = event.detail;
+      console.log('NetworkMap: pre-network-generation-complete event received', { networkId, action });
+      
+      if (action === 'clear-state') {
+        // Clear all state immediately
+        console.log('NetworkMap: Clearing nodes and edges for fresh state');
+        setNodes([]);
+        setEdges([]);
+      }
+    };
+    
+    window.addEventListener('pre-network-generation-complete', handlePreNetworkGenerationComplete as EventListener);
+    
+    return () => {
+      console.log('NetworkMap: Removing pre-network-generation-complete event listener');
+      window.removeEventListener('pre-network-generation-complete', handlePreNetworkGenerationComplete as EventListener);
+    };
+  }, [setNodes, setEdges]);
 
   const handleNetworkSelect = useCallback((id: string) => {
     // Skip if already selected

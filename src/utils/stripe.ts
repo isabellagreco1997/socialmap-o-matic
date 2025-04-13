@@ -47,4 +47,36 @@ export async function redirectToCheckout(priceId: string) {
     console.error('Error:', error);
     throw error;
   }
+}
+
+export async function redirectToCustomerPortal() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Call the Netlify function instead of a direct API endpoint
+    const response = await fetch('/.netlify/functions/create-portal-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: user.id,
+        email: user.email,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create portal session');
+    }
+
+    const { url } = await response.json();
+    
+    // Redirect to the portal
+    window.location.href = url;
+  } catch (error) {
+    console.error('Error redirecting to customer portal:', error);
+    throw error;
+  }
 } 

@@ -449,12 +449,26 @@ export const generateDefaultNetworkData = (industry: string) => {
 /**
  * Generate fallback network structure from text if JSON parsing fails
  */
-export const generateFallbackNetworkFromText = (text: string, industry: string) => {
-  console.log("Generating fallback network from text content");
+export const generateFallbackNetworkFromText = (text: string, industry: string, prompt: string = "") => {
+  console.log("Generating fallback network from text content with prompt:", prompt);
   
   // Extract potential node names using regex patterns
   const extractNodes = () => {
     const nodes = [];
+    
+    // Extract keywords from prompt
+    let keywords: string[] = [];
+    if (prompt) {
+      // Split prompt into words, remove common words, keep meaningful ones
+      const stopWords = ['a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with', 'about', 'from'];
+      keywords = prompt.split(/[\s,.!?;:()[\]{}'"]+/)
+        .filter(word => word.length > 3) // Only words longer than 3 chars
+        .filter(word => !stopWords.includes(word.toLowerCase())) // Remove common words
+        .map(word => word.trim())
+        .filter(word => word.length > 0);
+      
+      console.log("Extracted keywords from prompt:", keywords);
+    }
     
     // Look for company/organization names (often have Inc, LLC, etc.)
     const companyRegex = /([A-Z][A-Za-z0-9\s&\'\.]+(?:Inc\.?|LLC|Corp\.?|Corporation|Company|Technologies|Group|Association|Institute|Society|Agency|Foundation))/g;
@@ -474,7 +488,7 @@ export const generateFallbackNetworkFromText = (text: string, industry: string) 
         nodes.push({
           name: match[1],
           type: "organization",
-          notes: `Organization in the ${industry} industry`
+          notes: prompt ? `Organization relevant to your request: "${prompt}"` : `Organization in the ${industry} industry`
         });
       }
     });
@@ -485,7 +499,7 @@ export const generateFallbackNetworkFromText = (text: string, industry: string) 
         nodes.push({
           name: match[1],
           type: "person",
-          notes: `Professional in the ${industry} industry`
+          notes: prompt ? `Professional with expertise related to: "${prompt}"` : `Professional in the ${industry} industry`
         });
       }
     });
@@ -496,21 +510,88 @@ export const generateFallbackNetworkFromText = (text: string, industry: string) 
         nodes.push({
           name: match[1],
           type: "event",
-          notes: `Event in the ${industry} industry`
+          notes: prompt ? `Event directly related to: "${prompt}"` : `Event in the ${industry} industry`
         });
       }
     });
+    
+    // If we have a prompt, create targeted nodes based on the keywords
+    if (prompt && keywords.length > 0) {
+      // Create companies based on keyword combinations
+      const companyTypes = ["Solutions", "Technologies", "Systems", "Network", "Partners", "Associates", "Group", "Innovation", "Ventures"];
+      const companyPrefixes = ["Leading", "Advanced", "Global", "Next-Gen", "Strategic", "Premier"];
+      
+      // Use keywords in company names
+      keywords.forEach((keyword, i) => {
+        if (i < 5) { // Limit to 5 companies
+          const companyType = companyTypes[i % companyTypes.length];
+          const prefix = Math.random() > 0.5 ? companyPrefixes[i % companyPrefixes.length] + " " : "";
+          const name = `${prefix}${keyword.charAt(0).toUpperCase() + keyword.slice(1)} ${companyType}`;
+          
+          nodes.push({
+            name,
+            type: "organization",
+            notes: `Specializes in ${keyword.toLowerCase()} solutions specifically for needs like: "${prompt}"`
+          });
+        }
+      });
+      
+      // Create professionals with expertise in keywords
+      const jobTitles = ["Director", "Specialist", "Consultant", "Expert", "Advisor", "Manager", "Lead", "Strategist"];
+      const firstNames = ["Jennifer", "Michael", "Sarah", "David", "Emma", "Robert", "Lisa", "James"];
+      const lastNames = ["Johnson", "Chen", "Rodriguez", "Williams", "Taylor", "Lee", "Smith", "Brown"];
+      
+      keywords.forEach((keyword, i) => {
+        if (i < 5) { // Limit to 5 people
+          const jobTitle = jobTitles[i % jobTitles.length];
+          const firstName = firstNames[i % firstNames.length];
+          const lastName = lastNames[i % lastNames.length];
+          
+          nodes.push({
+            name: `${firstName} ${lastName}`,
+            type: "person",
+            notes: `${jobTitle} specializing in ${keyword.toLowerCase()}, can help with: "${prompt}"`
+          });
+        }
+      });
+      
+      // Create relevant events
+      const eventTypes = ["Conference", "Summit", "Forum", "Workshop", "Symposium"];
+      
+      keywords.forEach((keyword, i) => {
+        if (i < 3) { // Limit to 3 events
+          const eventType = eventTypes[i % eventTypes.length];
+          
+          nodes.push({
+            name: `${industry} ${keyword.charAt(0).toUpperCase() + keyword.slice(1)} ${eventType}`,
+            type: "event",
+            notes: `Annual gathering focused on ${keyword.toLowerCase()} within ${industry}, relevant to: "${prompt}"`
+          });
+        }
+      });
+      
+      // Create venues relevant to the prompt
+      keywords.forEach((keyword, i) => {
+        if (i < 2) { // Limit to 2 venues
+          nodes.push({
+            name: `${keyword.charAt(0).toUpperCase() + keyword.slice(1)} Innovation Center`,
+            type: "venue",
+            notes: `Meeting hub for professionals working on ${keyword.toLowerCase()}, perfect for connecting about: "${prompt}"`
+          });
+        }
+      });
+    }
     
     // Limit to a reasonable number of nodes and ensure uniqueness
     const uniqueNodes = nodes
       .filter((node, index, self) => 
         index === self.findIndex(n => n.name === node.name))
-      .slice(0, 30); // Limit to 30 nodes for clean visualization
+      .slice(0, 20); // Limit to 20 nodes for clean visualization
     
     // Add more nodes from default data if we don't have enough
     if (uniqueNodes.length < 5) {
       const defaultData = generateDefaultNetworkData(industry);
-      return defaultData.nodes;
+      return [...uniqueNodes, ...defaultData.nodes.slice(0, 15 - uniqueNodes.length)];
     }
     
     return uniqueNodes;
@@ -518,8 +599,35 @@ export const generateFallbackNetworkFromText = (text: string, industry: string) 
   
   const nodes = extractNodes();
   
+  // Generate some basic relationships
+  const relationships = [];
+  if (nodes.length > 1) {
+    // Connect some nodes in a sensible pattern
+    // Start by connecting to the "You" node that will be added
+    const centralNodeIndex = 0; // "You" will be at index 0
+    
+    for (let i = 0; i < Math.min(5, nodes.length); i++) {
+      relationships.push({
+        source: "You",
+        target: nodes[i].name,
+        label: getActionLabel(nodes[i]),
+        notes: `Direct contact related to ${prompt || industry}`
+      });
+    }
+    
+    // Create a few connections between nodes
+    for (let i = 0; i < Math.min(5, nodes.length - 1); i++) {
+      relationships.push({
+        source: nodes[i].name,
+        target: nodes[(i + 1) % nodes.length].name,
+        label: "Connected to",
+        notes: `Relationship relevant to ${prompt || industry}`
+      });
+    }
+  }
+  
   return {
     nodes,
-    relationships: [] // No relationships for fallback
+    relationships
   };
 }; 

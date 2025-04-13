@@ -314,20 +314,63 @@ export const generateNetworkFromPrompt = async (networkId: string, prompt: strin
     
     // Ensure the loading state is cleared and notify completion
     setTimeout(() => {
-      // Dispatch event to notify the network generation is complete
-      console.log('NetworkGenerator: Dispatching network-generation-complete event for network', networkId);
-      window.dispatchEvent(new CustomEvent('network-generation-complete'));
-      console.log('Network generation complete event dispatched');
-    }, 100);
+      // Clear any previous cache for this network to ensure fresh data load
+      try {
+        console.log('NetworkGenerator: Clearing cache for network before completion event', networkId);
+        
+        // Clear all localStorage cache for this network
+        localStorage.removeItem(`socialmap-nodes-${networkId}`);
+        localStorage.removeItem(`socialmap-edges-${networkId}`);
+        
+        // Dispatch an internal event to clear the nodes and edges from state first
+        window.dispatchEvent(new CustomEvent('pre-network-generation-complete', {
+          detail: { 
+            networkId,
+            action: 'clear-state'
+          }
+        }));
+        
+        // Give a short delay for the clear state event to be processed
+        setTimeout(() => {
+          // Dispatch event to notify the network generation is complete
+          console.log('NetworkGenerator: Dispatching network-generation-complete event for network', networkId);
+          window.dispatchEvent(new CustomEvent('network-generation-complete', {
+            detail: { 
+              networkId,
+              timestamp: Date.now(),
+              forceServerRefresh: true
+            }
+          }));
+          console.log('Network generation complete event dispatched');
+        }, 200);
+      } catch (error) {
+        console.error('Error clearing cache before completion event:', error);
+        // Still dispatch the event even if cache clearing fails
+        window.dispatchEvent(new CustomEvent('network-generation-complete', {
+          detail: { 
+            networkId,
+            timestamp: Date.now(),
+            forceServerRefresh: true,
+            error: 'cache-clear-failed'
+          }
+        }));
+      }
+    }, 1000); // Increased timeout to ensure DB operations complete
   } catch (error) {
     console.error("Error generating network from prompt:", error);
     
     // Also dispatch the completion event on error to ensure loading screen disappears
     setTimeout(() => {
       console.log('NetworkGenerator: Dispatching network-generation-complete event on error');
-      window.dispatchEvent(new CustomEvent('network-generation-complete'));
+      window.dispatchEvent(new CustomEvent('network-generation-complete', {
+        detail: { 
+          networkId,
+          error: true,
+          timestamp: Date.now()
+        }
+      }));
       console.log('Network generation complete event dispatched on error');
-    }, 100);
+    }, 1000);
     
     throw error;
   }
@@ -338,108 +381,81 @@ export const generateNetworkFromPrompt = async (networkId: string, prompt: strin
  */
 export const generateNetworkDataFromAI = async (prompt: string, industry: string) => {
   try {
+    console.log('NetworkGenerator: Starting AI data generation for industry:', industry);
+    console.log('NetworkGenerator: Using prompt:', prompt);
+    
+    // Check if API key exists
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+    
+    if (!apiKey || apiKey.trim() === '') {
+      console.error("No OpenAI API key found. Check your .env file.");
+      throw new Error("Missing OpenAI API key");
+    }
+    
+    console.log("API key status:", apiKey ? "Present (length: " + apiKey.length + ")" : "Missing");
+    
     const systemPrompt = `
 You are an expert in professional networking, relationship mapping, and industry influence strategies.
-Your task is to generate an extensive, realistic professional network for someone in the ${industry || "professional"} industry.
 
-### Objective
-Create a comprehensive network map (approximately 100 nodes) that represents a realistic professional ecosystem, including:
-- Actual companies, organizations, and institutions (use real names)
-- Professional roles and positions (use realistic titles)
-- Industry events and conferences (use real event names)
-- Real networking venues and locations
+### PRIORITY INSTRUCTION 
+The user's request is: "${prompt}"
+This request must be your PRIMARY focus. The network generated MUST be customized to reflect EXACTLY what the user has requested. DO NOT create a generic ${industry} network - instead create a network that specifically addresses "${prompt}".
 
-### Network Structure (100+ nodes total)
-1. Organizations (40-50 nodes):
-   - Major companies in the industry (use real company names)
-   - Professional associations and trade bodies
-   - Investment firms and relevant financial institutions
-   - Media organizations and industry publications
-   - Research institutions and think tanks
-   - Regulatory bodies and government agencies
+### Network Structure (15-20 nodes total)
+1. Organizations (5-7 nodes):
+   - Companies and organizations that DIRECTLY relate to: "${prompt}"
+   - Must include specific, real organizations relevant to the user's request
+   - Each organization must have a clear connection to the user's specific needs
 
-2. Professional Roles (30-40 nodes):
-   - C-suite executives and decision-makers
-   - Industry experts and thought leaders
-   - Technical specialists and domain experts
-   - Department heads and team leaders
-   - Entrepreneurs and innovators
-   - Consultants and advisors
+2. People (5-7 nodes):
+   - Real job roles/positions that would help with: "${prompt}" 
+   - Professionals with expertise specifically requested by the user
+   - Contacts that would be valuable for the exact situation described
 
-3. Industry Events (15-20 nodes):
-   - Major industry conferences
-   - Trade shows and exhibitions
-   - Professional seminars and workshops
-   - Industry awards ceremonies
-   - Networking events and meetups
+3. Events/Venues (3-5 nodes):
+   - Specific conferences, events, or places directly relevant to: "${prompt}"
+   - Must be tailored to the user's exact request, not generic industry events
 
-4. Networking Venues (10-15 nodes):
-   - Business clubs and professional associations
-   - Conference centers and event spaces
-   - Coworking spaces and innovation hubs
-   - Industry-specific facilities
-   - Educational institutions
-
-### Critical Requirements
-1. Use REAL names for:
-   - Companies and organizations
-   - Industry events and conferences
-   - Venues and locations
-   - Professional associations
-   
-2. Include SPECIFIC details:
-   - Company locations and headquarters
-   - Event dates (use future dates)
-   - Venue addresses
-   - Professional roles and responsibilities
-
-3. Create MEANINGFUL relationships:
-   - Professional collaborations
-   - Business partnerships
-   - Mentor-mentee relationships
-   - Industry influence flows
-   - Knowledge exchange pathways
+### CRITICAL REQUIREMENTS
+1. DO NOT generate generic nodes. Each node MUST directly relate to: "${prompt}"
+2. If the user asks for a specific type of network (e.g., "tech startups in healthcare"), EVERY node must relate to that specific focus
+3. If the user includes specific companies, people, or events in their prompt, those MUST be included as nodes
+4. The network should solve the specific problem or address the specific situation in: "${prompt}"
 
 ### Output Format
-IMPORTANT: Your response must ONLY contain the JSON, with no additional text. Do not include explanations, markdown formatting, or code blocks. Return a STRICT, VALID JSON object with absolutely nothing else.
-
-The JSON structure must follow this exact format:
+Return a STRICT, VALID JSON object with these exact fields:
 {
   "nodes": [
     {
-      "name": "Google",
-      "type": "organization",
-      "notes": "Global technology leader in AI and cloud computing",
-      "address": "Mountain View, CA"
+      "name": "Specific Company/Person Name",
+      "type": "organization/person/event/venue",
+      "notes": "Description showing direct relevance to user's prompt: ${prompt}",
+      "address": "Location (for organizations/venues)"
     }
   ],
   "relationships": [
     {
-      "source": "Google",
-      "target": "Apple",
-      "label": "Strategic partnership",
-      "notes": "Joint AI research initiative"
+      "source": "Source Name",
+      "target": "Target Name",
+      "label": "Nature of relationship",
+      "notes": "How this connection helps with: ${prompt}"
     }
-  ],
-}
-
-Your response must be a valid JSON object starting with '{' and ending with '}' - nothing else. Do not include anything before or after the JSON.
-
-Focus on creating a rich, interconnected network that provides a comprehensive view of the industry's ecosystem.`;
+  ]
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a comprehensive professional network for the ${industry} industry, incorporating the user's context: ${prompt}` }
+          { role: 'user', content: `I need a professional network specifically focused on: "${prompt}" in the ${industry} industry. Please generate ONLY relevant nodes that directly address my specific request, not generic industry contacts.` }
         ],
-        temperature: 0.8,
+        temperature: 0.5,
         max_tokens: 4000
       })
     });
@@ -447,20 +463,24 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error:", errorData);
+      console.log("API key used (first 5 chars):", apiKey.substring(0, 5) + "...");
       throw new Error(errorData.error?.message || 'Failed to get response from AI');
     }
     
     const data = await response.json();
     const content = data.choices[0].message.content;
-    console.log("Raw AI response:", content);
+    console.log("Raw AI response received, length:", content.length);
+    console.log("Response starts with:", content.substring(0, 100));
     
     let parsedData;
     
     // First try to parse the entire response as JSON directly
     try {
       parsedData = JSON.parse(content);
+      console.log("Direct JSON parsing successful");
+      console.log("Parsed data node count:", parsedData?.nodes?.length || 0);
     } catch (directParseError) {
-      console.log("Direct JSON parsing failed, trying to extract JSON from markdown...");
+      console.log("Direct JSON parsing failed with error:", directParseError.message);
       
       // Try different regex patterns to extract JSON
       // Pattern 1: JSON inside code blocks
@@ -469,6 +489,7 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
       const codeBlockMatch = content.match(codeBlockRegex);
       
       if (codeBlockMatch && codeBlockMatch[1]) {
+        console.log("Found JSON in code block");
         jsonContent = codeBlockMatch[1].trim();
       } else {
         // Pattern 2: Look for a JSON object with curly braces
@@ -476,36 +497,49 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
         const jsonObjectMatch = content.match(jsonObjectRegex);
         
         if (jsonObjectMatch && jsonObjectMatch[1]) {
+          console.log("Found JSON with regex pattern");
           jsonContent = jsonObjectMatch[1].trim();
         }
       }
       
       if (!jsonContent) {
-        console.error("Could not extract JSON from AI response, content:", content);
+        console.error("Could not extract JSON from AI response, falling back to text parsing");
+        console.log("Displaying first 300 chars of response:", content.substring(0, 300));
         
         // Emergency fallback - try to create a basic network structure from the text
-        return generateFallbackNetworkFromText(content, industry);
+        return generateFallbackNetworkFromText(content, industry, prompt);
       }
       
       try {
         parsedData = JSON.parse(jsonContent);
+        console.log("Extracted JSON parsing successful");
+        console.log("Parsed data node count:", parsedData?.nodes?.length || 0);
       } catch (extractParseError) {
-        console.error("Error parsing extracted JSON:", extractParseError, "content:", jsonContent);
+        console.error("Error parsing extracted JSON:", extractParseError, "content first 100 chars:", jsonContent.substring(0, 100));
         
         // Emergency fallback if JSON parsing fails
-        return generateFallbackNetworkFromText(content, industry);
+        return generateFallbackNetworkFromText(content, industry, prompt);
       }
     }
     
     // Validate the structure
     if (!parsedData || !parsedData.nodes || !Array.isArray(parsedData.nodes)) {
       console.error("Invalid network data structure - missing nodes:", parsedData);
-      return generateFallbackNetworkFromText(content, industry);
+      return generateFallbackNetworkFromText(content, industry, prompt);
     }
+    
+    if (parsedData.nodes.length < 5) {
+      console.error("Too few nodes in response, expected 20+ but got:", parsedData.nodes.length);
+      return generateFallbackNetworkFromText(content, industry, prompt);
+    }
+    
+    console.log("Successfully parsed network data from AI with", parsedData.nodes.length, "nodes");
     
     if (!parsedData.relationships || !Array.isArray(parsedData.relationships)) {
       console.log("Missing relationships, creating an empty array");
       parsedData.relationships = [];
+    } else {
+      console.log("Relationship count:", parsedData.relationships.length);
     }
     
     // Return a network with the relationships
@@ -525,7 +559,8 @@ Focus on creating a rich, interconnected network that provides a comprehensive v
     };
   } catch (error) {
     console.error('Error generating network data from AI:', error);
-    throw error;
+    // Ensure we have a fallback with the user's prompt
+    return generateFallbackNetworkFromText("", industry, prompt);
   }
 };
 

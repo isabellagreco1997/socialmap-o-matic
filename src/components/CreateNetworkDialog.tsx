@@ -96,7 +96,7 @@ export const CreateNetworkDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      // If this is an AI network, check subscription status and limits
+      // If this is an AI network (isBlank=false), check subscription status and limits
       if (!isBlank) {
         // If user is not subscribed and has reached the free limit, don't proceed
         if (!isSubscribed && userNetworkCount >= FREE_NETWORK_LIMIT) {
@@ -111,7 +111,9 @@ export const CreateNetworkDialog = ({
       
       const name = isBlank ? "New Network" : "AI Generated Network";
       
-      // Add the is_ai flag to indicate if this is an AI-generated network
+      // The third parameter to createNetwork is is_ai:
+      // - When isBlank=true, is_ai=false (for manual networks)
+      // - When isBlank=false, is_ai=true (for AI-generated networks)
       const network = await NetworkDataService.createNetwork(user.id, name, !isBlank);
 
       if (network) {
@@ -239,10 +241,60 @@ export const CreateNetworkDialog = ({
     }
   };
 
+  // Helper function to generate a network name from a prompt
+  const generateNetworkNameFromPrompt = async (prompt: string, industry: string): Promise<string> => {
+    try {
+      console.log('Generating network name from prompt and industry:', { prompt, industry });
+      
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional network naming assistant. Create a concise, professional name for a network based on the user\'s description. The name should be maximum 30 characters. Return ONLY the name as a plain text string, with no quotes, explanations, formatting or additional text.'
+            },
+            {
+              role: 'user',
+              content: `Generate a professional, concise name for a network in the ${industry} industry based on this description: "${prompt}"`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 30
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate network name');
+      }
+      
+      const data = await response.json();
+      const generatedName = data.choices[0].message.content.trim();
+      
+      // Clean up the name (remove quotes if present)
+      const cleanedName = generatedName.replace(/["']/g, '');
+      
+      console.log('Generated network name:', cleanedName);
+      return cleanedName;
+    } catch (error) {
+      console.error('Error generating network name:', error);
+      // Return a default name if generation fails
+      return `${industry} Network ${new Date().toLocaleTimeString()}`;
+    }
+  };
+
   const handleCreateAiNetwork = async (networkName: string, prompt: string, industry: string) => {
     console.log('CreateNetworkDialog: handleCreateAiNetwork called');
     setShowAIDialog(false);
-    createNetwork(false); // false means AI network
+    // Create a network with isBlank=false to indicate this is an AI-generated network
+    createNetwork(false); 
 
     try {
       // Get the most recently created network
@@ -259,19 +311,44 @@ export const CreateNetworkDialog = ({
       if (networks && networks.length > 0) {
         const network = networks[0];
         
-        // Update the network name based on industry
+        // Check if we need to generate a name
+        let finalNetworkName = networkName;
+        
+        // If the name is empty or the default template, generate a name with AI
+        if (!finalNetworkName || finalNetworkName.trim() === "" || 
+            finalNetworkName === `${industry} Network`) {
+          console.log('Generating AI name for network');
+          toast({
+            title: "Generating network name",
+            description: "Creating a name based on your prompt..."
+          });
+          
+          finalNetworkName = await generateNetworkNameFromPrompt(prompt, industry);
+        }
+
+        // Update the network name
         await supabase
           .from('networks')
-          .update({ name: networkName })
+          .update({ name: finalNetworkName })
           .eq('id', network.id);
 
-        // Generate the network with AI
-        await generateNetworkFromPrompt(network.id, prompt, industry);
-        
-        toast({
-          title: "Network generated",
-          description: "Created an AI-generated network based on your prompt"
-        });
+        // Generate the network with AI based on user's prompt
+        console.log(`Generating network nodes and edges for "${finalNetworkName}" with prompt: "${prompt}"`);
+        try {
+          await generateNetworkFromPrompt(network.id, prompt, industry);
+          
+          toast({
+            title: "Network generated",
+            description: `Created "${finalNetworkName}" based on your prompt`
+          });
+        } catch (generateError) {
+          console.error('Error generating network content:', generateError);
+          toast({
+            variant: "destructive",
+            title: "Generation Error",
+            description: "Error creating network content. Please try again with a different prompt."
+          });
+        }
       }
     } catch (error) {
       console.error('Error in AI network generation:', error);

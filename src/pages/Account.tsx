@@ -11,6 +11,7 @@ import { User } from "@supabase/supabase-js";
 import { env } from "@/utils/env";
 import { useSubscription } from "@/hooks/use-subscription";
 import { format } from "date-fns";
+import { redirectToCustomerPortal } from "@/utils/stripe";
 
 export default function Account() {
   const [user, setUser] = useState<User | null>(null);
@@ -126,6 +127,20 @@ export default function Account() {
       return format(new Date(dateString), 'MMMM d, yyyy');
     } catch (error) {
       return dateString;
+    }
+  };
+
+  // Function to handle redirecting to the Stripe customer portal
+  const handleManageBilling = async () => {
+    try {
+      await redirectToCustomerPortal();
+    } catch (error) {
+      console.error('Error redirecting to customer portal:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to open billing portal. Please try again.",
+      });
     }
   };
 
@@ -276,7 +291,7 @@ export default function Account() {
                             )}
                           </div>
                           <div className="mt-4">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={handleManageBilling}>
                               Manage Billing
                             </Button>
                           </div>

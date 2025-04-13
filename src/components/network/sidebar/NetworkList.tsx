@@ -404,8 +404,8 @@ export function NetworkList({
       // Add a delay before ending transition
       setTimeout(() => {
         isTransitioningRef.current = false;
-      }, 200);
-    }, 200); // Increase timeout to ensure smoother transitions
+      }, 100); // Reduced from 200ms to 100ms for faster UI transition
+    }, 100); // Reduced from 200ms to 100ms for faster UI updates
     
     return () => {
       if (updateTimeoutRef.current) {
@@ -434,7 +434,7 @@ export function NetworkList({
         onNetworkSelect(id);
       }
       selectionTimeoutRef.current = null;
-    }, 30);
+    }, 10); // Reduced from 30ms to 10ms for faster network selection
   }, [currentNetworkId, onNetworkSelect]);
   
   // Ensure currentNetworkId is valid when networks change

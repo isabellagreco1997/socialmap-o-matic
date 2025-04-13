@@ -13,17 +13,64 @@ import { useNetworkHandlers } from '@/components/network/handlers';
 import EdgeLabelDialog from '@/components/EdgeLabelDialog';
 import NetworkChat from '@/components/network/NetworkChat';
 import { useFluidNodeMovement } from '@/hooks/useFluidNodeMovement';
-import NetworkLoadingOverlay from '@/components/network/NetworkLoadingOverlay';
 import NetworkEmptyState from '@/components/network/NetworkEmptyState';
 import NetworkFileHandlers from '@/components/network/NetworkFileHandlers';
 import { NetworkMapProvider, useNetworkMap } from '@/context/NetworkMapContext';
 import { useNetworkEvents } from '@/hooks/useNetworkEvents';
 import { useNetworkDataFetcher } from '@/hooks/useNetworkDataFetcher';
 import { useNetworkConnections } from '@/hooks/useNetworkConnections';
+import { Loader2 } from 'lucide-react';
 
 // Create a global variable to track if we've loaded networks before
 const hasLoadedNetworks = {
   value: false
+};
+
+// Component to handle reload checks 
+const NetworkReloadCheck = () => {
+  const {
+    currentNetworkId,
+    setNodes,
+    setEdges,
+    setRefreshCounter
+  } = useNetworkMap();
+  
+  // Check for reload flags on mount
+  useEffect(() => {
+    const needsReload = localStorage.getItem('network-generation-reload-needed');
+    if (needsReload) {
+      console.log('Detected unfinished network generation for:', needsReload);
+      
+      // Clear the flag
+      localStorage.removeItem('network-generation-reload-needed');
+      
+      // Set a short delay before triggering a refresh
+      setTimeout(() => {
+        if (currentNetworkId === needsReload) {
+          console.log('Triggering refresh for unfinished network:', needsReload);
+          // Force refresh the data after a delay
+          setRefreshCounter(prev => prev + 1);
+          
+          // Force a clean slate
+          setNodes([]);
+          setEdges([]);
+          
+          // Trigger a network update
+          window.dispatchEvent(new CustomEvent('force-network-update', {
+            detail: { 
+              networkId: needsReload,
+              timestamp: Date.now(),
+              forceServerRefresh: true,
+              attempt: 'reload-recovery'
+            }
+          }));
+        }
+      }, 1000);
+    }
+  }, [currentNetworkId, setRefreshCounter, setNodes, setEdges]);
+  
+  // This component doesn't render anything
+  return null;
 };
 
 const NetworkMapContent = () => {
@@ -66,7 +113,8 @@ const NetworkMapContent = () => {
     setNetworkName,
     networkDescription,
     setNetworkDescription,
-    filteredNetworks
+    filteredNetworks,
+    setRefreshCounter
   } = useNetworkMap();
 
   // Import custom hooks
@@ -127,63 +175,27 @@ const NetworkMapContent = () => {
   // Handle tab visibility changes to avoid unnecessary loading states
   useEffect(() => {
     // Force loading state to false on mount - this ensures we don't show loading on initial load
-    setIsLoading(false);
+    // setIsLoading(false); // REMOVED - Allow the loading state to be controlled by data fetch
     
     const handleVisibilityChange = () => {
       // When returning to the tab, check if we have cached data
       if (document.visibilityState === 'visible') {
-        // Immediately set loading to false on tab return
-        console.log('NetworkMap: Tab visibility changed to visible, forcing loading state to false');
-        setIsLoading(false);
+        console.log('NetworkMap: Tab visibility changed to visible');
         
-        // Immediately set loading to false if we have any network data
-        if (networks.length > 0) {
-          console.log('NetworkMap: Tab visibility changed to visible, networks exist, setting loading false');
+        // Only reset loading state if we already have data loaded
+        if (networks.length > 0 && currentNetworkId && nodes.length > 0) {
+          console.log('NetworkMap: Data already loaded, setting loading false');
           setIsLoading(false);
-        }
-        
-        // If we have a current network, check for cached data
-        if (currentNetworkId) {
-          const hasCachedData = 
-            localStorage.getItem(`socialmap-nodes-${currentNetworkId}`) && 
-            localStorage.getItem(`socialmap-edges-${currentNetworkId}`);
-            
-          if (hasCachedData) {
-            console.log('NetworkMap: Tab visibility changed, found cached data, setting loading false');
-            setIsLoading(false);
-          }
         }
       }
     };
-    
-    // Force loading to false after initial render too
-    const initialTimout = setTimeout(() => {
-      // If we have cached data or networks, force loading to false
-      console.log('NetworkMap: Initial timeout forcing loading false');
-      setIsLoading(false);
-    }, 500); // Reduced from 1000ms to 500ms
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Immediately set up a MutationObserver to detect any loading overlay and remove it
-    const observer = new MutationObserver((mutations) => {
-      // Look for any loading overlay elements in the DOM
-      const loadingOverlays = document.querySelectorAll('[class*="backdrop-blur"]');
-      if (loadingOverlays.length > 0) {
-        console.log('NetworkMap: MutationObserver detected loading overlay, forcing removal');
-        setIsLoading(false);
-      }
-    });
-    
-    // Start observing the document body for added nodes
-    observer.observe(document.body, { childList: true, subtree: true });
-    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearTimeout(initialTimout);
-      observer.disconnect();
     };
-  }, [currentNetworkId, setIsLoading, networks]);
+  }, [currentNetworkId, setIsLoading, networks, nodes.length]);
 
   return (
     <SidebarProvider defaultOpen>
@@ -207,15 +219,6 @@ const NetworkMapContent = () => {
         </Sidebar>
 
         <div className="flex-1 relative">
-          {/* Hidden div that forces loading state to false on visibility change */}
-          {document.visibilityState === 'visible' && (
-            <div style={{ display: 'none' }} 
-                 onLoad={() => setIsLoading(false)}
-                 ref={(el) => el && setTimeout(() => setIsLoading(false), 0)} />
-          )}
-          
-          <NetworkLoadingOverlay isGenerating={isGeneratingNetwork} />
-          
           {/* Empty state when there are no networks */}
           {networks.length === 0 && !isLoading ? (
             <NetworkEmptyState 
@@ -225,17 +228,31 @@ const NetworkMapContent = () => {
             />
           ) : (
             <ReactFlowProvider>
-              <NetworkFlow 
-                nodes={nodes} 
-                edges={edges} 
-                networks={networks} 
-                currentNetworkId={currentNetworkId} 
-                onNodesChange={handleNodeChanges} 
-                onEdgesChange={handleEdgeChangesWrapper} 
-                onConnect={onConnect} 
-                onAddNode={() => setIsDialogOpen(true)} 
-                onImportCsv={() => setIsCsvDialogOpen(true)} 
-              />
+              <div className="relative h-full w-full overflow-hidden">
+                {/* Hide the network flow completely when loading */}
+                {isLoading || isGeneratingNetwork ? (
+                  <div className="absolute inset-0 w-full h-full bg-white flex items-center justify-center">
+                    <div className="bg-white shadow-sm p-5 rounded-lg flex flex-col items-center">
+                      <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-2" />
+                      <p className="text-base font-medium">
+                        {isGeneratingNetwork ? "Generating Network..." : "Loading Network..."}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <NetworkFlow 
+                    nodes={nodes} 
+                    edges={edges} 
+                    networks={networks} 
+                    currentNetworkId={currentNetworkId} 
+                    onNodesChange={handleNodeChanges} 
+                    onEdgesChange={handleEdgeChangesWrapper} 
+                    onConnect={onConnect} 
+                    onAddNode={() => setIsDialogOpen(true)} 
+                    onImportCsv={() => setIsCsvDialogOpen(true)} 
+                  />
+                )}
+              </div>
             </ReactFlowProvider>
           )}
 
@@ -296,6 +313,7 @@ const NetworkMapContent = () => {
 const Flow = () => {
   return (
     <NetworkMapProvider>
+      <NetworkReloadCheck />
       <NetworkMapContent />
     </NetworkMapProvider>
   );

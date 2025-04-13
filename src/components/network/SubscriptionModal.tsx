@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { CheckCircle2, Calendar, CreditCard } from 'lucide-react';
 import { env } from "@/utils/env";
-import { redirectToCheckout } from "@/utils/stripe";
+import { redirectToCheckout, redirectToCustomerPortal } from "@/utils/stripe";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -54,6 +54,23 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
         title: "Error",
         description: "Failed to start checkout process. Please try again.",
         variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to handle redirecting to the Stripe customer portal
+  const handleManageBilling = async () => {
+    try {
+      setIsLoading(true);
+      await redirectToCustomerPortal();
+    } catch (error) {
+      console.error('Error redirecting to customer portal:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to open billing portal. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -123,8 +140,8 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
               </div>
               
               <div className="flex justify-center">
-                <Button variant="outline" size="sm">
-                  Manage Billing
+                <Button variant="outline" size="sm" onClick={handleManageBilling} disabled={isLoading}>
+                  {isLoading ? "Loading..." : "Manage Billing"}
                 </Button>
               </div>
             </div>

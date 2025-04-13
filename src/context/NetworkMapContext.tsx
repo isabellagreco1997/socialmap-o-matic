@@ -346,11 +346,32 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     };
     
-    // Handle network name updates - ensure they're reflected in the networks array
+    // Handle network name updates and force refreshes
     const handleNetworkUpdate = (event: CustomEvent) => {
-      const { networkId, newName } = event.detail;
-      console.log('NetworkMapContext: Handling network update for:', networkId, newName);
+      const { networkId, newName, forceServerRefresh } = event.detail;
+      console.log('NetworkMapContext: Handling network update for:', networkId, 'with forceServerRefresh:', forceServerRefresh);
       
+      // If forceServerRefresh is true, we need to clear cache and fetch fresh data
+      if (forceServerRefresh) {
+        console.log('NetworkMapContext: Force server refresh requested for network:', networkId);
+        
+        // Clear any cached data in localStorage
+        localStorage.removeItem(`socialmap-nodes-${networkId}`);
+        localStorage.removeItem(`socialmap-edges-${networkId}`);
+        
+        // Clear state
+        setNodes([]);
+        setEdges([]);
+        
+        // Trigger a refresh by forcing a shouldRefetchData update
+        setShouldRefetchData(true);
+        // Also increment the refresh counter to ensure all components update
+        setRefreshCounter(prev => prev + 1);
+        
+        return; // Skip the rest of the function since we're doing a full refresh
+      }
+      
+      // Regular name update handling
       if (networkId && newName && typeof newName === 'string') {
         // IMMEDIATELY update the network object in the networks array
         // This is the quickest way to update the UI with the minimal change
@@ -362,49 +383,22 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
           
           // Still update the state properly to ensure React updates
           setNetworks([...networks]);
+        } else {
+          console.log('NetworkMapContext: Could not find network to update:', networkId);
+          
+          // Refresh networks to ensure UI is up to date
+          refreshNetworks();
         }
         
-        // Update our local state with the new name (this is the more "React way")
-        setNetworks(prevNetworks => {
-          // Create a new array with the updated network
-          const updatedNetworks = prevNetworks.map(network => 
-            network.id === networkId 
-              ? { ...network, name: newName } 
-              : network
-          );
-          
-          // Also update localStorage immediately to persist the change
-          localStorage.setItem('socialmap-networks', JSON.stringify(updatedNetworks));
-          
-          // Directly update the networks array in localStorage to ensure it's available immediately
-          try {
-            // Get all networks from Supabase to ensure we have the latest data
-            supabase
-              .from('networks')
-              .select('*')
-              .order('order', { ascending: true })
-              .then(({ data, error }) => {
-                if (!error && data) {
-                  // Update any matching networks with the new name
-                  const finalNetworks = data.map(network => 
-                    network.id === networkId 
-                      ? { ...network, name: newName } 
-                      : network
-                  );
-                  
-                  // Update localStorage with the latest data
-                  localStorage.setItem('socialmap-networks', JSON.stringify(finalNetworks));
-                  
-                  // Update state with the latest data from the server
-                  setNetworks(finalNetworks);
-                }
-              });
-          } catch (err) {
-            console.error('Error updating networks in localStorage:', err);
+        // Update name in sidebar cache
+        if (typeof window !== 'undefined') {
+          console.log('NetworkMapContext: Updating cached network name:', networkId, newName);
+          // Use type assertion to handle the cached network names 
+          const cachedNames = (window as any).cachedNetworkNames;
+          if (cachedNames && typeof cachedNames.set === 'function') {
+            cachedNames.set(networkId, newName);
           }
-          
-          return updatedNetworks;
-        });
+        }
         
         // Also update the database with the new name
         supabase
@@ -469,8 +463,20 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     if (currentNetworkId) {
       localStorage.setItem('socialmap-current-network-id', currentNetworkId);
+      
+      // Set loading to true when we switch networks
+      console.log(`NetworkMapContext: Setting isLoading to TRUE for network change to ${currentNetworkId}`);
+      setIsLoading(true);
+      
+      // Auto-reset loading state after a timeout as a fallback
+      const timeout = setTimeout(() => {
+        console.log(`NetworkMapContext: Fallback timeout clearing isLoading for ${currentNetworkId}`);
+        setIsLoading(false);
+      }, 5000); // 5 second fallback timeout
+      
+      return () => clearTimeout(timeout);
     }
-  }, [currentNetworkId]);
+  }, [currentNetworkId, setIsLoading]);
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {

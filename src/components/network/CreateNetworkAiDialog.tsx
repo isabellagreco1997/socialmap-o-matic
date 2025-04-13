@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Sparkles, 
-  Loader2, 
+  Loader2,
+  Wand2
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface CreateNetworkAiDialogProps {
   open: boolean;
@@ -43,8 +45,15 @@ export const CreateNetworkAiDialog = ({
   const [prompt, setPrompt] = useState("");
   const [industry, setIndustry] = useState("Technology");
   const [networkName, setNetworkName] = useState(`${industry} Network`);
+  const { toast } = useToast();
+
+  // Update network name when industry changes
+  useEffect(() => {
+    setNetworkName(`${industry} Network`);
+  }, [industry]);
 
   const handleCreateNetwork = () => {
+    // Network name will be auto-generated based on prompt and industry
     onCreateAiNetwork(networkName, prompt, industry);
   };
 
@@ -100,15 +109,24 @@ export const CreateNetworkAiDialog = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="prompt">Network Description</Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="prompt">Network Description</Label>
+              <Badge variant="outline" className="font-normal text-xs px-2 py-0">
+                <Wand2 className="w-3 h-3 mr-1" />
+                Auto-naming enabled
+              </Badge>
+            </div>
             <Textarea 
               id="prompt" 
               placeholder="Describe the professional network you want to create..." 
               value={prompt} 
               onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-[120px]"
+              className="min-h-[150px]"
               disabled={!canUseAI}
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              AI will automatically generate a network name based on your description and selected industry.
+            </p>
           </div>
         </div>
         

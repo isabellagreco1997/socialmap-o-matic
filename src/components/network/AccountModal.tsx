@@ -11,6 +11,7 @@ import { User } from "@supabase/supabase-js";
 import { SubscriptionModal } from "./SubscriptionModal";
 import { useSubscription } from "@/hooks/use-subscription";
 import { format } from "date-fns";
+import { redirectToCustomerPortal } from "@/utils/stripe";
 
 interface AccountModalProps {
   open: boolean;
@@ -113,6 +114,23 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
 
   const handleUpgradeToPro = () => {
     setSubscriptionModalOpen(true);
+  };
+
+  // Function to handle redirecting to the Stripe customer portal
+  const handleManageBilling = async () => {
+    try {
+      setUpdating(true);
+      await redirectToCustomerPortal();
+    } catch (error) {
+      console.error('Error redirecting to customer portal:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to open billing portal. Please try again.",
+      });
+    } finally {
+      setUpdating(false);
+    }
   };
 
   // Function to format date
@@ -270,8 +288,8 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                                 )}
                               </div>
                               <div className="mt-4">
-                                <Button variant="outline" size="sm">
-                                  Manage Billing
+                                <Button variant="outline" size="sm" onClick={handleManageBilling} disabled={updating}>
+                                  {updating ? "Loading..." : "Manage Billing"}
                                 </Button>
                               </div>
                             </div>
