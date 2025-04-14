@@ -3,6 +3,9 @@ import { Edge, Node } from '@xyflow/react';
 import { useNetworkMap } from '@/context/NetworkMapContext';
 import type { Network, NodeData, EdgeData } from '@/types/network';
 import { clearNetworkNodesEdgesCache } from '@/utils/networkCacheUtils';
+import { useToast } from "@/components/ui/use-toast";
+import { useNetworkCache } from './useNetworkCache';
+import { useNetworkDataSync } from './useNetworkDataSync';
 
 export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonElement>) {
   const {
@@ -18,6 +21,9 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     isLoading,
     setIsGeneratingNetwork
   } = useNetworkMap();
+
+  const { clearCache, saveToCache } = useNetworkCache();
+  const { saveNetworkToDB } = useNetworkDataSync();
 
   // Auto-open create dialog when no networks exist
   useEffect(() => {
@@ -191,58 +197,25 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
   useEffect(() => {
     const handleNetworkDeleted = (event: CustomEvent) => {
       const { networkId } = event.detail;
-      console.log('Network deleted event received in NetworkMap:', networkId);
+      console.log(`Network deleted event received, clearing cache for ${networkId}`);
       
-      try {
-        // If the deleted network is the current one, select another one
-        if (networkId === currentNetworkId) {
-          console.log('Current network was deleted, selecting another one');
-          
-          // Make sure we have the most up-to-date network list
-          const remainingNetworks = networks.filter(network => network.id !== networkId);
-          
-          if (remainingNetworks.length > 0) {
-            // Select the first available network after filtering out the deleted one
-            const nextNetworkId = remainingNetworks[0].id;
-            console.log(`Selecting next available network: ${nextNetworkId}`);
-            
-            // Clear the old network's data from state
-            setNodes([]);
-            
-            // Use a small delay before switching networks to ensure clean state
-            setTimeout(() => {
-              // Set the new network ID
-              setCurrentNetworkId(nextNetworkId);
-              
-              // Force refresh
-              setRefreshCounter(prev => prev + 1);
-            }, 10);
-          } else {
-            // No networks left, clear the current selection
-            console.log('No networks left after deletion, clearing state');
-            setCurrentNetworkId(null);
-            
-            // Clear the canvas
-            setNodes([]);
-          }
-        } else {
-          // The deleted network wasn't the current one, just refresh to update the list
-          console.log('Refreshing network data after network deletion');
-          setRefreshCounter(prev => prev + 1);
-        }
-      } catch (error) {
-        console.error('Error handling network deletion:', error);
-        // Force a refresh as a fallback
-        setRefreshCounter(prev => prev + 1);
+      // Clear the cache for this network
+      clearCache(networkId);
+      
+      // If this was the current network, clear nodes and edges immediately
+      if (networkId === currentNetworkId) {
+        console.log('Clearing current network data after deletion');
+        setNodes([]);
+        setEdges([]);
       }
     };
-
+    
     window.addEventListener('network-deleted', handleNetworkDeleted as EventListener);
     
     return () => {
       window.removeEventListener('network-deleted', handleNetworkDeleted as EventListener);
     };
-  }, [currentNetworkId, networks, setCurrentNetworkId, setNodes, setRefreshCounter]);
+  }, [currentNetworkId, setNodes, setEdges, clearCache]);
 
   // Listen for pre-network-generation-complete event to clear state
   useEffect(() => {
@@ -276,11 +249,20 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     }
     
     console.log(`Selecting network ${id}`);
+    
+    // For blank networks, make sure to clear cached nodes and edges in localStorage
+    // and load fresh data from the database
+    clearNetworkNodesEdgesCache(id);
+    
+    // Clear existing nodes and edges before switching to the new network
+    setNodes([]);
+    setEdges([]);
+    
     setCurrentNetworkId(id);
     
     // Increment the refresh counter to force data refetching
     setRefreshCounter(prev => prev + 1);
-  }, [currentNetworkId, setCurrentNetworkId, setRefreshCounter]);
+  }, [currentNetworkId, setCurrentNetworkId, setRefreshCounter, setNodes, setEdges]);
   
   const handleNetworkCreated = useCallback((id: string, isAI: boolean = false) => {
     console.log('NetworkMap: Network created', {id, isAI});
@@ -323,6 +305,49 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     // Force an immediate refresh of network data
     setRefreshCounter(prev => prev + 1);
   }, [setCurrentNetworkId, setIsGeneratingNetwork, setRefreshCounter, setNodes, setEdges]);
+
+  // Handle node added events
+  useEffect(() => {
+    const handleNodeAdded = (event: CustomEvent) => {
+      const { networkId, nodeId } = event.detail;
+      console.log(`Node added event received for network ${networkId}, node ${nodeId}`);
+      
+      // If this is for the current network, make sure we save our current nodes reference
+      if (networkId === currentNetworkId) {
+        console.log('Saving updated nodes to cache after node add');
+        saveToCache(networkId, nodes, edges);
+      }
+    };
+    
+    window.addEventListener('node-added', handleNodeAdded as EventListener);
+    
+    return () => {
+      window.removeEventListener('node-added', handleNodeAdded as EventListener);
+    };
+  }, [currentNetworkId, nodes, edges, saveToCache]);
+
+  // Handle beforeunload to save unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (currentNetworkId && nodes.length > 0) {
+        // Force save to local storage for backup
+        saveToCache(currentNetworkId, nodes, edges);
+        
+        // Optionally try to save to database too
+        try {
+          saveNetworkToDB(currentNetworkId, nodes, edges);
+        } catch (error) {
+          console.error('Error saving on beforeunload:', error);
+        }
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentNetworkId, nodes, edges, saveToCache, saveNetworkToDB]);
 
   return {
     handleNetworkSelect,

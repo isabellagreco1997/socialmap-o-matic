@@ -69,12 +69,35 @@ export const useNetworkHandlers = (
         }
       };
       
-      setNodes(nodes => [...nodes, newNode]);
+      // Update the local state
+      setNodes(nodes => {
+        const newNodes = [...nodes, newNode];
+        
+        // Save to localStorage to provide backup persistence
+        if (currentNetworkId) {
+          try {
+            localStorage.setItem(`socialmap-nodes-${currentNetworkId}`, JSON.stringify(newNodes));
+          } catch (e) {
+            console.error('Error saving nodes to localStorage:', e);
+          }
+        }
+        
+        return newNodes;
+      });
+
       setIsDialogOpen(false);
       toast({
         title: "Node added",
         description: `Added ${data.name} to the network`,
       });
+      
+      // Ensure other components know we've added a node
+      window.dispatchEvent(new CustomEvent('node-added', { 
+        detail: { 
+          networkId: currentNetworkId,
+          nodeId: savedNode.id
+        }
+      }));
     } catch (error) {
       console.error('Error adding node:', error);
       toast({

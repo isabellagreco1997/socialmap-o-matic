@@ -49,12 +49,27 @@ export class NetworkDataService {
    */
   static async createNetwork(userId: string, name: string, isAI: boolean) {
     try {
+      // First get the current max order value
+      const { data: maxOrderResult, error: maxOrderError } = await supabase
+        .from('networks')
+        .select('order')
+        .eq('user_id', userId)
+        .order('order', { ascending: false })
+        .limit(1);
+      
+      // Calculate the next order value (max + 1), or 0 if no networks exist
+      const nextOrder = maxOrderResult && maxOrderResult.length > 0 && maxOrderResult[0].order !== null
+        ? maxOrderResult[0].order + 1
+        : 0;
+        
+      // Create the network with explicit order
       const { data: network, error } = await supabase
         .from('networks')
         .insert([{
           name: name,
           user_id: userId,
-          is_ai: isAI
+          is_ai: isAI,
+          order: nextOrder // Explicitly set the order to place it at the end
         }])
         .select()
         .single();

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { Node, Edge, useNodesState, useEdgesState } from '@xyflow/react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
@@ -109,13 +109,29 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
   
   const { toast } = useToast();
   
-  // Compute filtered networks
-  const filteredNetworks = networks.filter(network => 
-    network.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  // Memoize the filtered networks to prevent unnecessary re-renders
+  const filteredNetworks = useMemo(() => 
+    networks.filter(network => 
+      network.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), 
+    [networks, searchQuery]
+  );
   
   // Function to manually trigger a networks refresh
   const refreshNetworks = useCallback(async () => {
+    // Use a flag to track if the component is still mounted
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Timeout",
+          description: "Network request timed out. Please try again."
+        });
+      }
+    }, 10000); // 10-second timeout
+    
     try {
       console.log('NetworkMapContext: Manual refresh of networks requested');
       setIsLoading(true);
@@ -124,6 +140,10 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
         .from('networks')
         .select('*')
         .order('order', { ascending: true });
+      
+      clearTimeout(timeoutId);
+      
+      if (!isMounted) return;
       
       if (error) throw error;
       
@@ -144,14 +164,19 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       localStorage.setItem('socialmap-networks', JSON.stringify(networksData));
       
     } catch (error) {
-      console.error('Error refreshing networks:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to refresh networks"
-      });
+      clearTimeout(timeoutId);
+      if (isMounted) {
+        console.error('Error refreshing networks:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to refresh networks"
+        });
+      }
     } finally {
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
   }, [setNetworks, setLastFetchTimestamp, currentNetworkId, setCurrentNetworkId, toast]);
   

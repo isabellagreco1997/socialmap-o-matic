@@ -1,9 +1,13 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNetworkMap } from '@/context/NetworkMapContext';
-import { clearNetworkCache, loadNetworkFromCache, saveNetworkToCache, areNetworksEquivalent } from "@/utils/networkCacheUtils";
-import isEqual from 'lodash/isEqual';
+import { useNetworkCache } from './useNetworkCache';
+import { useNetworkDataSync } from './useNetworkDataSync';
+import { useNetworkEventHandlers } from './useNetworkEventHandlers';
+import { useNetworkLoadingState } from './useNetworkLoadingState';
+import { useNetworkDataTracking } from './useNetworkDataTracking';
+import { useNetworkFetchTriggers } from './useNetworkFetchTriggers';
+import { debounce } from 'lodash';
 
 export function useNetworkDataFetcher() {
   const {
@@ -11,267 +15,265 @@ export function useNetworkDataFetcher() {
     networks,
     setNodes,
     setEdges,
-    refreshCounter,
-    shouldRefetchData,
-    setShouldRefetchData,
     setLastFetchTimestamp,
-    isLoading,
-    setIsLoading
   } = useNetworkMap();
   
-  // Use refs to track current data to avoid unnecessary re-renders
-  const currentNodesRef = useRef<any[]>([]);
-  const currentEdgesRef = useRef<any[]>([]);
-  const lastFetchedNetworkId = useRef<string | null>(null);
-  const processingRef = useRef<boolean>(false);
-  
   const { toast } = useToast();
+  const { clearCache, loadFromCache, saveToCache } = useNetworkCache();
+  const { 
+    fetchNodesFromDB, 
+    fetchEdgesFromDB, 
+    saveNetworkToDB,
+    cleanupInvalidEdges 
+  } = useNetworkDataSync();
+  
+  // Use our new sub-hooks
+  const {
+    isLoading,
+    startLoading,
+    stopLoading,
+    startProcessing,
+    stopProcessing,
+    isProcessing
+  } = useNetworkLoadingState();
+  
+  const {
+    getCurrentNodes,
+    getCurrentEdges,
+    setCurrentNodes,
+    setCurrentEdges,
+    getLastFetchedNetworkId,
+    setLastFetchedNetworkId,
+    hasNodesLoaded
+  } = useNetworkDataTracking();
+  
+  const {
+    shouldForceRefresh,
+    resetRefreshFlag,
+    shouldSkipFetching,
+    refreshCounter,
+    shouldRefetchData
+  } = useNetworkFetchTriggers();
+  
+  // Create proper refs for event handlers
+  const nodesRefForEvents = useRef<any[]>([]);
+  const edgesRefForEvents = useRef<any[]>([]);
+  
+  // Improve the synchronization of refs with their data
+  useEffect(() => {
+    // When the component renders, make sure the event ref contains the current data
+    // This is critical for the event handlers to work with the latest data
+    if (getCurrentNodes().length > 0 && nodesRefForEvents.current.length === 0) {
+      console.log('Initializing event refs with current data');
+      nodesRefForEvents.current = [...getCurrentNodes()];
+      edgesRefForEvents.current = [...getCurrentEdges()];
+    }
+  }, [getCurrentNodes, getCurrentEdges]);
+  
+  // Also update refs whenever we set new data - this needs to be more reliable
+  const updateCurrentNodes = useCallback((nodes: any[]) => {
+    console.log('Updating node refs with new data', nodes.length);
+    setCurrentNodes(nodes);
+    nodesRefForEvents.current = [...nodes]; // Make a copy to ensure reference changes
+  }, [setCurrentNodes]);
+  
+  const updateCurrentEdges = useCallback((edges: any[]) => {
+    console.log('Updating edge refs with new data', edges.length);
+    setCurrentEdges(edges);
+    edgesRefForEvents.current = [...edges]; // Make a copy to ensure reference changes
+  }, [setCurrentEdges]);
+  
+  // Setup event handlers with proper refs
+  useNetworkEventHandlers(
+    currentNetworkId,
+    setNodes,
+    setEdges,
+    nodesRefForEvents,
+    edgesRefForEvents
+  );
 
   // Function to fetch network data from cache or server
   const fetchNetworkData = useCallback(async (forceServerRefresh = false) => {
     // Guard against concurrent execution
-    if (processingRef.current) {
-      console.log('Already processing a network fetch, ignoring duplicate call');
-      return Promise.resolve();
+    if (isProcessing()) {
+      console.log('Already processing a data fetch, skipping...');
+      return;
     }
     
+    // If no network ID is selected, don't try to fetch
     if (!currentNetworkId) {
-      console.log('No current network ID, skipping fetch');
-      setIsLoading(false);
+      stopLoading();
+      return;
+    }
+    
+    // Skip if this network was just fetched and we're not forcing refresh
+    if (
+      getLastFetchedNetworkId() === currentNetworkId && 
+      !forceServerRefresh && 
+      !shouldRefetchData &&
+      refreshCounter === 0
+    ) {
+      console.log('Skipping data fetch - same network and no refresh trigger');
+      stopLoading();
       return Promise.resolve();
     }
     
-    console.log(`Fetching network data for network: ${currentNetworkId}, force: ${forceServerRefresh}`);
-    processingRef.current = true;
+    // Mark as processing to prevent concurrent executions
+    startProcessing();
+    
+    console.log('FETCH START - Current nodes in memory:', getCurrentNodes().length);
+    console.log('FETCH START - Current nodes in event refs:', nodesRefForEvents.current.length);
     
     return new Promise<void>(async (resolve) => {
       try {
+        if (!currentNetworkId) {
+          stopLoading();
+          stopProcessing();
+          resolve();
+          return;
+        }
+        
+        // Update the last fetched network ID at the start of fetch process
+        // to prevent multiple concurrent fetches for the same network
+        setLastFetchedNetworkId(currentNetworkId);
+        
+        // Set loading state to true before fetching
+        startLoading();
+        
+        console.log('Fetching data for network:', currentNetworkId);
+        
+        // Save any unsaved nodes from previous network to database 
+        // if we have nodes in memory but are switching networks
+        if (getLastFetchedNetworkId() && 
+            getLastFetchedNetworkId() !== currentNetworkId && 
+            (getCurrentNodes().length > 0 || getCurrentEdges().length > 0)) {
+            
+          console.log('Saving data from previous network before switching:', getLastFetchedNetworkId());
+          try {
+            // Save the previous network data
+            await saveNetworkToDB(
+              getLastFetchedNetworkId()!, 
+              getCurrentNodes(), 
+              getCurrentEdges()
+            );
+          } catch (error) {
+            console.error('Error saving data before switching networks:', error);
+          }
+        }
+        
+        // Try to load from cache first
+        let cachedData = null;
+        if (!forceServerRefresh && !shouldRefetchData) {
+          cachedData = loadFromCache(currentNetworkId);
+        }
+        
+        if (cachedData && cachedData.nodes.length > 0 && !forceServerRefresh && !shouldRefetchData) {
+          console.log('Using cached data for network:', currentNetworkId);
+          setNodes(cachedData.nodes);
+          setEdges(cachedData.edges);
+          updateCurrentNodes(cachedData.nodes);
+          updateCurrentEdges(cachedData.edges);
+        }
+        
         // Check if the network exists first before trying to load cached data
         const networkExists = networks.some(network => network.id === currentNetworkId);
         if (!networkExists) {
           console.log(`Network ${currentNetworkId} no longer exists, clearing data`);
-          if (currentNodesRef.current.length > 0) {
+          if (getCurrentNodes().length > 0) {
             setNodes([]);
             setEdges([]);
-            currentNodesRef.current = [];
-            currentEdgesRef.current = [];
+            updateCurrentNodes([]);
+            updateCurrentEdges([]);
           }
           return resolve();
         }
         
-        // Try to load from cache first, unless forcing a server refresh
-        const cachedNetwork = forceServerRefresh ? null : loadNetworkFromCache(currentNetworkId);
-        
-        if (cachedNetwork && !forceServerRefresh) {
-          console.log(`Found cached network data for ${currentNetworkId}, checking if update needed`);
-          
-          // Use our utility function to compare networks
-          const currentNetwork = {
-            nodes: currentNodesRef.current,
-            edges: currentEdgesRef.current
-          };
-          
-          const shouldUpdateState = !areNetworksEquivalent(cachedNetwork, currentNetwork);
-          
-          if (shouldUpdateState) {
-            console.log('Cache data differs from current state, updating state...');
-            
-            // Update our refs first before setting state
-            currentNodesRef.current = cachedNetwork.nodes;
-            currentEdgesRef.current = cachedNetwork.edges;
-            
-            // Then update component state
-            (setNodes as any)(cachedNetwork.nodes);
-            (setEdges as any)(cachedNetwork.edges);
-          } else {
-            console.log('Cache data is identical to current state, no update needed');
-          }
-          
-          // Skip server fetch if we're not explicitly refreshing
-          if (!shouldRefetchData && !forceServerRefresh) {
-            console.log('Using cached data only, skipping server fetch');
-            return resolve();
-          }
-        } else {
-          if (forceServerRefresh) {
-            console.log('Force server refresh requested, bypassing cache');
-          } else {
-            console.log('No cached data found for this network');
-          }
-        }
-        
         // Reset refresh flag
-        if (shouldRefetchData) {
-          setShouldRefetchData(false);
-        }
+        resetRefreshFlag();
         
         // If forcing a server refresh, clear the cache first
         if (forceServerRefresh && currentNetworkId) {
           console.log('Clearing network cache for forced refresh');
-          clearNetworkCache(currentNetworkId);
+          clearCache(currentNetworkId);
           
           // Also clear the current nodes and edges in state
           setNodes([]);
           setEdges([]);
-          currentNodesRef.current = [];
-          currentEdgesRef.current = [];
+          updateCurrentNodes([]);
+          updateCurrentEdges([]);
         }
         
         try {
           console.log('Fetching fresh data from server for network:', currentNetworkId);
           
-          const [nodesResponse, edgesResponse] = await Promise.all([
-            supabase.from('nodes')
-              .select('*')
-              .eq('network_id', currentNetworkId),
-            supabase.from('edges')
-              .select('*')
-              .eq('network_id', currentNetworkId)
+          // Fetch nodes and edges from database
+          const [nodesWithTodos, validEdges] = await Promise.all([
+            fetchNodesFromDB(currentNetworkId),
+            fetchEdgesFromDB(currentNetworkId)
           ]);
           
-          if (nodesResponse.error) throw nodesResponse.error;
-          if (edgesResponse.error) throw edgesResponse.error;
-          
-          console.log('Nodes from database:', nodesResponse.data);
-          
-          const nodesTodosPromises = nodesResponse.data.map(node => 
-            supabase.from('todos').select('*').eq('node_id', node.id)
-          );
-          
-          const nodesTodosResponses = await Promise.all(nodesTodosPromises);
-          
-          // Create nodes with their saved positions or calculate new ones
-          const nodesWithTodos = nodesResponse.data.map((node, index) => {
-            const todoItems = nodesTodosResponses[index].data?.map(todo => ({
-              id: todo.id,
-              text: todo.text,
-              completed: todo.completed || false,
-              dueDate: todo.due_date
-            })) || [];
+          console.log('FETCH SUCCESS - Nodes fetched from DB:', nodesWithTodos.length);
+          console.log('FETCH SUCCESS - Edges fetched from DB:', validEdges.length);
+          console.log('FETCH SUCCESS - Context nodes before update:', contextNodes.length);
 
-            // Use saved position if it exists
-            const position = {
-              x: node.x_position !== null ? node.x_position : Math.random() * 500,
-              y: node.y_position !== null ? node.y_position : Math.random() * 500
-            };
-
-            return {
-              id: node.id,
-              type: 'social',
-              position,
-              data: {
-                type: node.type,
-                name: node.name,
-                profileUrl: node.profile_url,
-                imageUrl: node.image_url,
-                date: node.date,
-                address: node.address,
-                color: node.color || '',
-                contactDetails: {
-                  notes: node.notes
-                },
-                todos: todoItems
-              },
-              style: node.color && typeof node.color === 'string' && node.color.trim() !== '' ? {
-                backgroundColor: `${node.color}15`,
-                borderColor: node.color,
-                borderWidth: 2,
-              } : undefined
-            };
-          });
+          // Critical: Only proceed if we have network data and it hasn't changed
+          if (currentNetworkId !== getLastFetchedNetworkId()) {
+            console.log('Network changed during fetch, aborting update');
+            stopProcessing();
+            stopLoading();
+            return resolve();
+          }
           
-          console.log('Nodes with todos:', nodesWithTodos);
+          if (nodesWithTodos.length === 0) {
+            console.log('WARNING: No nodes returned from database. This might be a new network or a fetch error.');
+          }
 
-          // Update our refs
-          currentNodesRef.current = nodesWithTodos;
+          // Make shallow copies of arrays to ensure reference changes
+          const nodesToSet = [...nodesWithTodos];
+          const edgesToSet = [...validEdges];
           
-          // Cast to any to bypass type checking issues
-          (setNodes as any)(nodesWithTodos);
-
-          // Map edges with all their properties
-          const mappedEdges = edgesResponse.data.map(edge => {
-            // Fix invalid handle configurations
-            let sourceHandle = edge.source_handle;
-            let targetHandle = edge.target_handle;
-            
-            // Check if the handles are valid (source handle should contain "source", target handle should contain "target")
-            const isSourceHandleValid = sourceHandle && sourceHandle.includes('source');
-            const isTargetHandleValid = targetHandle && targetHandle.includes('target');
-            
-            // If handles are invalid, set them to defaults
-            if (!isSourceHandleValid && sourceHandle) {
-              console.log(`Fixing invalid source handle: ${sourceHandle} for edge ${edge.id}`);
-              sourceHandle = 'right-source'; // Default to right-source
+          // Important: Process in exact order with immediate operations
+          
+          // 1. Set nodes in React state with a fresh array
+          console.log('Setting nodes in React state:', nodesToSet.length);
+          (setNodes as any)(nodesToSet);
+          
+          // 2. Update internal refs immediately
+          console.log('Updating internal refs with nodes:', nodesToSet.length);
+          updateCurrentNodes(nodesToSet);
+          
+          // 3. Update event refs directly
+          console.log('Updating event refs directly');
+          nodesRefForEvents.current = [...nodesToSet];
+          
+          // 4. Now do the same for edges
+          console.log('Setting edges in React state:', edgesToSet.length);
+          (setEdges as any)(edgesToSet);
+          
+          // 5. Update internal refs for edges
+          updateCurrentEdges(edgesToSet);
+          
+          // 6. Update event refs for edges directly 
+          edgesRefForEvents.current = [...edgesToSet];
+          
+          // Force a sync after a slight delay to ensure React has processed state updates
+          setTimeout(() => {
+            const currentContextNodes = (window as any).contextNodesCount || contextNodes.length;
+            console.log('Delayed check - Context nodes after update:', currentContextNodes);
+            if (currentContextNodes === 0 && nodesToSet.length > 0) {
+              console.log('CRITICAL: Context nodes not updated correctly, forcing update');
+              (setNodes as any)([...nodesToSet]);
             }
-            
-            if (!isTargetHandleValid && targetHandle) {
-              console.log(`Fixing invalid target handle: ${targetHandle} for edge ${edge.id}`);
-              targetHandle = 'left-target'; // Default to left-target
-            }
-            
-            // Update the database if fixes were applied
-            if ((!isSourceHandleValid && edge.source_handle) || (!isTargetHandleValid && edge.target_handle)) {
-              console.log(`Updating edge ${edge.id} with fixed handles in database`);
-              supabase.from('edges')
-                .update({
-                  source_handle: sourceHandle,
-                  target_handle: targetHandle
-                })
-                .eq('id', edge.id)
-                .then(result => {
-                  if (result.error) {
-                    console.error('Error updating edge handles:', result.error);
-                  }
-                });
-            }
-            
-            return {
-              id: edge.id,
-              source: edge.source_id,
-              target: edge.target_id,
-              sourceHandle: sourceHandle,
-              targetHandle: targetHandle,
-              type: 'custom',
-              data: {
-                label: edge.label || 'Connection',
-                color: edge.color || '#3b82f6',
-                notes: edge.notes || '',
-                labelPosition: 'center'
-              }
-            };
-          });
+          }, 100);
           
-          // Filter out edges with invalid handle configurations
-          const validEdges = mappedEdges.filter(edge => {
-            // Skip edges with missing handles
-            if (!edge.sourceHandle || !edge.targetHandle) return true;
-            
-            const isSourceHandleValid = edge.sourceHandle.includes('source');
-            const isTargetHandleValid = edge.targetHandle.includes('target');
-            
-            if (!isSourceHandleValid || !isTargetHandleValid) {
-              console.log(`Filtering out edge ${edge.id} with invalid handles: source=${edge.sourceHandle}, target=${edge.targetHandle}`);
-              return false;
-            }
-            
-            return true;
-          });
-
-          console.log('Setting edges:', validEdges);
+          // 7. Save to cache after state is updated
+          console.log('Saving to cache');
+          saveToCache(currentNetworkId, nodesToSet, edgesToSet);
           
-          // Update our refs
-          currentEdgesRef.current = validEdges;
-          
-          // Cast to any to bypass type checking issues
-          (setEdges as any)(validEdges);
-          
-          // Update the last fetch timestamp
+          // Update timestamps
           const now = Date.now();
           setLastFetchTimestamp(now);
-          localStorage.setItem('socialmap-last-fetch', now.toString());
-
-          // Save the fetched data to cache
-          saveNetworkToCache(currentNetworkId, nodesWithTodos, validEdges);
+          localStorage.setItem('socialmap-last-fetch-' + currentNetworkId, now.toString());
 
         } catch (error) {
           console.error('Error fetching network data:', error);
@@ -281,7 +283,21 @@ export function useNetworkDataFetcher() {
             description: "Failed to load network data"
           });
         } finally {
-          processingRef.current = false;
+          // Update timestamps and processing flags
+          const now = Date.now();
+          setLastFetchTimestamp(now);
+          localStorage.setItem('socialmap-last-fetch-' + currentNetworkId, now.toString());
+          
+          // Reset processing flag to allow future fetches
+          stopProcessing();
+          
+          // Mark loading as complete
+          stopLoading();
+          
+          // Reset the should-refetch flag
+          resetRefreshFlag();
+          
+          // Mark as completed
           resolve();
         }
       } catch (error) {
@@ -293,149 +309,212 @@ export function useNetworkDataFetcher() {
         });
       }
     });
-  }, [currentNetworkId, networks, setNodes, setEdges, toast, shouldRefetchData, setShouldRefetchData, setLastFetchTimestamp]);
-
-  // Listen for network deletion events to clear cache
-  useEffect(() => {
-    const handleNetworkDeleted = (event: CustomEvent) => {
-      const { networkId } = event.detail;
-      console.log(`useNetworkDataFetcher: Network deleted event received, clearing cache for ${networkId}`);
-      
-      // Clear the cache for this network
-      clearNetworkCache(networkId);
-      
-      // If this was the current network, clear nodes and edges immediately
-      if (currentNetworkId === networkId) {
-        console.log('useNetworkDataFetcher: Clearing current network data after deletion');
-        setNodes([]);
-        setEdges([]);
-        currentNodesRef.current = [];
-        currentEdgesRef.current = [];
-      }
-    };
-    
-    window.addEventListener('network-deleted', handleNetworkDeleted as EventListener);
-    
-    return () => {
-      window.removeEventListener('network-deleted', handleNetworkDeleted as EventListener);
-    };
-  }, [currentNetworkId, setNodes, setEdges]);
-
-  // Trigger data fetch when needed
-  useEffect(() => {
-    // Always set loading to true when network changes or refresh is requested
-    if (currentNetworkId !== lastFetchedNetworkId.current || shouldRefetchData) {
-      setIsLoading(true);
-      console.log('Setting loading state to TRUE for network change or refresh');
-    }
-    
-    // For AI-generated networks, always fetch fresh data from the server
-    // after the refreshCounter is incremented from the generation complete event
-    const forceRefresh = refreshCounter > 0 && lastFetchedNetworkId.current === currentNetworkId;
-    
-    // Skip if we've already processed this network and there's no explicit refresh
-    if (
-      !shouldRefetchData && 
-      !forceRefresh &&
-      currentNetworkId === lastFetchedNetworkId.current && 
-      currentNodesRef.current.length > 0
-    ) {
-      // Ensure loading is false
-      setIsLoading(false);
-      return;
-    }
-    
-    console.log(`Triggering network data fetch for ${currentNetworkId || 'null'} (refresh ${refreshCounter}, force: ${forceRefresh})`);
-    
-    // Update the last fetched network ID
-    lastFetchedNetworkId.current = currentNetworkId;
-    
-    // Call our memoized fetch function with forceRefresh for AI-generated networks
-    fetchNetworkData(forceRefresh);
-    
-    // Set a longer timeout to ensure loading state is visible long enough
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-      console.log('Setting loading state to FALSE after timeout');
-    }, 1500); // Reduced from 5 seconds to 1.5 seconds to make tab switching faster
-    
-    return () => clearTimeout(timeout);
-    
-  }, [currentNetworkId, refreshCounter, shouldRefetchData, fetchNetworkData, setIsLoading]);
+  }, [
+    currentNetworkId, 
+    networks, 
+    setNodes, 
+    setEdges, 
+    toast, 
+    shouldRefetchData, 
+    setLastFetchTimestamp, 
+    refreshCounter,
+    loadFromCache,
+    saveToCache,
+    clearCache,
+    fetchNodesFromDB,
+    fetchEdgesFromDB,
+    saveNetworkToDB,
+    isProcessing,
+    startProcessing,
+    stopProcessing,
+    startLoading,
+    stopLoading,
+    getCurrentNodes,
+    getCurrentEdges,
+    setCurrentNodes,
+    setCurrentEdges,
+    getLastFetchedNetworkId,
+    setLastFetchedNetworkId,
+    resetRefreshFlag,
+    updateCurrentNodes,
+    updateCurrentEdges
+  ]);
 
   // One-time cleanup of invalid edges across all networks
   useEffect(() => {
-    const cleanupInvalidEdges = async () => {
-      try {
-        console.log('Running one-time cleanup of invalid edges...');
-        
-        // Get all edges from the database
-        const { data: allEdges, error } = await supabase
-          .from('edges')
-          .select('*');
-        
-        if (error) {
-          console.error('Error fetching edges for cleanup:', error);
-          return;
+    cleanupInvalidEdges();
+  }, [cleanupInvalidEdges]);
+
+  // Near the top of the hook add this:
+  const networkChangingRef = useRef(false);
+
+  // Add debounce ref
+  const debounceTimerRef = useRef<any>(null);
+  
+  // Create a debounced version of fetchNetworkData that prevents rapid successive calls
+  const debouncedFetchNetworkData = useCallback(
+    debounce((forceRefresh: boolean) => {
+      console.log(`Debounced network fetch triggered with forceRefresh=${forceRefresh}`);
+      fetchNetworkData(forceRefresh).then(() => {
+        networkChangingRef.current = false;
+      });
+    }, 300), // 300ms debounce
+    [fetchNetworkData]
+  );
+  
+  // Modify the useEffect that triggers data fetching
+  useEffect(() => {
+    // Prevent multiple fetches during network transitions
+    if (networkChangingRef.current) {
+      console.log('Network change already in progress, skipping additional fetches');
+      return;
+    }
+
+    // Always set loading to true when network changes or refresh is requested
+    if (currentNetworkId !== getLastFetchedNetworkId() || shouldRefetchData) {
+      startLoading();
+      console.log('Setting loading state to TRUE for network change or refresh');
+      
+      // Set network changing flag to prevent multiple fetches
+      if (currentNetworkId !== getLastFetchedNetworkId()) {
+        networkChangingRef.current = true;
+      }
+    }
+    
+    // Always force a refresh when switching networks or when refreshCounter changes
+    const forceRefresh = shouldForceRefresh(getLastFetchedNetworkId());
+    
+    // Skip if we've already processed this network and there's no explicit refresh
+    if (shouldSkipFetching(getLastFetchedNetworkId(), hasNodesLoaded())) {
+      // Ensure loading is false
+      stopLoading();
+      return;
+    }
+    
+    console.log('Current data state before fetch decision:', {
+      currentNetworkId,
+      lastFetchedNetworkId: getLastFetchedNetworkId(),
+      nodesLoaded: hasNodesLoaded(),
+      forceRefresh,
+      shouldRefetchData,
+      nodeCount: getCurrentNodes().length
+    });
+    
+    // Clear any existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Use direct fetch instead of debounced for now until we fix the issue
+    fetchNetworkData(forceRefresh).then(() => {
+      networkChangingRef.current = false;
+      console.log('Network fetch completed. Node count:', getCurrentNodes().length);
+    });
+    
+    // Set a timeout to ensure loading state is visible long enough
+    const timeout = setTimeout(() => {
+      stopLoading();
+      console.log('Setting loading state to FALSE after timeout');
+    }, 1500); // Reduced from 5 seconds to 1.5 seconds to make tab switching faster
+    
+    return () => {
+      clearTimeout(timeout);
+      debouncedFetchNetworkData.cancel(); // Cancel any pending debounced calls on cleanup
+    };
+  }, [
+    currentNetworkId, 
+    refreshCounter, 
+    shouldRefetchData, 
+    fetchNetworkData, // Use direct fetch in dependencies
+    startLoading, 
+    stopLoading,
+    getLastFetchedNetworkId,
+    shouldForceRefresh,
+    shouldSkipFetching,
+    hasNodesLoaded
+  ]);
+
+  // Debug the event handlers by exposing them to the window for debugging
+  useEffect(() => {
+    (window as any).debugNodeRefs = () => {
+      console.log('Current nodes in context:', getCurrentNodes().length);
+      console.log('Current nodes in event refs:', nodesRefForEvents.current.length);
+      console.log('Current network ID:', currentNetworkId);
+      console.log('Last fetched network ID:', getLastFetchedNetworkId());
+    };
+    
+    return () => {
+      delete (window as any).debugNodeRefs;
+    };
+  }, [getCurrentNodes, getLastFetchedNetworkId, currentNetworkId]);
+
+  // Add direct sync with NetworkMapContext nodes
+  const contextNodes = useNetworkMap().nodes;
+  
+  // Add effect to detect when context nodes don't match our internal state
+  useEffect(() => {
+    // Skip if we're loading or no network is selected
+    if (isLoading || !currentNetworkId) return;
+    
+    const internalNodeCount = getCurrentNodes().length;
+    const contextNodeCount = contextNodes.length;
+    
+    console.log('Node count check - Internal:', internalNodeCount, 'Context:', contextNodeCount);
+    
+    // If we have nodes in our refs but none in context, we need to force a sync
+    if (internalNodeCount > 0 && contextNodeCount === 0) {
+      console.log('WARNING: Node state mismatch - forcing sync from internal state to context');
+      const nodes = getCurrentNodes();
+      // Force update the context with our internal state
+      (setNodes as any)(nodes);
+    }
+    
+    // If context has nodes but our internal state doesn't, sync the other way
+    if (contextNodeCount > 0 && internalNodeCount === 0) {
+      console.log('WARNING: Node state mismatch - updating internal state from context');
+      updateCurrentNodes([...contextNodes]);
+    }
+    
+  }, [contextNodes, getCurrentNodes, setNodes, updateCurrentNodes, isLoading, currentNetworkId]);
+  
+  // Add direct node visibility debug helpers
+  useEffect(() => {
+    // Add debug functions to global window object
+    (window as any).nodeDebug = {
+      syncNodes: () => {
+        const nodes = getCurrentNodes();
+        if (nodes.length > 0) {
+          console.log('Force syncing internal nodes to context:', nodes.length);
+          (setNodes as any)([...nodes]);
+        } else if (contextNodes.length > 0) {
+          console.log('Force syncing context nodes to internal state:', contextNodes.length);
+          updateCurrentNodes([...contextNodes]);
         }
-        
-        // Find edges with invalid handle configurations
-        const edgesToFix = allEdges.filter(edge => {
-          const sourceHandle = edge.source_handle;
-          const targetHandle = edge.target_handle;
-          
-          // Skip edges without handles
-          if (!sourceHandle && !targetHandle) return false;
-          
-          const isSourceHandleValid = sourceHandle && sourceHandle.includes('source');
-          const isTargetHandleValid = targetHandle && targetHandle.includes('target');
-          
-          return !isSourceHandleValid || !isTargetHandleValid;
+      },
+      forceRefresh: () => {
+        console.log('Manual force refresh triggered');
+        fetchNetworkData(true);
+      },
+      checkState: () => {
+        console.log({
+          internalNodes: getCurrentNodes().length,
+          contextNodes: contextNodes.length,
+          currentNetworkId,
+          lastFetchedNetworkId: getLastFetchedNetworkId(),
+          hasNodesLoaded: hasNodesLoaded()
         });
-        
-        if (edgesToFix.length === 0) {
-          console.log('No invalid edges found.');
-          return;
-        }
-        
-        console.log(`Found ${edgesToFix.length} invalid edges to fix.`);
-        
-        // Fix each edge
-        for (const edge of edgesToFix) {
-          let sourceHandle = edge.source_handle;
-          let targetHandle = edge.target_handle;
-          
-          // Fix invalid handles
-          if (sourceHandle && !sourceHandle.includes('source')) {
-            sourceHandle = 'right-source';
-          }
-          
-          if (targetHandle && !targetHandle.includes('target')) {
-            targetHandle = 'left-target';
-          }
-          
-          // Update the edge in the database
-          const { error: updateError } = await supabase
-            .from('edges')
-            .update({
-              source_handle: sourceHandle,
-              target_handle: targetHandle
-            })
-            .eq('id', edge.id);
-          
-          if (updateError) {
-            console.error(`Error updating edge ${edge.id}:`, updateError);
-          } else {
-            console.log(`Fixed edge ${edge.id}`);
-          }
-        }
-        
-        console.log('Edge cleanup complete.');
-      } catch (error) {
-        console.error('Error in cleanupInvalidEdges:', error);
       }
     };
     
-    cleanupInvalidEdges();
-  }, []);  // Empty dependency array means this runs once when component mounts
+    return () => {
+      delete (window as any).nodeDebug;
+    };
+  }, [contextNodes, getCurrentNodes, setNodes, updateCurrentNodes, 
+      currentNetworkId, getLastFetchedNetworkId, hasNodesLoaded, fetchNetworkData]);
+
+  // Add effect to track context nodes in window for debugging
+  useEffect(() => {
+    // Store the context nodes count on the window for debugging
+    (window as any).contextNodesCount = contextNodes.length;
+  }, [contextNodes]);
 } 

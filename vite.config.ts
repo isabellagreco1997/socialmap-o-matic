@@ -15,6 +15,13 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
+    hmr: {
+      overlay: false,
+    },
+    watch: {
+      usePolling: false,
+      interval: 1000,
+    },
   },
   plugins: [
     react(),
@@ -24,6 +31,24 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+          ],
+          'supabase-vendor': ['@supabase/supabase-js'],
+        },
+      },
     },
   },
 }));
