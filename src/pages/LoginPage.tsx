@@ -23,7 +23,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -39,7 +39,42 @@ const LoginPage = () => {
           title: "Success",
           description: "Successfully logged in!",
         });
-        navigate("/network?fromLogin=true");
+        
+        // Check subscription status
+        try {
+          setIsLoading(true);
+          const response = await fetch('/.netlify/functions/check-subscription', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              email: data.user?.email,
+            }),
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+          }
+          
+          const subscriptionData = await response.json();
+          
+          console.log('Subscription check result:', subscriptionData);
+          
+          // If subscribed, go to dashboard; otherwise, go to pricing
+          if (subscriptionData.isSubscribed) {
+            navigate("/network?fromLogin=true");
+          } else {
+            // Redirect to pricing with fromLogin parameter and return path to network
+            navigate('/pricing', { 
+              state: { from: { pathname: '/network' } }
+            });
+          }
+        } catch (subscriptionError) {
+          console.error('Error checking subscription:', subscriptionError);
+          // On subscription check error, continue to network
+          navigate("/network?fromLogin=true");
+        }
       }
     } catch (error) {
       toast({

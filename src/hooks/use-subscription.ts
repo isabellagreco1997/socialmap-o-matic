@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -66,105 +66,25 @@ export function useSubscription(stripeEmail?: string) {
   const [lastFetched, setLastFetched] = useState<number>(cachedData?.timestamp || 0);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Don't refetch if we've fetched recently
-    if (Date.now() - lastFetched < CACHE_EXPIRY) {
-      return;
-    }
-    
-    const checkSubscription = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.log('No user found, setting isSubscribed to false');
-          const newData = {
-            isSubscribed: false,
-            customerDetails: null,
-            subscriptionDetails: null
-          };
-          
-          setSubscriptionData(newData);
-          
-          // Update cache
-          cachedData = {
-            data: newData,
-            timestamp: Date.now()
-          };
-          localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
-          
-          setLastFetched(Date.now());
-          setIsLoading(false);
-          return;
-        }
-
-        console.log('Checking subscription for user:', {
-          id: user.id,
-          email: user.email,
-          stripeEmail
-        });
-
-        // Call the Netlify function to check subscription
-        console.log('Calling Netlify function to check subscription with data:', { 
-          email: user.email,
-          stripeEmail 
-        });
-        
-        const response = await fetch('/.netlify/functions/check-subscription', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            email: user.email,
-            stripeEmail 
-          }),
-        });
-
-        // Log the raw response for debugging
-        console.log('Raw Netlify function response status:', response.status);
-        
-        const responseText = await response.text();
-        console.log('Raw Netlify function response text:', responseText);
-        
-        let data;
-        
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse response:', responseText);
-          throw new Error(`Invalid response: ${responseText.substring(0, 100)}${responseText.length > 100 ? '...' : ''}`);
-        }
-
-        if (!response.ok) {
-          console.error('API request failed:', {
-            status: response.status,
-            statusText: response.statusText,
-            data
-          });
-          
-          const errorMessage = data?.error || `Request failed with status ${response.status}`;
-          setError(errorMessage);
-          
-          toast({
-            title: "Subscription Check Failed",
-            description: "We couldn't verify your subscription status. Please try again later.",
-            variant: "destructive",
-          });
-          
-          return;
-        }
-
-        console.log('Subscription check response:', data);
-        
-        // Store the full subscription data
+  // Create the subscription checking function that can be called on demand
+  const checkSubscription = useCallback(async (forceCheck: boolean = false) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Skip if we've fetched recently and not forcing a check
+      if (!forceCheck && Date.now() - lastFetched < CACHE_EXPIRY) {
+        setIsLoading(false);
+        return;
+      }
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user found, setting isSubscribed to false');
         const newData = {
-          isSubscribed: data.isSubscribed,
-          customerDetails: data.customerDetails,
-          subscriptionDetails: data.subscriptionDetails,
-          debug: data.debug
+          isSubscribed: false,
+          customerDetails: null,
+          subscriptionDetails: null
         };
         
         setSubscriptionData(newData);
@@ -177,27 +97,110 @@ export function useSubscription(stripeEmail?: string) {
         localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
         
         setLastFetched(Date.now());
-        console.log('Updated subscription status:', data.isSubscribed);
-      } catch (error) {
-        console.error('Error checking subscription:', error);
-        setSubscriptionData({
-          isSubscribed: false,
-          customerDetails: null,
-          subscriptionDetails: null
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Checking subscription for user:', {
+        id: user.id,
+        email: user.email,
+        stripeEmail
+      });
+
+      // Call the Netlify function to check subscription
+      console.log('Calling Netlify function to check subscription with data:', { 
+        email: user.email,
+        stripeEmail 
+      });
+      
+      const response = await fetch('/.netlify/functions/check-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: user.email,
+          stripeEmail 
+        }),
+      });
+
+      // Log the raw response for debugging
+      console.log('Raw Netlify function response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('Raw Netlify function response text:', responseText);
+      
+      let data;
+      
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response:', responseText);
+        throw new Error(`Invalid response: ${responseText.substring(0, 100)}${responseText.length > 100 ? '...' : ''}`);
+      }
+
+      if (!response.ok) {
+        console.error('API request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data
         });
-        setError(error instanceof Error ? error.message : 'Unknown error');
+        
+        const errorMessage = data?.error || `Request failed with status ${response.status}`;
+        setError(errorMessage);
         
         toast({
-          title: "Subscription Check Error",
-          description: "There was a problem checking your subscription. Please refresh the page or try again later.",
+          title: "Subscription Check Failed",
+          description: "We couldn't verify your subscription status. Please try again later.",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
+        
+        return;
       }
-    };
 
-    checkSubscription();
+      console.log('Subscription check response:', data);
+      
+      // Store the full subscription data
+      const newData = {
+        isSubscribed: data.isSubscribed,
+        customerDetails: data.customerDetails,
+        subscriptionDetails: data.subscriptionDetails,
+        debug: data.debug
+      };
+      
+      setSubscriptionData(newData);
+      
+      // Update cache
+      cachedData = {
+        data: newData,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
+      
+      setLastFetched(Date.now());
+      console.log('Updated subscription status:', data.isSubscribed);
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setSubscriptionData({
+        isSubscribed: false,
+        customerDetails: null,
+        subscriptionDetails: null
+      });
+      setError(error instanceof Error ? error.message : 'Unknown error');
+      
+      toast({
+        title: "Subscription Check Error",
+        description: "There was a problem checking your subscription. Please refresh the page or try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [stripeEmail, toast, lastFetched, setLastFetched]);
+
+  useEffect(() => {
+    // Run the check without forcing on component mount
+    checkSubscription(false);
 
     // Only subscribe to auth changes, not on every render
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
@@ -205,14 +208,14 @@ export function useSubscription(stripeEmail?: string) {
       cachedData = null;
       localStorage.removeItem(CACHE_KEY);
       console.log('Auth state changed, rechecking subscription');
-      checkSubscription();
+      checkSubscription(true);
     });
 
     // Cleanup subscription on unmount
     return () => {
       subscription.unsubscribe();
     };
-  }, [stripeEmail, toast, lastFetched]);
+  }, [checkSubscription]);
 
   // For backward compatibility
   const { isSubscribed } = subscriptionData;
@@ -223,6 +226,7 @@ export function useSubscription(stripeEmail?: string) {
     error,
     subscriptionData,
     customerDetails: subscriptionData.customerDetails,
-    subscriptionDetails: subscriptionData.subscriptionDetails
+    subscriptionDetails: subscriptionData.subscriptionDetails,
+    checkSubscription: () => checkSubscription(true) // Expose function to force check
   };
 } 

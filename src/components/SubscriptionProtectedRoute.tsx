@@ -12,25 +12,37 @@ interface SubscriptionProtectedRouteProps {
 
 const SubscriptionProtectedRoute = ({ children, includeFooter = true }: SubscriptionProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { isSubscribed, isLoading: subscriptionLoading } = useSubscription();
+  const { isSubscribed, isLoading: subscriptionLoading, checkSubscription } = useSubscription();
   const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
+      
+      // If authenticated, force check subscription status every time
+      if (session) {
+        console.log('Authenticated, forcing subscription check');
+        checkSubscription();
+      }
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      
+      // If authenticated on auth change, force check subscription
+      if (session) {
+        console.log('Auth state changed, forcing subscription check');
+        checkSubscription();
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [checkSubscription]);
 
   // Show loading state while checking auth and subscription
   if (isAuthenticated === null ) {
