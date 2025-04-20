@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Share2, CheckCircle2, X, Loader2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { env } from "@/utils/env";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useToast } from "@/components/ui/use-toast";
@@ -36,20 +36,44 @@ export default function Pricing() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isYearlyBilling, setIsYearlyBilling] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [showLoading, setShowLoading] = useState(true);
+  const checkCompleted = useRef(false);
+  
+  // Don't trigger subscription check on component mount
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscription();
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || '/network';
+  
+  // Show loading screen initially, but with a timeout to prevent hanging
+  useEffect(() => {
+    const loadingTimer = setTimeout(() => {
+      setShowLoading(false);
+    }, 5000); // Show loading for max 5 seconds
+    
+    return () => clearTimeout(loadingTimer);
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
+      
+      // Mark initial check as completed after authentication check
+      if (!checkCompleted.current) {
+        checkCompleted.current = true;
+        setInitialCheckDone(true);
+        setTimeout(() => {
+          setShowLoading(false);
+        }, 500); // Give a short delay to ensure subscription state is updated
+      }
     };
 
     checkAuth();
 
+    // Only listen for auth changes - don't check subscription here
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
     });
@@ -61,10 +85,30 @@ export default function Pricing() {
 
   // If user is already subscribed, redirect to dashboard
   useEffect(() => {
-    if (isAuthenticated && isSubscribed && !subscriptionLoading) {
-      navigate(from);
+    // Only redirect if we've completed the initial check and loading is done
+    if (initialCheckDone && !subscriptionLoading && isAuthenticated) {
+      if (isSubscribed) {
+        console.log('User is subscribed, redirecting to:', from);
+        navigate(from);
+      } else {
+        console.log('User is not subscribed, staying on pricing page');
+        // Just stay on pricing page
+      }
     }
-  }, [isAuthenticated, isSubscribed, subscriptionLoading, navigate, from]);
+  }, [isAuthenticated, isSubscribed, subscriptionLoading, navigate, from, initialCheckDone]);
+
+  // Show loading overlay while we're checking
+  if (showLoading && (subscriptionLoading || !initialCheckDone)) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+          <h2 className="text-xl font-semibold mb-2">Checking subscription status...</h2>
+          <p className="text-muted-foreground">Just a moment while we verify your account.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubscribe = async () => {
     if (!isAuthenticated) {
@@ -154,7 +198,7 @@ export default function Pricing() {
               <Button 
                 className="w-full bg-[#0A2463] hover:bg-[#0A2463]/90 mt-8"
                 onClick={handleSubscribe}
-                disabled={isLoading || (isAuthenticated && subscriptionLoading)}
+                disabled={isLoading}
                 size="lg"
               >
                 {isLoading ? (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -14,16 +14,24 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { isSubscribed, isLoading: subscriptionLoading, checkSubscription } = useSubscription();
   const location = useLocation();
+  const hasCheckedSubscription = useRef(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      
-      // If authenticated, force check subscription status every time
-      if (session) {
-        console.log('Authenticated, forcing subscription check');
-        checkSubscription();
+      setIsCheckingAuth(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+        
+        // If authenticated and we haven't already checked subscription, check it once
+        if (session && !hasCheckedSubscription.current) {
+          console.log('Initial subscription check on protected route mount');
+          checkSubscription();
+          hasCheckedSubscription.current = true;
+        }
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
 
@@ -32,10 +40,11 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       
-      // If authenticated on auth change, force check subscription
-      if (session) {
-        console.log('Auth state changed, forcing subscription check');
+      // Only force check on auth change if the state changed to logged in
+      if (session && !hasCheckedSubscription.current) {
+        console.log('Auth state changed, forcing initial subscription check');
         checkSubscription();
+        hasCheckedSubscription.current = true;
       }
     });
 
@@ -45,10 +54,13 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
   }, [checkSubscription]);
 
   // Show loading state while checking auth and subscription
-  if (isAuthenticated === null ) {
+  if (isCheckingAuth || isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
       </div>
     );
   }
@@ -58,9 +70,22 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Show loading state during initial subscription check
+  if (subscriptionLoading && !hasCheckedSubscription.current) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Checking your subscription...</h2>
+          <p className="text-muted-foreground">Just a moment while we verify your access.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Only redirect to pricing if we're certain the user isn't subscribed
-  // Allow access during loading states to prevent blocking legitimate users
   if (!isSubscribed && !subscriptionLoading) {
+    console.log('User not subscribed, redirecting to pricing');
     return <Navigate to="/pricing" state={{ from: location }} replace />;
   }
 
