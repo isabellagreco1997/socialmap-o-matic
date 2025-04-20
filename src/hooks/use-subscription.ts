@@ -27,16 +27,23 @@ export interface SubscriptionData {
 
 // Cache subscription data
 const CACHE_KEY = 'subscription-data';
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour for active subscriptions
+const CACHE_EXPIRY_INACTIVE = 5 * 60 * 1000; // 5 minutes for inactive subscriptions
 let cachedData: {
   data: SubscriptionData;
   timestamp: number;
 } | null = null;
 
+// Track check attempts globally
+let checkAttempts = 0;
+let lastCheckTime = 0;
+const CHECK_THROTTLE_TIME = 2000; // Don't check more often than every 2 seconds
+
 export function useSubscription(stripeEmail?: string) {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>(() => {
     // Try to use cached data on initial load
-    if (cachedData && Date.now() - cachedData.timestamp < CACHE_EXPIRY) {
+    if (cachedData && Date.now() - cachedData.timestamp < getCacheExpiry(cachedData.data.isSubscribed)) {
+      console.log('Using cached subscription data:', cachedData.data.isSubscribed ? 'Subscribed' : 'Not subscribed');
       return cachedData.data;
     }
     
@@ -45,8 +52,10 @@ export function useSubscription(stripeEmail?: string) {
     if (storedData) {
       try {
         const parsed = JSON.parse(storedData);
-        if (parsed && parsed.timestamp && Date.now() - parsed.timestamp < CACHE_EXPIRY) {
+        if (parsed && parsed.timestamp && 
+            Date.now() - parsed.timestamp < getCacheExpiry(parsed.data.isSubscribed)) {
           cachedData = parsed;
+          console.log('Using localStorage subscription data:', parsed.data.isSubscribed ? 'Subscribed' : 'Not subscribed');
           return parsed.data;
         }
       } catch (e) {
@@ -66,14 +75,33 @@ export function useSubscription(stripeEmail?: string) {
   const [lastFetched, setLastFetched] = useState<number>(cachedData?.timestamp || 0);
   const { toast } = useToast();
 
+  // Helper function to determine cache expiry time based on subscription status
+  function getCacheExpiry(isSubscribed: boolean): number {
+    return isSubscribed ? CACHE_EXPIRY : CACHE_EXPIRY_INACTIVE;
+  }
+
   // Create the subscription checking function that can be called on demand
   const checkSubscription = useCallback(async (forceCheck: boolean = false) => {
+    // Throttle checks to prevent rapid consecutive calls
+    const now = Date.now();
+    if (!forceCheck && now - lastCheckTime < CHECK_THROTTLE_TIME) {
+      console.log('Throttling subscription check - too soon since last check');
+      return;
+    }
+    lastCheckTime = now;
+    
+    // Log and count check attempts
+    checkAttempts++;
+    console.log(`Subscription check attempt ${checkAttempts} (forced: ${forceCheck})`);
+
     try {
       setIsLoading(true);
       setError(null);
       
       // Skip if we've fetched recently and not forcing a check
-      if (!forceCheck && Date.now() - lastFetched < CACHE_EXPIRY) {
+      if (!forceCheck && cachedData && 
+          Date.now() - cachedData.timestamp < getCacheExpiry(cachedData.data.isSubscribed)) {
+        console.log('Using cached subscription data, skipping API call');
         setIsLoading(false);
         return;
       }
@@ -103,15 +131,11 @@ export function useSubscription(stripeEmail?: string) {
 
       console.log('Checking subscription for user:', {
         id: user.id,
-        email: user.email,
-        stripeEmail
+        email: user.email
       });
 
       // Call the Netlify function to check subscription
-      console.log('Calling Netlify function to check subscription with data:', { 
-        email: user.email,
-        stripeEmail 
-      });
+      console.log('Calling Netlify function to check subscription');
       
       const response = await fetch('/.netlify/functions/check-subscription', {
         method: 'POST',
@@ -125,10 +149,9 @@ export function useSubscription(stripeEmail?: string) {
       });
 
       // Log the raw response for debugging
-      console.log('Raw Netlify function response status:', response.status);
+      console.log('Response status:', response.status);
       
       const responseText = await response.text();
-      console.log('Raw Netlify function response text:', responseText);
       
       let data;
       
@@ -158,7 +181,7 @@ export function useSubscription(stripeEmail?: string) {
         return;
       }
 
-      console.log('Subscription check response:', data);
+      console.log('Subscription check result:', data.isSubscribed ? 'Subscribed' : 'Not subscribed');
       
       // Store the full subscription data
       const newData = {
@@ -170,7 +193,7 @@ export function useSubscription(stripeEmail?: string) {
       
       setSubscriptionData(newData);
       
-      // Update cache
+      // Update cache with longer expiry for active subscriptions
       cachedData = {
         data: newData,
         timestamp: Date.now()
@@ -178,7 +201,6 @@ export function useSubscription(stripeEmail?: string) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
       
       setLastFetched(Date.now());
-      console.log('Updated subscription status:', data.isSubscribed);
     } catch (error) {
       console.error('Error checking subscription:', error);
       setSubscriptionData({
@@ -190,7 +212,7 @@ export function useSubscription(stripeEmail?: string) {
       
       toast({
         title: "Subscription Check Error",
-        description: "There was a problem checking your subscription. Please refresh the page or try again later.",
+        description: "There was a problem checking your subscription. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -199,15 +221,21 @@ export function useSubscription(stripeEmail?: string) {
   }, [stripeEmail, toast, lastFetched, setLastFetched]);
 
   useEffect(() => {
-    // Run the check without forcing on component mount
-    checkSubscription(false);
+    // Run the check without forcing on component mount - only if no recent checks
+    const now = Date.now();
+    if (!cachedData || now - cachedData.timestamp > getCacheExpiry(cachedData.data.isSubscribed)) {
+      console.log('No recent subscription check found, performing initial check');
+      checkSubscription(false);
+    } else {
+      console.log('Using cached subscription data on mount, skipping check');
+    }
 
     // Only subscribe to auth changes, not on every render
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       // Clear cache on auth state change to force refetching
       cachedData = null;
       localStorage.removeItem(CACHE_KEY);
-      console.log('Auth state changed, rechecking subscription');
+      console.log('Auth state changed, forcing subscription check');
       checkSubscription(true);
     });
 

@@ -15,18 +15,28 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
   const { isSubscribed, isLoading: subscriptionLoading, checkSubscription } = useSubscription();
   const location = useLocation();
   const hasCheckedSubscription = useRef(false);
+  const hasCheckedAuth = useRef(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Capture the initial subscription status to prevent unnecessary re-checks
+  const initialIsSubscribed = useRef(isSubscribed);
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Don't check auth multiple times
+      if (hasCheckedAuth.current) {
+        return;
+      }
+      
       setIsCheckingAuth(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setIsAuthenticated(!!session);
+        hasCheckedAuth.current = true;
         
-        // If authenticated and we haven't already checked subscription, check it once
-        if (session && !hasCheckedSubscription.current) {
-          console.log('Initial subscription check on protected route mount');
+        // Only check subscription once on initial mount, and only if not already subscribed
+        if (session && !hasCheckedSubscription.current && !initialIsSubscribed.current) {
+          console.log('Initial subscription check on protected route');
           checkSubscription();
           hasCheckedSubscription.current = true;
         }
@@ -37,12 +47,13 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
 
     checkAuth();
 
+    // Set up auth listener, but avoid redundant subscription checks
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       
-      // Only force check on auth change if the state changed to logged in
-      if (session && !hasCheckedSubscription.current) {
-        console.log('Auth state changed, forcing initial subscription check');
+      // Only force check on auth change if the state changed to logged in and we haven't checked
+      if (session && !hasCheckedSubscription.current && !initialIsSubscribed.current) {
+        console.log('Auth state changed, making initial subscription check');
         checkSubscription();
         hasCheckedSubscription.current = true;
       }
@@ -51,9 +62,9 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     return () => {
       subscription.unsubscribe();
     };
-  }, [checkSubscription]);
+  }, [checkSubscription, initialIsSubscribed]);
 
-  // Show loading state while checking auth and subscription
+  // Show loading state while checking auth
   if (isCheckingAuth || isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -70,8 +81,8 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Show loading state during initial subscription check
-  if (subscriptionLoading && !hasCheckedSubscription.current) {
+  // Show loading state during initial subscription check - but only if we're not already subscribed
+  if (subscriptionLoading && !hasCheckedSubscription.current && !initialIsSubscribed.current) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
