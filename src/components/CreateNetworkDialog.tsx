@@ -146,11 +146,6 @@ export const CreateNetworkDialog = ({
       
       // Ensure we have a valid network before proceeding
       if (network && onNetworkCreated) {
-        // First dispatch the event to update any components listening for network changes
-        window.dispatchEvent(new CustomEvent('network-created', { 
-          detail: { networkId: network.id, isAI: false }
-        }));
-        
         // IMPORTANT: Add a small delay before calling the callback to ensure state is updated correctly
         // This helps prevent UI glitches in the sidebar by giving React time to process the event
         setTimeout(() => {
@@ -172,11 +167,6 @@ export const CreateNetworkDialog = ({
       
       setIsGenerating(true);
       try {
-        // Dispatch event for AI network creation first
-        window.dispatchEvent(new CustomEvent('network-created', { 
-          detail: { networkId: network.id, isAI: true }
-        }));
-        
         // Call onNetworkCreated with isAI=true parameter to indicate this is an AI-generated network
         if (onNetworkCreated && network) {
           console.log("Starting AI network generation for network:", network.id);

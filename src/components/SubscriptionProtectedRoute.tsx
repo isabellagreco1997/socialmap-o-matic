@@ -46,12 +46,13 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Redirect to pricing page if authenticated but no active subscription
-  if (!isSubscribed) {
+  // Only redirect to pricing if we're certain the user isn't subscribed
+  // Allow access during loading states to prevent blocking legitimate users
+  if (!isSubscribed && !subscriptionLoading) {
     return <Navigate to="/pricing" state={{ from: location }} replace />;
   }
 
-  // If authenticated and subscribed, render the content
+  // If authenticated and subscribed (or still checking), render the content
   return (
     <AppLayout includeFooter={includeFooter}>
       {children}

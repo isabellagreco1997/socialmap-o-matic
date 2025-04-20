@@ -279,25 +279,18 @@ export class SidebarService {
   // Save network
   static async saveNetwork(networkId: string, name: string, description?: string): Promise<boolean> {
     try {
-      // Create an update object with the fields we want to update
-      const updateData: { name: string; description?: string } = {
-        name: name
-      };
-      
-      // Only include description if it's not empty
-      if (description) {
-        updateData.description = description;
-      }
-      
       const { error } = await supabase
         .from('networks')
-        .update(updateData)
+        .update({ 
+          name,
+          description: description || null
+        })
         .eq('id', networkId);
       
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating network:', error);
+      console.error('Error saving network:', error);
       return false;
     }
   }
@@ -305,55 +298,22 @@ export class SidebarService {
   // Delete network
   static async deleteNetwork(networkId: string): Promise<boolean> {
     try {
-      console.log('Starting network deletion for network:', networkId);
+      // Delete related entries first
+      await Promise.all([
+        supabase.from('edges').delete().eq('network_id', networkId),
+        supabase.from('nodes').delete().eq('network_id', networkId)
+      ]);
       
-      // Delete all nodes in this network
-      try {
-        const { error: nodesError } = await supabase
-          .from('nodes')
-          .delete()
-          .eq('network_id', networkId);
-        
-        if (nodesError) {
-          console.warn('Warning deleting nodes:', nodesError);
-          // Continue anyway, we want to delete the network even if node deletion fails
-        }
-      } catch (nodeError) {
-        console.warn('Exception when deleting nodes:', nodeError);
-        // Continue with deletion process anyway
-      }
-      
-      // Delete all edges in this network
-      try {
-        const { error: edgesError } = await supabase
-          .from('edges')
-          .delete()
-          .eq('network_id', networkId);
-        
-        if (edgesError) {
-          console.warn('Warning deleting edges:', edgesError);
-          // Continue anyway, we want to delete the network even if edge deletion fails
-        }
-      } catch (edgeError) {
-        console.warn('Exception when deleting edges:', edgeError);
-        // Continue with deletion process anyway
-      }
-      
-      // Delete the network itself - this is the critical operation
+      // Then delete the network
       const { error } = await supabase
         .from('networks')
         .delete()
         .eq('id', networkId);
       
-      if (error) {
-        console.error('Error deleting network:', error);
-        throw error;
-      }
-      
-      console.log('Successfully deleted network:', networkId);
+      if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Fatal error deleting network:', error);
+      console.error('Error deleting network:', error);
       return false;
     }
   }
@@ -388,18 +348,54 @@ export class SidebarService {
   // Add the getAllNetworks method to fetch all networks
   static async getAllNetworks(): Promise<Network[] | null> {
     try {
-      // Fetch all networks from the database
-      const { data: networks, error } = await supabase
+      const { data, error } = await supabase
         .from('networks')
         .select('*')
-        .order('order');
+        .order('order', { ascending: true });
       
       if (error) throw error;
       
-      return networks || [];
+      return data || [];
     } catch (error) {
-      console.error('Error fetching all networks:', error);
+      console.error('Error fetching networks:', error);
       return null;
+    }
+  }
+
+  // Reorder networks in the database (only update order)
+  static async reorderNetworks(networks: Network[]): Promise<void> {
+    console.log('[SidebarService] reorderNetworks called with networks:', 
+      networks.map(n => ({ id: n.id, order: n.order, name: n.name })));
+    
+    // Create a mapping of network id to new order
+    const orderMap = new Map<string, number>();
+    networks.forEach((network, index) => {
+      orderMap.set(network.id, index);
+    });
+    
+    console.log('[SidebarService] orderMap created:', Object.fromEntries(orderMap));
+    
+    try {
+      // Process each network update individually
+      for (const network of networks) {
+        const newOrder = orderMap.get(network.id);
+        console.log(`[SidebarService] Updating network ${network.id} with order: ${newOrder}`);
+        
+        const { error } = await supabase
+          .from('networks')
+          .update({ order: newOrder })
+          .eq('id', network.id);
+          
+        if (error) {
+          console.error(`[SidebarService] Error updating network ${network.id}:`, error);
+          throw error;
+        }
+      }
+      
+      console.log('[SidebarService] Network reordering completed successfully');
+    } catch (error) {
+      console.error('[SidebarService] Error in reorderNetworks:', error);
+      throw error;
     }
   }
 } 

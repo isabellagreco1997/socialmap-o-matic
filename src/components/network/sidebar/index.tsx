@@ -43,6 +43,8 @@ export const NetworkSidebar = memo(({
   
   // Memoized networks reordering handler
   const handleNetworksReorder = useCallback((updatedNetworks: Network[]) => {
+    console.log('Network reordering triggered with', updatedNetworks.length, 'networks');
+    
     // Batch state update by using setTimeout to push to next event loop cycle
     setTimeout(() => {
       onNetworksReorder(updatedNetworks);
@@ -145,29 +147,35 @@ export const NetworkSidebar = memo(({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Top section with buttons */}
-      <SidebarHeader
-        onCreateNetwork={handleNetworkCreatedWrapper}
-        onAIChatClick={handleAIChatClick}
-        onHealthClick={handleMyTasksClick}
-        onImportCsv={onImportCsv}
-      />
+      {/* Top section with buttons - fixed */}
+      <div className="flex-none">
+        <SidebarHeader
+          onCreateNetwork={handleNetworkCreatedWrapper}
+          onAIChatClick={handleAIChatClick}
+          onHealthClick={handleMyTasksClick}
+          onImportCsv={onImportCsv}
+        />
+      </div>
 
-      {/* Networks list - pass memoized value to reduce re-renders */}
-      <NetworkList
-        networks={networksForList}
-        currentNetworkId={currentNetworkId}
-        onNetworkSelect={handleNetworkSelect}
-        onEditNetwork={openEditPanel}
-        onNetworksReorder={handleNetworksReorder}
-      />
+      {/* Networks list - scrollable */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <NetworkList
+          networks={networksForList}
+          currentNetworkId={currentNetworkId}
+          onNetworkSelect={handleNetworkSelect}
+          onEditNetwork={openEditPanel}
+          onNetworksReorder={handleNetworksReorder}
+        />
+      </div>
 
-      {/* Bottom section with account links */}
-      <SidebarFooter
-        onOpenPricing={() => setIsPricingModalOpen(true)}
-        onOpenAccount={() => setIsAccountModalOpen(true)}
-        onLogout={handleLogout}
-      />
+      {/* Bottom section with account links - fixed */}
+      <div className="flex-none">
+        <SidebarFooter
+          onOpenPricing={() => setIsPricingModalOpen(true)}
+          onOpenAccount={() => setIsAccountModalOpen(true)}
+          onLogout={handleLogout}
+        />
+      </div>
 
       {/* Panels/Modals */}
       <EditNetworkPanel

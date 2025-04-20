@@ -471,25 +471,53 @@ export const useNetworkHandlers = (
 
   const handleNetworksReorder = async (reorderedNetworks: Network[]) => {
     try {
+      console.log('Network reordering requested with', reorderedNetworks.length, 'networks');
+      
+      // Set a flag to prevent refresh cycles during reordering
+      localStorage.setItem('network-reordering-in-progress', 'true');
+      
+      // First update localStorage immediately for fast UI response
+      localStorage.setItem('socialmap-networks', JSON.stringify(reorderedNetworks));
+      
       // Update the order field for each network
       const updates = reorderedNetworks.map((network, index) => 
         supabase
           .from('networks')
-          .update({ order: index })
+          .update({ 
+            order: index,
+            updated_at: new Date().toISOString() // Force update timestamp
+          })
           .eq('id', network.id)
       );
       
-      await Promise.all(updates);
-      
-      // Update local state with new order
+      // Update local state with new order immediately
       setNetworks(reorderedNetworks);
       
+      // Show the toast early for better UX
       toast({
         title: "Networks reordered",
-        description: "Network order has been updated"
+        description: "Network order is being saved..."
       });
+      
+      // Wait for all updates to complete
+      await Promise.all(updates);
+      
+      // Add a delay before allowing refresh cycles to ensure database updates complete
+      setTimeout(() => {
+        console.log('Network reordering complete, releasing lock');
+        localStorage.removeItem('network-reordering-in-progress');
+        
+        // Show success confirmation
+        toast({
+          title: "Networks saved",
+          description: "Network order has been saved to database",
+          duration: 3000
+        });
+      }, 2000); // 2 second delay
     } catch (error) {
       console.error('Error reordering networks:', error);
+      localStorage.removeItem('network-reordering-in-progress');
+      
       toast({
         variant: "destructive",
         title: "Error",

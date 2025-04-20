@@ -107,6 +107,11 @@ export function useSubscription(stripeEmail?: string) {
         });
 
         // Call the Netlify function to check subscription
+        console.log('Calling Netlify function to check subscription with data:', { 
+          email: user.email,
+          stripeEmail 
+        });
+        
         const response = await fetch('/.netlify/functions/check-subscription', {
           method: 'POST',
           headers: {
@@ -118,7 +123,12 @@ export function useSubscription(stripeEmail?: string) {
           }),
         });
 
+        // Log the raw response for debugging
+        console.log('Raw Netlify function response status:', response.status);
+        
         const responseText = await response.text();
+        console.log('Raw Netlify function response text:', responseText);
+        
         let data;
         
         try {

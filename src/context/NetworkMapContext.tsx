@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { Node, Edge, useNodesState, useEdgesState } from '@xyflow/react';
+import { Node, Edge, useNodesState, useEdgesState, NodeChange, EdgeChange, addEdge, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
 import type { Network, NodeData, EdgeData } from '@/types/network';
+import { cachedNetworkNames } from '@/components/network/NetworkTopBar';
 
 interface NetworkMapContextProps {
   networks: Network[];
@@ -110,12 +111,25 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
   const { toast } = useToast();
   
   // Memoize the filtered networks to prevent unnecessary re-renders
-  const filteredNetworks = useMemo(() => 
-    networks.filter(network => 
+  const filteredNetworks = useMemo(() => {
+    // First filter the networks based on search query
+    const filtered = networks.filter(network => 
       network.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), 
-    [networks, searchQuery]
-  );
+    );
+    
+    // Always sort by order regardless of other operations
+    const sorted = [...filtered].sort((a, b) => {
+      // Use nullish coalescing to handle undefined order values
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+    
+    console.log('[DEBUG] NetworkMapContext: Filtered and sorted networks:', 
+      sorted.map(n => `${n.name} (id: ${n.id}, order: ${n.order ?? "undefined"})`));
+    
+    return sorted;
+  }, [networks, searchQuery]);
   
   // Function to manually trigger a networks refresh
   const refreshNetworks = useCallback(async () => {
@@ -136,10 +150,22 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       console.log('NetworkMapContext: Manual refresh of networks requested');
       setIsLoading(true);
       
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('NetworkMapContext: No authenticated user found during refresh');
+        clearTimeout(timeoutId);
+        if (isMounted) setIsLoading(false);
+        return;
+      }
+      
       const { data: networksData, error } = await supabase
         .from('networks')
         .select('*')
-        .order('order', { ascending: true });
+        .eq('user_id', user.id) // Only fetch networks belonging to current user
+        .order('order', { ascending: true })
+        .order('created_at', { ascending: false }); // Secondary sort by creation date
       
       clearTimeout(timeoutId);
       
@@ -248,18 +274,50 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
   // Fetch networks effect
   useEffect(() => {
     const fetchNetworks = async () => {
-      // First try to load from cache
+      // Check if network reordering is in progress
+      const reorderingInProgress = localStorage.getItem('network-reordering-in-progress') === 'true';
+      if (reorderingInProgress) {
+        console.log('[DEBUG] NetworkMapContext: Skipping network fetch due to reordering in progress');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if this is an initial login scenario
+      const isLoginNavigation = window.location.search.includes('fromLogin=true');
+      console.log('[DEBUG] NetworkMapContext: Is login navigation:', isLoginNavigation);
+      
+      // If this is login navigation, we should prioritize fetching from the server
+      if (isLoginNavigation) {
+        console.log('[DEBUG] NetworkMapContext: Login detected, prioritizing server fetch');
+        setIsLoading(true);
+      }
+      
+      // First try to load from cache (unless it's a login)
       const cachedNetworks = localStorage.getItem('socialmap-networks');
       
       // If we have cached networks, use them first to avoid loading state
-      if (cachedNetworks) {
+      // But skip this for login scenarios to ensure fresh data
+      if (cachedNetworks && !isLoginNavigation) {
         try {
           const networksData = JSON.parse(cachedNetworks);
-          setNetworks(networksData);
+          console.log('[DEBUG] NetworkMapContext: Using cached networks from localStorage:', networksData.length);
+          
+          // Sort networks by order to ensure consistent display
+          const sortedNetworks = [...networksData].sort((a, b) => {
+            // Use nullish coalescing to handle undefined order values
+            const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+            const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+            return orderA - orderB;
+          });
+          
+          console.log('[DEBUG] NetworkMapContext: Sorted cached networks by order:',
+            sortedNetworks.map(n => `${n.name} (id: ${n.id}, order: ${n.order ?? "undefined"})`));
+          
+          setNetworks(sortedNetworks);
           
           // If no current network is selected but we have networks, select the first one
-          if (!currentNetworkId && networksData.length > 0) {
-            setCurrentNetworkId(networksData[0].id);
+          if (!currentNetworkId && sortedNetworks.length > 0) {
+            setCurrentNetworkId(sortedNetworks[0].id);
           }
           
           // Immediately set loading to false when using cached data
@@ -269,11 +327,12 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
         }
       }
   
-      // Check if the user just returned to the tab
+      // Always fetch from the server for login navigation
+      // For other scenarios, check tab visibility
       const isTabReturn = document.visibilityState === 'visible';
       
       // If returning from a tab change, don't show loading and maybe skip the fetch
-      if (isTabReturn) {
+      if (isTabReturn && !isLoginNavigation) {
         setIsLoading(false);
         
         // If we have cached networks and it's a tab return, we can skip the actual fetch
@@ -281,14 +340,70 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       }
       
       try {
+        // Skip fetch if reordering started during async operations
+        if (localStorage.getItem('network-reordering-in-progress') === 'true') {
+          console.log('[DEBUG] NetworkMapContext: Aborting network fetch due to reordering started during fetch');
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('[DEBUG] NetworkMapContext: Fetching networks from server');
+        
+        // Get the current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.log('[DEBUG] NetworkMapContext: No authenticated user found');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Fetch only networks created by the current user
         const {
           data: networksData,
           error
-        } = await supabase.from('networks').select('*').order('order', {
-          ascending: true
-        });
+        } = await supabase
+          .from('networks')
+          .select('*')
+          .eq('user_id', user.id) // Only fetch networks belonging to current user
+          .order('order', { ascending: true })
+          .order('created_at', { ascending: false }); // Secondary sort by creation date
+          
         if (error) throw error;
-        setNetworks(networksData);
+        
+        // Skip state update if reordering started during fetch
+        if (localStorage.getItem('network-reordering-in-progress') === 'true') {
+          console.log('[DEBUG] NetworkMapContext: Skipping network state update due to reordering in progress');
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('[DEBUG] NetworkMapContext: Received networks from database:', 
+          networksData.map(n => `${n.name} (id: ${n.id}, order: ${n.order ?? "undefined"})`));
+        
+        // If this was a login scenario, clear the URL parameter without refreshing the page
+        if (isLoginNavigation) {
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+        }
+        
+        // Sort the networks by order explicitly before updating state
+        const sortedNetworks = [...networksData].sort((a, b) => {
+          // Use nullish coalescing to handle undefined order values
+          const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+          const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+          return orderA - orderB;
+        });
+        
+        console.log('[DEBUG] NetworkMapContext: Sorted networks from database:', 
+          sortedNetworks.map(n => `${n.name} (id: ${n.id}, order: ${n.order ?? "undefined"})`));
+        
+        // Update networks in state
+        setNetworks(sortedNetworks);
+        
+        // Also update localStorage to ensure consistency
+        localStorage.setItem('socialmap-networks', JSON.stringify(networksData));
+        
         if (networksData.length > 0 && !currentNetworkId) {
           setCurrentNetworkId(networksData[0].id);
         } else if (networksData.length === 0) {
@@ -315,8 +430,13 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
     
     // Execute but don't show loading if we already have cached data
     const cachedNetworks = localStorage.getItem('socialmap-networks');
-    if (cachedNetworks) {
+    const isLoginNavigation = window.location.search.includes('fromLogin=true');
+    
+    if (cachedNetworks && !isLoginNavigation) {
       setIsLoading(false);
+    } else if (isLoginNavigation) {
+      // Show loading indicator immediately for login navigation
+      setIsLoading(true);
     }
     
     fetchNetworks();
@@ -418,10 +538,9 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
         // Update name in sidebar cache
         if (typeof window !== 'undefined') {
           console.log('NetworkMapContext: Updating cached network name:', networkId, newName);
-          // Use type assertion to handle the cached network names 
-          const cachedNames = (window as any).cachedNetworkNames;
-          if (cachedNames && typeof cachedNames.set === 'function') {
-            cachedNames.set(networkId, newName);
+          // Use the imported cachedNetworkNames
+          if (cachedNetworkNames) {
+            cachedNetworkNames.set(networkId, newName);
           }
         }
         

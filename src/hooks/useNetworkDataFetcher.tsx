@@ -75,13 +75,23 @@ export function useNetworkDataFetcher() {
     console.log('Updating node refs with new data', nodes.length);
     setCurrentNodes(nodes);
     nodesRefForEvents.current = [...nodes]; // Make a copy to ensure reference changes
-  }, [setCurrentNodes]);
+    
+    // Also update the React state if needed
+    const contextNodeCount = (window as any).contextNodesCount || 0;
+    if (contextNodeCount !== nodes.length) {
+      console.log('Syncing nodes to context state:', nodes.length);
+      setNodes(nodes);
+    }
+  }, [setCurrentNodes, setNodes]);
   
   const updateCurrentEdges = useCallback((edges: any[]) => {
     console.log('Updating edge refs with new data', edges.length);
     setCurrentEdges(edges);
     edgesRefForEvents.current = [...edges]; // Make a copy to ensure reference changes
-  }, [setCurrentEdges]);
+    
+    // Also update the React state if needed
+    setEdges(edges);
+  }, [setCurrentEdges, setEdges]);
   
   // Setup event handlers with proper refs
   useNetworkEventHandlers(
@@ -94,6 +104,19 @@ export function useNetworkDataFetcher() {
 
   // Function to fetch network data from cache or server
   const fetchNetworkData = useCallback(async (forceServerRefresh = false) => {
+    // Check if this is a login scenario
+    const isLoginNavigation = window.location.search.includes('fromLogin=true');
+    
+    // Force server refresh if this is a login
+    if (isLoginNavigation) {
+      console.log('Login navigation detected, forcing server refresh');
+      forceServerRefresh = true;
+      
+      // Clear the fromLogin parameter from the URL without refreshing the page
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+    
     // Guard against concurrent execution
     if (isProcessing()) {
       console.log('Already processing a data fetch, skipping...');
@@ -121,6 +144,11 @@ export function useNetworkDataFetcher() {
     // Mark as processing to prevent concurrent executions
     startProcessing();
     
+    // When coming from login, always show loading indicator
+    if (isLoginNavigation) {
+      startLoading();
+    }
+    
     console.log('FETCH START - Current nodes in memory:', getCurrentNodes().length);
     console.log('FETCH START - Current nodes in event refs:', nodesRefForEvents.current.length);
     
@@ -133,6 +161,31 @@ export function useNetworkDataFetcher() {
           return;
         }
         
+        // Save previous network data first if we're switching networks
+        const previousNetworkId = getLastFetchedNetworkId();
+        if (previousNetworkId && 
+            previousNetworkId !== currentNetworkId && 
+            (getCurrentNodes().length > 0 || getCurrentEdges().length > 0)) {
+            
+          console.log('Saving data from previous network before switching:', previousNetworkId);
+          try {
+            // Save the previous network data
+            await saveNetworkToDB(
+              previousNetworkId, 
+              getCurrentNodes(), 
+              getCurrentEdges()
+            );
+            
+            // Clear current nodes and edges after saving to prevent bleeding into the next network
+            setCurrentNodes([]);
+            setCurrentEdges([]);
+            nodesRefForEvents.current = [];
+            edgesRefForEvents.current = [];
+          } catch (error) {
+            console.error('Error saving data before switching networks:', error);
+          }
+        }
+        
         // Update the last fetched network ID at the start of fetch process
         // to prevent multiple concurrent fetches for the same network
         setLastFetchedNetworkId(currentNetworkId);
@@ -141,25 +194,6 @@ export function useNetworkDataFetcher() {
         startLoading();
         
         console.log('Fetching data for network:', currentNetworkId);
-        
-        // Save any unsaved nodes from previous network to database 
-        // if we have nodes in memory but are switching networks
-        if (getLastFetchedNetworkId() && 
-            getLastFetchedNetworkId() !== currentNetworkId && 
-            (getCurrentNodes().length > 0 || getCurrentEdges().length > 0)) {
-            
-          console.log('Saving data from previous network before switching:', getLastFetchedNetworkId());
-          try {
-            // Save the previous network data
-            await saveNetworkToDB(
-              getLastFetchedNetworkId()!, 
-              getCurrentNodes(), 
-              getCurrentEdges()
-            );
-          } catch (error) {
-            console.error('Error saving data before switching networks:', error);
-          }
-        }
         
         // Try to load from cache first
         let cachedData = null;
@@ -370,6 +404,9 @@ export function useNetworkDataFetcher() {
       return;
     }
 
+    // Track the last network ID before we potentially change it
+    const previousNetworkId = getLastFetchedNetworkId();
+
     // Always set loading to true when network changes or refresh is requested
     if (currentNetworkId !== getLastFetchedNetworkId() || shouldRefetchData) {
       startLoading();
@@ -378,6 +415,18 @@ export function useNetworkDataFetcher() {
       // Set network changing flag to prevent multiple fetches
       if (currentNetworkId !== getLastFetchedNetworkId()) {
         networkChangingRef.current = true;
+        
+        // Immediately save data from the previous network if we have any
+        if (previousNetworkId && (getCurrentNodes().length > 0 || getCurrentEdges().length > 0)) {
+          console.log('Immediately saving data from previous network:', previousNetworkId);
+          saveNetworkToDB(
+            previousNetworkId,
+            getCurrentNodes(),
+            getCurrentEdges()
+          ).catch(error => {
+            console.error('Error saving previous network data:', error);
+          });
+        }
       }
     }
     
@@ -431,7 +480,10 @@ export function useNetworkDataFetcher() {
     getLastFetchedNetworkId,
     shouldForceRefresh,
     shouldSkipFetching,
-    hasNodesLoaded
+    hasNodesLoaded,
+    getCurrentNodes,
+    getCurrentEdges,
+    saveNetworkToDB
   ]);
 
   // Debug the event handlers by exposing them to the window for debugging
@@ -517,4 +569,33 @@ export function useNetworkDataFetcher() {
     // Store the context nodes count on the window for debugging
     (window as any).contextNodesCount = contextNodes.length;
   }, [contextNodes]);
+  
+  // Add an effect to save network data when unmounting or navigating away
+  useEffect(() => {
+    // Function to save current network data
+    const saveCurrentNetwork = async () => {
+      const networkId = currentNetworkId;
+      if (networkId && (getCurrentNodes().length > 0 || getCurrentEdges().length > 0)) {
+        console.log('Saving current network data before unmount:', networkId);
+        try {
+          await saveNetworkToDB(networkId, getCurrentNodes(), getCurrentEdges());
+        } catch (error) {
+          console.error('Error saving network data before unmount:', error);
+        }
+      }
+    };
+    
+    // Add beforeunload event handler to save data when navigating away
+    const handleBeforeUnload = () => {
+      saveCurrentNetwork();
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Save data when unmounting component
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      saveCurrentNetwork();
+    };
+  }, [currentNetworkId, getCurrentNodes, getCurrentEdges, saveNetworkToDB]);
 } 

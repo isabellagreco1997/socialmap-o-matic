@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNetworkMap } from '@/context/NetworkMapContext';
 
 export function useNetworkFetchTriggers() {
@@ -8,6 +8,19 @@ export function useNetworkFetchTriggers() {
     shouldRefetchData,
     setShouldRefetchData
   } = useNetworkMap();
+  
+  // Check for login navigation
+  const isLoginNavigation = useCallback(() => {
+    return window.location.search.includes('fromLogin=true');
+  }, []);
+  
+  // Force refresh data after login
+  useEffect(() => {
+    if (isLoginNavigation()) {
+      console.log('Login navigation detected in triggers, setting shouldRefetchData');
+      setShouldRefetchData(true);
+    }
+  }, [isLoginNavigation, setShouldRefetchData]);
   
   // Determine if a network switch has occurred
   const shouldFetchOnNetworkSwitch = useCallback((lastFetchedNetworkId: string | null) => {
@@ -22,8 +35,9 @@ export function useNetworkFetchTriggers() {
   // Determine if we should force a refresh
   const shouldForceRefresh = useCallback((lastFetchedNetworkId: string | null) => {
     return shouldFetchOnNetworkSwitch(lastFetchedNetworkId) || 
-           shouldFetchOnRefreshCounter(lastFetchedNetworkId);
-  }, [shouldFetchOnNetworkSwitch, shouldFetchOnRefreshCounter]);
+           shouldFetchOnRefreshCounter(lastFetchedNetworkId) ||
+           isLoginNavigation();
+  }, [shouldFetchOnNetworkSwitch, shouldFetchOnRefreshCounter, isLoginNavigation]);
   
   // Reset refresh flag
   const resetRefreshFlag = useCallback(() => {
@@ -34,11 +48,16 @@ export function useNetworkFetchTriggers() {
   
   // Check if we should skip fetching
   const shouldSkipFetching = useCallback((lastFetchedNetworkId: string | null, hasNodesLoaded: boolean) => {
+    // Never skip fetching on login
+    if (isLoginNavigation()) {
+      return false;
+    }
+    
     return !shouldRefetchData && 
            !shouldForceRefresh(lastFetchedNetworkId) &&
            currentNetworkId === lastFetchedNetworkId && 
            hasNodesLoaded;
-  }, [shouldRefetchData, shouldForceRefresh, currentNetworkId]);
+  }, [shouldRefetchData, shouldForceRefresh, currentNetworkId, isLoginNavigation]);
   
   return {
     shouldFetchOnNetworkSwitch,
@@ -48,6 +67,7 @@ export function useNetworkFetchTriggers() {
     shouldSkipFetching,
     currentNetworkId,
     refreshCounter,
-    shouldRefetchData
+    shouldRefetchData,
+    isLoginNavigation
   };
 } 
