@@ -3,15 +3,15 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Stripe
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
+const stripeSecretKey = process.env.VITE_STRIPE_SECRET_KEY_TEST || process.env.VITE_STRIPE_SECRET_KEY_LIVE || '';
 const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-02-24.acacia',
 });
 
 // Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const handler: Handler = async (event) => {
   // Set CORS headers for preflight requests
@@ -46,10 +46,10 @@ export const handler: Handler = async (event) => {
     const signature = event.headers['stripe-signature'] || '';
     
     // Verify webhook signature
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+    const endpointSecret = process.env.VITE_STRIPE_WEBHOOK_SECRET || '';
     
     if (!endpointSecret) {
-      console.error('Missing STRIPE_WEBHOOK_SECRET');
+      console.error('Missing VITE_STRIPE_WEBHOOK_SECRET');
       return {
         statusCode: 500,
         headers,

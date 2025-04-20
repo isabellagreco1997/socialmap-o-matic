@@ -6,13 +6,13 @@ import { createClient } from '@supabase/supabase-js';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Initialize Stripe for test and live environments
-const stripeTestKey = process.env.STRIPE_TEST_SECRET_KEY;
-const stripeLiveKey = process.env.STRIPE_LIVE_SECRET_KEY;
+const stripeTestKey = process.env.VITE_STRIPE_SECRET_KEY_TEST;
+const stripeLiveKey = process.env.VITE_STRIPE_SECRET_KEY_LIVE;
 
 const stripeTest = stripeTestKey 
   ? new Stripe(stripeTestKey, { apiVersion: '2025-02-24.acacia' }) 
@@ -95,275 +95,164 @@ export const handler: Handler = async (event) => {
   console.log('Checking subscription for emails:', emailsToCheck);
 
   try {
-    // FIRST: Check subscription status in Supabase for the primary email
-    if (email) {
-      console.log('Checking Supabase subscription status for email:', email);
-      
-      // First, try to get the user ID from auth
-      const { data: users, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (!authError && users) {
-        // Find user with matching email
-        const authUser = users.users.find(user => user.email === email);
-        
-        if (authUser) {
-          console.log('Found user in auth with ID:', authUser.id);
-          
-          // Check if user has a profile with subscription status
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('subscription_status')
-            .eq('id', authUser.id)
-            .single();
-          
-          if (!profileError && profile && profile.subscription_status) {
-            console.log('Found subscription status in Supabase:', profile.subscription_status);
-            
-            // If we have a clear active status, return it
-            if (profile.subscription_status === 'active') {
-              console.log('Returning active subscription status from Supabase');
-              return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({
-                  isSubscribed: true,
-                  customerDetails: {
-                    id: authUser.id,
-                    email: authUser.email,
-                    name: authUser.user_metadata?.full_name || null,
-                    metadata: {},
-                    environment: useTestByDefault ? 'test' : 'live'
-                  },
-                  subscriptionDetails: {
-                    id: 'supabase-subscription',
-                    status: 'active',
-                    currentPeriodEnd: 'N/A',
-                    cancelAtPeriodEnd: false
-                  },
-                  debug: {
-                    source: 'supabase',
-                    searchedEmails: emailsToCheck,
-                    profile: profile
-                  }
-                }),
-              };
-            }
-            
-            // If we have a clear inactive status, continue to check Stripe as fallback
-            if (profile.subscription_status === 'inactive') {
-              console.log('Found inactive status in Supabase, will check Stripe as fallback');
-              // Will continue to Stripe check below
-            }
-          }
-        }
-      }
-    }
+    // Simple approach: just check if there are any active subscriptions in Stripe
+    // Default to 'true' if something goes wrong to avoid blocking users
     
-    // SECOND: If Supabase didn't give a clear answer, check Stripe
-    // Try primary environment first
-    let customers: Stripe.Customer[] = [];
-    let testCustomers: Stripe.Customer[] = [];
-    let liveCustomers: Stripe.Customer[] = [];
-
-    // Check test environment
-    if (stripeTest) {
-      console.log('Checking test environment...');
-      for (const emailToCheck of emailsToCheck) {
-        try {
-          const result = await stripeTest.customers.list({
-            email: emailToCheck,
-            limit: 100,
-          });
-          testCustomers.push(...result.data);
-        } catch (error) {
-          console.error(`Error listing customers for ${emailToCheck} in test environment:`, error);
-          // Continue with other emails
-        }
-      }
-
-      console.log('Test environment results:', {
-        customersFound: testCustomers.length,
-        customers: testCustomers.map(c => ({
-          id: c.id,
-          email: c.email,
-          name: c.name,
-          created: new Date(c.created * 1000).toISOString()
-        }))
-      });
-    }
-
-    // Check live environment
-    if (stripeLive) {
-      console.log('Checking live environment...');
-      for (const emailToCheck of emailsToCheck) {
-        try {
-          const result = await stripeLive.customers.list({
-            email: emailToCheck,
-            limit: 100,
-          });
-          liveCustomers.push(...result.data);
-        } catch (error) {
-          console.error(`Error listing customers for ${emailToCheck} in live environment:`, error);
-          // Continue with other emails
-        }
-      }
-
-      console.log('Live environment results:', {
-        customersFound: liveCustomers.length,
-        customers: liveCustomers.map(c => ({
-          id: c.id,
-          email: c.email,
-          name: c.name,
-          created: new Date(c.created * 1000).toISOString()
-        }))
-      });
-    }
-
-    // Combine results based on environment priority
-    if (useTestByDefault) {
-      // If using test environment by default, prioritize test customers
-      customers = [...testCustomers, ...liveCustomers];
-    } else {
-      // If using live environment by default, prioritize live customers
-      customers = [...liveCustomers, ...testCustomers];
-    }
-
-    console.log('Combined results:', {
-      customersFound: customers.length,
-      testCustomersFound: testCustomers.length,
-      liveCustomersFound: liveCustomers.length
-    });
-
-    // Early return if no customers found
-    if (customers.length === 0) {
-      console.log('No Stripe customers found for the provided emails');
-      
-      // If we didn't find customers, try to update Supabase to be consistent
-      await tryUpdateSupabaseStatus(email, 'inactive');
-      
+    // If we don't have properly configured Stripe APIs, return 'true' by default
+    if (!stripeTest && !stripeLive) {
+      console.log('No Stripe API keys configured, defaulting to true');
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({
-          isSubscribed: false,
-          customerDetails: null,
-          subscriptionDetails: null,
+        body: JSON.stringify({ 
+          isSubscribed: true,
           debug: {
-            searchedEmails: emailsToCheck,
-            customersFound: 0,
-            testCustomersFound: 0,
-            liveCustomersFound: 0,
-            environment: isDevelopment ? 'development' : 'production',
-            customerEnvironment: null
+            reason: 'no_stripe_keys_configured'
           }
         }),
       };
     }
-
-    let activeSubscription: Stripe.Subscription | null = null;
-    let activeCustomer: Stripe.Customer | null = null;
-
-    for (const customer of customers) {
-      try {
-        // Get the appropriate Stripe client for this customer
-        const stripe = getStripeClientForCustomer(customer.id);
-        
-        if (!stripe) {
-          console.log(`Skipping customer ${customer.id} - no matching Stripe client available`);
-          continue;
-        }
-
-        console.log(`Checking subscriptions for customer ${customer.id} using ${isTestCustomer(customer.id) ? 'test' : 'live'} client`);
-        
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          status: 'active',
-          expand: ['data.default_payment_method'],
-          limit: 100,
-        });
-
-        console.log(`Subscriptions found for customer ${customer.email}:`, {
-          count: subscriptions.data.length,
-          subscriptions: subscriptions.data.map(s => ({
-            id: s.id,
-            status: s.status,
-            currentPeriodEnd: new Date(s.current_period_end * 1000).toISOString(),
-            cancelAtPeriodEnd: s.cancel_at_period_end
-          }))
-        });
-
-        const hasActive = subscriptions.data.some(sub => 
-          sub.status === 'active' || sub.status === 'trialing'
-        );
-
-        if (hasActive) {
-          activeSubscription = subscriptions.data[0];
-          activeCustomer = customer;
+    
+    // Check both test and live environments
+    let hasActiveSubscription = false;
+    let customerDetails: {
+      id: string;
+      email: string | null;
+      name: string | null | undefined;
+      metadata: Stripe.Metadata;
+      environment: string;
+    } | null = null;
+    let subscriptionDetails: {
+      id: string;
+      status: Stripe.Subscription.Status;
+      currentPeriodEnd: string;
+      cancelAtPeriodEnd: boolean;
+    } | null = null;
+    
+    // First try test environment if available
+    if (stripeTest) {
+      for (const emailToCheck of emailsToCheck) {
+        try {
+          // Find customers with this email
+          const customers = await stripeTest.customers.list({
+            email: emailToCheck,
+            limit: 10,
+          });
           
-          // Update Supabase with active status
-          await tryUpdateSupabaseStatus(email, 'active');
+          // Check each customer for active subscriptions
+          for (const customer of customers.data) {
+            const subscriptions = await stripeTest.subscriptions.list({
+              customer: customer.id,
+              status: 'active',
+              limit: 1,
+            });
+            
+            if (subscriptions.data.length > 0) {
+              hasActiveSubscription = true;
+              customerDetails = {
+                id: customer.id,
+                email: customer.email,
+                name: customer.name,
+                metadata: customer.metadata,
+                environment: 'test'
+              };
+              subscriptionDetails = {
+                id: subscriptions.data[0].id,
+                status: subscriptions.data[0].status,
+                currentPeriodEnd: new Date(subscriptions.data[0].current_period_end * 1000).toISOString(),
+                cancelAtPeriodEnd: subscriptions.data[0].cancel_at_period_end,
+              };
+              break;
+            }
+          }
           
-          break;
+          if (hasActiveSubscription) break;
+        } catch (error) {
+          console.error(`Error checking test subscriptions for ${emailToCheck}:`, error);
         }
-      } catch (error) {
-        console.error(`Error checking subscriptions for customer ${customer.id}:`, error);
-        // Continue with other customers
       }
     }
     
-    // If no active subscription found, update Supabase
-    if (!activeSubscription) {
-      await tryUpdateSupabaseStatus(email, 'inactive');
+    // If no active subscription found in test env, try live
+    if (!hasActiveSubscription && stripeLive) {
+      for (const emailToCheck of emailsToCheck) {
+        try {
+          // Find customers with this email
+          const customers = await stripeLive.customers.list({
+            email: emailToCheck,
+            limit: 10,
+          });
+          
+          // Check each customer for active subscriptions
+          for (const customer of customers.data) {
+            const subscriptions = await stripeLive.subscriptions.list({
+              customer: customer.id,
+              status: 'active',
+              limit: 1,
+            });
+            
+            if (subscriptions.data.length > 0) {
+              hasActiveSubscription = true;
+              customerDetails = {
+                id: customer.id,
+                email: customer.email,
+                name: customer.name,
+                metadata: customer.metadata,
+                environment: 'live'
+              };
+              subscriptionDetails = {
+                id: subscriptions.data[0].id,
+                status: subscriptions.data[0].status,
+                currentPeriodEnd: new Date(subscriptions.data[0].current_period_end * 1000).toISOString(),
+                cancelAtPeriodEnd: subscriptions.data[0].cancel_at_period_end,
+              };
+              break;
+            }
+          }
+          
+          if (hasActiveSubscription) break;
+        } catch (error) {
+          console.error(`Error checking live subscriptions for ${emailToCheck}:`, error);
+        }
+      }
     }
-
+    
+    // Try to update Supabase if possible
+    if (email && supabaseUrl && supabaseAnonKey) {
+      try {
+        await updateSubscriptionStatus(email, hasActiveSubscription);
+      } catch (error) {
+        console.error('Error updating Supabase:', error);
+      }
+    }
+    
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        isSubscribed: !!activeSubscription,
-        customerDetails: activeCustomer ? {
-          id: activeCustomer.id,
-          email: activeCustomer.email,
-          name: activeCustomer.name,
-          metadata: activeCustomer.metadata,
-          environment: isTestCustomer(activeCustomer.id) ? 'test' : 'live'
-        } : null,
-        subscriptionDetails: activeSubscription ? {
-          id: activeSubscription.id,
-          status: activeSubscription.status,
-          currentPeriodEnd: new Date(activeSubscription.current_period_end * 1000).toISOString(),
-          cancelAtPeriodEnd: activeSubscription.cancel_at_period_end,
-        } : null,
+        isSubscribed: hasActiveSubscription,
+        customerDetails,
+        subscriptionDetails,
         debug: {
-          searchedEmails: emailsToCheck,
-          customersFound: customers.length,
-          testCustomersFound: testCustomers.length,
-          liveCustomersFound: liveCustomers.length,
-          environment: isDevelopment ? 'development' : 'production',
-          customerEnvironment: activeCustomer ? (isTestCustomer(activeCustomer.id) ? 'test' : 'live') : null
+          searchedEmails: emailsToCheck
         }
       }),
     };
   } catch (error) {
     console.error('Error checking subscription:', error);
     
-    // Try to update Supabase with active status to ensure user can access
-    if (email) {
-      await tryUpdateSupabaseStatus(email, 'active');
-    }
-    
+    // Default to true on error to avoid blocking access
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ 
-        isSubscribed: true, // Default to true on error to prevent access issues
+        isSubscribed: true,
         customerDetails: null,
         subscriptionDetails: null,
         debug: {
           errorMessage: error.message,
-          errorType: error.type || error.name,
-          fallbackResponse: true,
-          environment: isDevelopment ? 'development' : 'production'
+          errorType: error.name,
+          fallbackResponse: true
         }
       }),
     };
@@ -371,40 +260,32 @@ export const handler: Handler = async (event) => {
 };
 
 // Helper function to update Supabase subscription status
-async function tryUpdateSupabaseStatus(email: string | undefined, status: 'active' | 'inactive') {
-  if (!email) return;
-  
+async function updateSubscriptionStatus(email: string, isActive: boolean) {
   try {
-    console.log(`Updating Supabase subscription_status to ${status} for email: ${email}`);
+    const { data: user } = await supabase.auth.signInWithPassword({
+      email,
+      password: 'dummy-password-that-will-fail',
+    });
     
-    // First, try to get the user ID from auth
-    const { data: users, error: authError } = await supabase.auth.admin.listUsers();
+    console.log('User lookup result:', user);
     
-    if (authError || !users) {
-      console.error('Error listing users:', authError);
-      return;
-    }
+    // This won't actually log the user in, but it will tell us if the user exists
+    // If needed, you could replace this with a more direct check
     
-    // Find user with matching email
-    const authUser = users.users.find(user => user.email === email);
-    
-    if (!authUser) {
-      console.error('User not found with email:', email);
-      return;
-    }
-    
-    // Update profile with user ID from auth
-    const { error: updateError } = await supabase
+    // Since we don't have admin permissions with anon key, we'll try a direct table query
+    const { data, error } = await supabase
       .from('profiles')
-      .update({ subscription_status: status })
-      .eq('id', authUser.id);
-      
-    if (updateError) {
-      console.error('Error updating user subscription status:', updateError);
+      .update({ 
+        subscription_status: isActive ? 'active' : 'inactive' 
+      })
+      .eq('email', email);
+    
+    if (error) {
+      console.error('Error updating profile:', error);
     } else {
-      console.log(`Successfully updated subscription_status to ${status} for user ID: ${authUser.id}`);
+      console.log('Updated profile successfully:', data);
     }
   } catch (error) {
-    console.error('Error updating Supabase subscription status:', error);
+    console.error('Error in updateSubscriptionStatus:', error);
   }
-} 
+}
