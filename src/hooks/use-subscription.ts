@@ -1,260 +1,207 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
 
-// Define types for subscription data
-export interface CustomerDetails {
-  id: string;
-  email: string;
-  name: string | null;
-  metadata: Record<string, any>;
-  environment: 'test' | 'live';
-}
-
-export interface SubscriptionDetails {
-  id: string;
-  status: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-}
-
+// Define types
 export interface SubscriptionData {
   isSubscribed: boolean;
-  customerDetails: CustomerDetails | null;
-  subscriptionDetails: SubscriptionDetails | null;
-  debug?: any;
+  customerDetails: any | null;
+  subscriptionDetails: any | null;
 }
 
-// Cache subscription data
-const CACHE_KEY = 'subscription-data';
-const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour for active subscriptions
-const CACHE_EXPIRY_INACTIVE = 5 * 60 * 1000; // 5 minutes for inactive subscriptions
-let cachedData: {
-  data: SubscriptionData;
-  timestamp: number;
-} | null = null;
+// Global circuit breaker mechanism
+let IS_CHECKING = false;
+let LAST_CHECK_TIME = 0;
+let CHECK_COUNT = 0;
+let HAS_CHECKED_SESSION = false;
+const MAX_CHECKS = 3;
+const COOLDOWN_MS = 5000; // 5 seconds between checks
 
-// Track check attempts globally
-let checkAttempts = 0;
-let lastCheckTime = 0;
-const CHECK_THROTTLE_TIME = 2000; // Don't check more often than every 2 seconds
-
-export function useSubscription(stripeEmail?: string) {
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>(() => {
-    // Try to use cached data on initial load
-    if (cachedData && Date.now() - cachedData.timestamp < getCacheExpiry(cachedData.data.isSubscribed)) {
-      console.log('Using cached subscription data:', cachedData.data.isSubscribed ? 'Subscribed' : 'Not subscribed');
-      return cachedData.data;
-    }
-    
-    // Check localStorage for cached data
-    const storedData = localStorage.getItem(CACHE_KEY);
-    if (storedData) {
-      try {
-        const parsed = JSON.parse(storedData);
-        if (parsed && parsed.timestamp && 
-            Date.now() - parsed.timestamp < getCacheExpiry(parsed.data.isSubscribed)) {
-          cachedData = parsed;
-          console.log('Using localStorage subscription data:', parsed.data.isSubscribed ? 'Subscribed' : 'Not subscribed');
-          return parsed.data;
-        }
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-    
-    return {
-      isSubscribed: false,
-      customerDetails: null,
-      subscriptionDetails: null
-    };
-  });
-  
-  const [isLoading, setIsLoading] = useState<boolean>(!cachedData);
-  const [error, setError] = useState<string | null>(null);
-  const [lastFetched, setLastFetched] = useState<number>(cachedData?.timestamp || 0);
-  const { toast } = useToast();
-
-  // Helper function to determine cache expiry time based on subscription status
-  function getCacheExpiry(isSubscribed: boolean): number {
-    return isSubscribed ? CACHE_EXPIRY : CACHE_EXPIRY_INACTIVE;
+// Reset counter after 10 minutes
+setInterval(() => {
+  if (CHECK_COUNT > 0) {
+    console.log(`[Subscription] Resetting check counter. Had ${CHECK_COUNT} checks.`);
+    CHECK_COUNT = 0;
   }
+}, 10 * 60 * 1000);
 
-  // Create the subscription checking function that can be called on demand
-  const checkSubscription = useCallback(async (forceCheck: boolean = false) => {
-    // Throttle checks to prevent rapid consecutive calls
-    const now = Date.now();
-    if (!forceCheck && now - lastCheckTime < CHECK_THROTTLE_TIME) {
-      console.log('Throttling subscription check - too soon since last check');
+export function useSubscription() {
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastChecked, setLastChecked] = useState<number>(0);
+
+  // The main function to check subscription status
+  const checkSubscription = useCallback(async (forceCheck = false) => {
+    // Circuit breaker to prevent loops
+    if (IS_CHECKING) {
+      console.log('[Subscription] Check already in progress, skipping');
       return;
     }
-    lastCheckTime = now;
-    
-    // Log and count check attempts
-    checkAttempts++;
-    console.log(`Subscription check attempt ${checkAttempts} (forced: ${forceCheck})`);
 
+    // If we've already checked this session, don't check again (unless forced)
+    if (HAS_CHECKED_SESSION && !forceCheck) {
+      console.log('[Subscription] Already checked this session');
+      return;
+    }
+
+    // Prevent checks too close together
+    const now = Date.now();
+    if (!forceCheck && now - LAST_CHECK_TIME < COOLDOWN_MS) {
+      console.log(`[Subscription] Too many requests (wait ${Math.ceil((COOLDOWN_MS - (now - LAST_CHECK_TIME))/1000)}s)`);
+      return;
+    }
+
+    // Limit total number of checks 
+    if (CHECK_COUNT >= MAX_CHECKS && !forceCheck) {
+      console.log(`[Subscription] Maximum check count reached (${MAX_CHECKS})`);
+      // Default to subscribed to avoid blocking users
+      setIsSubscribed(true);
+      return;
+    }
+
+    // Check if we have a valid cached result
+    const cachedResult = localStorage.getItem('subscription-status');
+    if (!forceCheck && cachedResult) {
+      try {
+        const parsed = JSON.parse(cachedResult);
+        const cacheAge = now - parsed.timestamp;
+        // Use cache for 1 hour for subscribers, 5 minutes for others
+        const maxAge = parsed.data.isSubscribed ? 60 * 60 * 1000 : 5 * 60 * 1000;
+        
+        if (cacheAge < maxAge) {
+          console.log('[Subscription] Using cached data');
+          setIsSubscribed(parsed.data.isSubscribed);
+          return;
+        }
+      } catch (e) {
+        console.error('[Subscription] Error reading cache', e);
+      }
+    }
+
+    // Check if we have an authenticated session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.log('[Subscription] No active session');
+      return;
+    }
+
+    // Update circuit breaker state
+    IS_CHECKING = true;
+    LAST_CHECK_TIME = now;
+    CHECK_COUNT++;
+    
+    console.log(`[Subscription] Check #${CHECK_COUNT} starting...`);
+    
     try {
       setIsLoading(true);
       setError(null);
       
-      // Skip if we've fetched recently and not forcing a check
-      if (!forceCheck && cachedData && 
-          Date.now() - cachedData.timestamp < getCacheExpiry(cachedData.data.isSubscribed)) {
-        console.log('Using cached subscription data, skipping API call');
-        setIsLoading(false);
-        return;
-      }
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found, setting isSubscribed to false');
-        const newData = {
-          isSubscribed: false,
-          customerDetails: null,
-          subscriptionDetails: null
-        };
-        
-        setSubscriptionData(newData);
-        
-        // Update cache
-        cachedData = {
-          data: newData,
-          timestamp: Date.now()
-        };
-        localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
-        
-        setLastFetched(Date.now());
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Checking subscription for user:', {
-        id: user.id,
-        email: user.email
-      });
-
-      // Call the Netlify function to check subscription
-      console.log('Calling Netlify function to check subscription');
-      
+      // Call the Netlify function
       const response = await fetch('/.netlify/functions/check-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          email: user.email,
-          stripeEmail 
+          email: session.user.email,
         }),
       });
-
-      // Log the raw response for debugging
-      console.log('Response status:', response.status);
       
-      const responseText = await response.text();
-      
-      let data;
-      
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response:', responseText);
-        throw new Error(`Invalid response: ${responseText.substring(0, 100)}${responseText.length > 100 ? '...' : ''}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Subscription] Status:', data.isSubscribed ? 'ACTIVE' : 'INACTIVE');
+        
+        // Update state
+        setIsSubscribed(data.isSubscribed);
+        setLastChecked(now);
+        
+        // Cache the result
+        localStorage.setItem('subscription-status', JSON.stringify({
+          data,
+          timestamp: now
+        }));
+        
+        // If user is subscribed, set session flag
+        if (data.isSubscribed) {
+          HAS_CHECKED_SESSION = true;
+        }
+      } else {
+        console.error('[Subscription] API error:', response.status);
+        setError(`API error: ${response.status}`);
+        
+        // Default to subscribed on error to prevent blocking users
+        setIsSubscribed(true);
       }
-
-      if (!response.ok) {
-        console.error('API request failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          data
-        });
-        
-        const errorMessage = data?.error || `Request failed with status ${response.status}`;
-        setError(errorMessage);
-        
-        toast({
-          title: "Subscription Check Failed",
-          description: "We couldn't verify your subscription status. Please try again later.",
-          variant: "destructive",
-        });
-        
-        return;
-      }
-
-      console.log('Subscription check result:', data.isSubscribed ? 'Subscribed' : 'Not subscribed');
-      
-      // Store the full subscription data
-      const newData = {
-        isSubscribed: data.isSubscribed,
-        customerDetails: data.customerDetails,
-        subscriptionDetails: data.subscriptionDetails,
-        debug: data.debug
-      };
-      
-      setSubscriptionData(newData);
-      
-      // Update cache with longer expiry for active subscriptions
-      cachedData = {
-        data: newData,
-        timestamp: Date.now()
-      };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
-      
-      setLastFetched(Date.now());
     } catch (error) {
-      console.error('Error checking subscription:', error);
-      setSubscriptionData({
-        isSubscribed: false,
-        customerDetails: null,
-        subscriptionDetails: null
-      });
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      console.error('[Subscription] Error:', error);
+      setError('Unknown error checking subscription');
       
-      toast({
-        title: "Subscription Check Error",
-        description: "There was a problem checking your subscription. Please try again later.",
-        variant: "destructive",
-      });
+      // Default to subscribed on error
+      setIsSubscribed(true);
     } finally {
       setIsLoading(false);
+      IS_CHECKING = false;
     }
-  }, [stripeEmail, toast, lastFetched, setLastFetched]);
+  }, []);
 
+  // Initial check on mount
   useEffect(() => {
-    // Run the check without forcing on component mount - only if no recent checks
-    const now = Date.now();
-    if (!cachedData || now - cachedData.timestamp > getCacheExpiry(cachedData.data.isSubscribed)) {
-      console.log('No recent subscription check found, performing initial check');
-      checkSubscription(false);
-    } else {
-      console.log('Using cached subscription data on mount, skipping check');
+    // Try to load from cache first
+    const cachedResult = localStorage.getItem('subscription-status');
+    if (cachedResult) {
+      try {
+        const parsed = JSON.parse(cachedResult);
+        const now = Date.now();
+        const cacheAge = now - parsed.timestamp;
+        const maxAge = parsed.data.isSubscribed ? 60 * 60 * 1000 : 5 * 60 * 1000;
+        
+        if (cacheAge < maxAge) {
+          console.log('[Subscription] Using initial cached data');
+          setIsSubscribed(parsed.data.isSubscribed);
+          setLastChecked(parsed.timestamp);
+          
+          // If cached data says subscribed, set session flag
+          if (parsed.data.isSubscribed) {
+            HAS_CHECKED_SESSION = true;
+            return; // No need to check again
+          }
+        }
+      } catch (e) {
+        console.error('[Subscription] Error reading initial cache', e);
+      }
     }
-
-    // Only subscribe to auth changes, not on every render
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      // Clear cache on auth state change to force refetching
-      cachedData = null;
-      localStorage.removeItem(CACHE_KEY);
-      console.log('Auth state changed, forcing subscription check');
-      checkSubscription(true);
+    
+    // Only run check if we don't have valid cached data
+    if (!HAS_CHECKED_SESSION) {
+      checkSubscription();
+    }
+    
+    // Set up auth change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        console.log(`[Subscription] Auth changed: ${event}`);
+        
+        // Clear cache on auth change
+        localStorage.removeItem('subscription-status');
+        HAS_CHECKED_SESSION = false;
+        
+        // Force check on sign in, skip on sign out
+        if (event === 'SIGNED_IN') {
+          checkSubscription(true);
+        }
+      }
     });
-
-    // Cleanup subscription on unmount
+    
     return () => {
       subscription.unsubscribe();
     };
   }, [checkSubscription]);
 
-  // For backward compatibility
-  const { isSubscribed } = subscriptionData;
-
-  return { 
-    isSubscribed, 
-    isLoading, 
+  return {
+    isSubscribed,
+    isLoading,
     error,
-    subscriptionData,
-    customerDetails: subscriptionData.customerDetails,
-    subscriptionDetails: subscriptionData.subscriptionDetails,
-    checkSubscription: () => checkSubscription(true) // Expose function to force check
+    checkSubscription: () => checkSubscription(true),
+    lastChecked
   };
 } 

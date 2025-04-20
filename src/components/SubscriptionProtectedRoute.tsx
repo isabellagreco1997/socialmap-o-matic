@@ -10,16 +10,28 @@ interface SubscriptionProtectedRouteProps {
   includeFooter?: boolean;
 }
 
+// Global check tracking - we only want to check once per app session
+let hasGloballyCheckedSubscription = false;
+
 const SubscriptionProtectedRoute = ({ children, includeFooter = true }: SubscriptionProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { isSubscribed, isLoading: subscriptionLoading, checkSubscription } = useSubscription();
+  const { isSubscribed, isLoading: subscriptionLoading } = useSubscription();
   const location = useLocation();
-  const hasCheckedSubscription = useRef(false);
+  const hasCheckedSubscription = useRef(hasGloballyCheckedSubscription);
   const hasCheckedAuth = useRef(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Capture the initial subscription status to prevent unnecessary re-checks
   const initialIsSubscribed = useRef(isSubscribed);
+
+  // Set the global flag if we're already subscribed
+  useEffect(() => {
+    if (isSubscribed && !hasGloballyCheckedSubscription) {
+      console.log('[SubscriptionProtectedRoute] User is subscribed, setting global flag');
+      hasGloballyCheckedSubscription = true;
+      hasCheckedSubscription.current = true;
+    }
+  }, [isSubscribed]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,10 +46,25 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
         setIsAuthenticated(!!session);
         hasCheckedAuth.current = true;
         
-        // Only check subscription once on initial mount, and only if not already subscribed
-        if (session && !hasCheckedSubscription.current && !initialIsSubscribed.current) {
-          console.log('Initial subscription check on protected route');
-          checkSubscription();
+        // Skip subscription check if we've already checked globally
+        if (hasGloballyCheckedSubscription) {
+          console.log('[SubscriptionProtectedRoute] Already checked subscription globally');
+          hasCheckedSubscription.current = true;
+          return;
+        }
+        
+        // Skip subscription check if we already know from cache that they're subscribed
+        if (initialIsSubscribed.current) {
+          console.log('[SubscriptionProtectedRoute] User already known to be subscribed from initial state');
+          hasGloballyCheckedSubscription = true;
+          hasCheckedSubscription.current = true;
+          return;
+        }
+        
+        // No need to explicitly call checkSubscription() - the hook will handle it
+        if (session) {
+          console.log('[SubscriptionProtectedRoute] Auth session exists, subscription check handled by hook');
+          hasGloballyCheckedSubscription = true;
           hasCheckedSubscription.current = true;
         }
       } finally {
@@ -51,10 +78,21 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       
-      // Only force check on auth change if the state changed to logged in and we haven't checked
-      if (session && !hasCheckedSubscription.current && !initialIsSubscribed.current) {
-        console.log('Auth state changed, making initial subscription check');
-        checkSubscription();
+      // Skip if we've already checked globally
+      if (hasGloballyCheckedSubscription) {
+        return;
+      }
+      
+      // Skip if we already know they're subscribed
+      if (initialIsSubscribed.current) {
+        hasGloballyCheckedSubscription = true;
+        return;
+      }
+      
+      // The hook will handle the subscription check on auth change
+      if (session) {
+        console.log('[SubscriptionProtectedRoute] Auth state changed with session');
+        hasGloballyCheckedSubscription = true;
         hasCheckedSubscription.current = true;
       }
     });
@@ -62,7 +100,7 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
     return () => {
       subscription.unsubscribe();
     };
-  }, [checkSubscription, initialIsSubscribed]);
+  }, [initialIsSubscribed]);
 
   // Show loading state while checking auth
   if (isCheckingAuth || isAuthenticated === null) {
@@ -82,7 +120,8 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
   }
 
   // Show loading state during initial subscription check - but only if we're not already subscribed
-  if (subscriptionLoading && !hasCheckedSubscription.current && !initialIsSubscribed.current) {
+  // and we haven't already checked globally
+  if (subscriptionLoading && !hasGloballyCheckedSubscription && !initialIsSubscribed.current) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -96,7 +135,7 @@ const SubscriptionProtectedRoute = ({ children, includeFooter = true }: Subscrip
 
   // Only redirect to pricing if we're certain the user isn't subscribed
   if (!isSubscribed && !subscriptionLoading) {
-    console.log('User not subscribed, redirecting to pricing');
+    console.log('[SubscriptionProtectedRoute] User not subscribed, redirecting to pricing');
     return <Navigate to="/pricing" state={{ from: location }} replace />;
   }
 
