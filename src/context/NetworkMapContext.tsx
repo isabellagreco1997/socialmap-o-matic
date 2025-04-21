@@ -448,9 +448,9 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
   // Handle network events (creation and updates)
   useEffect(() => {
     // Create function to handle network creation events
-    const handleNetworkCreation = (event: CustomEvent) => {
+    const handleNetworkCreation = async (event: CustomEvent) => {
       console.log('NetworkMapContext: Network creation event received', event.detail);
-      const networkId = event.detail?.networkId;
+      const { networkId, isAI, source } = event.detail || {};
       
       // If we have a networkId from the event, use it to update state
       if (networkId) {
@@ -459,38 +459,55 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
         
         if (!existingNetwork) {
           console.log('NetworkMapContext: Network not found in current state, fetching from database');
-          // Fetch just this network to add it
-          supabase
-            .from('networks')
-            .select('*')
-            .eq('id', networkId)
-            .single()
-            .then(({ data, error }) => {
-              if (error) {
-                console.error('Error fetching newly created network:', error);
-                // Fall back to a full refresh
-                refreshNetworks();
-                return;
+          
+          try {
+            // Fetch just this network to add it
+            const { data, error } = await supabase
+              .from('networks')
+              .select('*')
+              .eq('id', networkId)
+              .single();
+              
+            if (error) {
+              console.error('Error fetching newly created network:', error);
+              // Fall back to a full refresh
+              await refreshNetworks();
+              return;
+            }
+            
+            if (data) {
+              console.log('NetworkMapContext: Adding new network to state:', data);
+              // Add the new network to state
+              setNetworks(prev => [...prev, data]);
+              
+              // Update localStorage to ensure persistence
+              const updatedNetworks = [...networks, data];
+              localStorage.setItem('socialmap-networks', JSON.stringify(updatedNetworks));
+              
+              // If we don't have a current network selected, select this one
+              if (!currentNetworkId) {
+                setCurrentNetworkId(networkId);
               }
               
-              if (data) {
-                console.log('NetworkMapContext: Adding new network to state:', data);
-                // Add the new network to state
-                setNetworks(prev => [...prev, data]);
-                
-                // If we don't have a current network selected, select this one
-                if (!currentNetworkId) {
-                  setCurrentNetworkId(networkId);
-                }
+              // If this is from the community networks page, we need to make sure
+              // we handle the network selection properly
+              if (source === 'community-networks') {
+                // Clear any cache for this network to ensure fresh data
+                localStorage.removeItem(`socialmap-nodes-${networkId}`);
+                localStorage.removeItem(`socialmap-edges-${networkId}`);
               }
-            });
+            }
+          } catch (err) {
+            console.error('Error in network creation handling:', err);
+            await refreshNetworks();
+          }
         } else {
           console.log('NetworkMapContext: Network already exists in state');
         }
       } else {
         // If we don't have a networkId, do a full refresh
         console.log('NetworkMapContext: No networkId in event, doing full refresh');
-        refreshNetworks();
+        await refreshNetworks();
       }
     };
     
@@ -597,7 +614,7 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       window.removeEventListener('network-created', handleNetworkCreation as EventListener);
       window.removeEventListener('force-network-update', handleNetworkUpdate as EventListener);
     };
-  }, [networks, currentNetworkId, refreshNetworks]);
+  }, [networks, currentNetworkId, refreshNetworks, setCurrentNetworkId, setNetworks]);
   
   // Update local storage when networks change
   useEffect(() => {
@@ -660,6 +677,86 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [lastFetchTimestamp]);
+
+  // Listen for events to force refresh network data
+  useEffect(() => {
+    const handleForceRefresh = async (event: CustomEvent) => {
+      const { networkId, refreshNodes = true, refreshEdges = true, timestamp } = event.detail;
+      console.log('NetworkMapContext: Force network data refresh requested for network:', networkId, 
+        { refreshNodes, refreshEdges, timestamp: new Date(timestamp).toISOString() });
+      
+      if (!networkId) {
+        console.error('NetworkMapContext: No networkId provided in force-network-data-refresh event');
+        return;
+      }
+      
+      // Set loading state to true
+      setIsLoading(true);
+      
+      // Clear any cached data in localStorage
+      localStorage.removeItem(`socialmap-nodes-${networkId}`);
+      localStorage.removeItem(`socialmap-edges-${networkId}`);
+      
+      // Clear state
+      setNodes([]);
+      setEdges([]);
+      
+      try {
+        // Fetch fresh data directly from the database
+        if (refreshNodes) {
+          console.log('NetworkMapContext: Fetching fresh nodes from database for network:', networkId);
+          const { data: nodesData, error: nodesError } = await supabase
+            .from('nodes')
+            .select('*')
+            .eq('network_id', networkId);
+            
+          if (nodesError) {
+            console.error('Error fetching nodes:', nodesError);
+          } else if (nodesData) {
+            console.log(`NetworkMapContext: Retrieved ${nodesData.length} nodes from database`);
+            setNodes(nodesData);
+            // Cache the fresh data
+            localStorage.setItem(`socialmap-nodes-${networkId}`, JSON.stringify(nodesData));
+          }
+        }
+        
+        if (refreshEdges) {
+          console.log('NetworkMapContext: Fetching fresh edges from database for network:', networkId);
+          const { data: edgesData, error: edgesError } = await supabase
+            .from('edges')
+            .select('*')
+            .eq('network_id', networkId);
+            
+          if (edgesError) {
+            console.error('Error fetching edges:', edgesError);
+          } else if (edgesData) {
+            console.log(`NetworkMapContext: Retrieved ${edgesData.length} edges from database`);
+            setEdges(edgesData);
+            // Cache the fresh data
+            localStorage.setItem(`socialmap-edges-${networkId}`, JSON.stringify(edgesData));
+          }
+        }
+      } catch (error) {
+        console.error('Error during force refresh:', error);
+      } finally {
+        // Trigger a refresh by updating state
+        setShouldRefetchData(true);
+        // Also increment the refresh counter to ensure all components update
+        setRefreshCounter(prev => prev + 1);
+        
+        // Set loading to false after a small delay to ensure UI updates
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      }
+    };
+    
+    window.addEventListener('force-network-data-refresh', handleForceRefresh as EventListener);
+    
+    return () => {
+      window.removeEventListener('force-network-data-refresh', handleForceRefresh as EventListener);
+    };
+  }, [setNodes, setEdges, setRefreshCounter, setIsLoading]);
 
   return (
     <NetworkMapContext.Provider value={{

@@ -22,6 +22,8 @@ import { useNetworkConnections } from '@/hooks/useNetworkConnections';
 import { Loader2 } from 'lucide-react';
 import { AccountModal } from '@/components/network/AccountModal';
 import { CommunityNetworksPage } from '@/components/network/CommunityNetworksPage';
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create a global variable to track if we've loaded networks before
 const hasLoadedNetworks = {
@@ -210,10 +212,99 @@ const NetworkMapContent = () => {
   
   // Handle network added from community networks page
   const handleCommunityNetworkAdded = useCallback((id: string) => {
-    // Select the newly added network and go back to network view
-    handleNetworkSelect(id);
-    setContentMode('network');
-  }, [handleNetworkSelect]);
+    console.log('NetworkMap: Community network added, id:', id);
+    
+    // Show loading state immediately
+    setIsLoading(true);
+    
+    // First, refresh the networks list to ensure the new network is included
+    const refreshNetworksList = async () => {
+      try {
+        console.log('NetworkMap: Refreshing networks list after community network addition');
+        
+        // Get the current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.error('NetworkMap: No authenticated user found');
+          return;
+        }
+        
+        // Fetch updated networks list from database
+        const { data: networksData, error } = await supabase
+          .from('networks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('order', { ascending: true })
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error('NetworkMap: Error fetching networks:', error);
+          return;
+        }
+        
+        console.log('NetworkMap: Retrieved updated network list with', networksData.length, 'networks');
+        
+        // Update networks in state and localStorage
+        setNetworks(networksData);
+        localStorage.setItem('socialmap-networks', JSON.stringify(networksData));
+        
+        // Check if our newly created network is in the list
+        const networkExists = networksData.some(network => network.id === id);
+        if (!networkExists) {
+          console.error(`NetworkMap: Network ${id} not found in refreshed networks list`);
+          return false;
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('NetworkMap: Error refreshing networks list:', error);
+        return false;
+      }
+    };
+    
+    // Execute the refresh and then continue with network selection
+    refreshNetworksList().then(success => {
+      if (success) {
+        // Switch to network view first before changing network selection
+        setContentMode('network');
+        
+        // Small delay to allow UI to update
+        setTimeout(() => {
+          // Select the newly added network with force fetch
+          handleNetworkSelect(id, true);
+          
+          // Set a longer timeout to hide the loading indicator after data fetch
+          setTimeout(() => {
+            console.log('NetworkMap: Completing community network loading for id:', id);
+            
+            // Final refresh of network data to ensure everything is loaded
+            window.dispatchEvent(new CustomEvent('force-network-data-refresh', {
+              detail: { 
+                networkId: id,
+                refreshNodes: true,
+                refreshEdges: true,
+                timestamp: Date.now(),
+                finalRefresh: true
+              }
+            }));
+            
+            setTimeout(() => {
+              setIsLoading(false);
+            }, 500);
+          }, 2000);
+        }, 300);
+      } else {
+        // If refresh failed, show error and hide loading
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load the newly created network. Please refresh the page."
+        });
+        setIsLoading(false);
+      }
+    });
+  }, [handleNetworkSelect, setIsLoading, setNetworks, setContentMode, toast]);
 
   // Listen for events to return to network view
   useEffect(() => {

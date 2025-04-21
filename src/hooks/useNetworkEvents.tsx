@@ -241,18 +241,21 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     };
   }, [setNodes, setEdges]);
 
-  const handleNetworkSelect = useCallback((id: string) => {
-    // Skip if already selected
-    if (id === currentNetworkId) {
+  const handleNetworkSelect = useCallback((id: string, forceFetch: boolean = false) => {
+    // Skip if already selected and we're not forcing a fetch
+    if (id === currentNetworkId && !forceFetch) {
       console.log(`Network ${id} is already selected, skipping selection`);
       return;
     }
     
-    console.log(`Selecting network ${id}`);
+    console.log(`Selecting network ${id}${forceFetch ? ' with forced fetch' : ''}`);
     
-    // For blank networks, make sure to clear cached nodes and edges in localStorage
-    // and load fresh data from the database
-    clearNetworkNodesEdgesCache(id);
+    // Always clear cache when we're forcing a fetch
+    if (forceFetch) {
+      console.log(`Forcing cache clear for network ${id}`);
+      clearNetworkNodesEdgesCache(id);
+      clearCache(id);
+    }
     
     // Clear existing nodes and edges before switching to the new network
     setNodes([]);
@@ -262,7 +265,41 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     
     // Increment the refresh counter to force data refetching
     setRefreshCounter(prev => prev + 1);
-  }, [currentNetworkId, setCurrentNetworkId, setRefreshCounter, setNodes, setEdges]);
+    
+    // If we're forcing a fetch, dispatch an event to refresh data completely
+    if (forceFetch) {
+      console.log(`Dispatching force-network-data-refresh for network ${id}`);
+      
+      // Small timeout to ensure network ID is set before requesting data
+      setTimeout(() => {
+        // First, clear any potentially cached data
+        localStorage.removeItem(`socialmap-nodes-${id}`);
+        localStorage.removeItem(`socialmap-edges-${id}`);
+        
+        // Then dispatch the event to force a complete refresh from the server
+        window.dispatchEvent(new CustomEvent('force-network-data-refresh', {
+          detail: { 
+            networkId: id,
+            refreshNodes: true,
+            refreshEdges: true,
+            timestamp: Date.now()
+          }
+        }));
+        
+        // Do a second attempt after a short delay to ensure data is loaded
+        setTimeout(() => {
+          console.log(`Making second refresh attempt for network ${id}`);
+          window.dispatchEvent(new CustomEvent('force-network-update', {
+            detail: { 
+              networkId: id,
+              forceServerRefresh: true,
+              timestamp: Date.now()
+            }
+          }));
+        }, 500);
+      }, 100);
+    }
+  }, [currentNetworkId, setCurrentNetworkId, setRefreshCounter, setNodes, setEdges, clearCache]);
   
   const handleNetworkCreated = useCallback((id: string, isAI: boolean = false) => {
     console.log('NetworkMap: Network created', {id, isAI});
@@ -288,6 +325,20 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
       const safetyTimeout = setTimeout(() => {
         console.log('Safety timeout triggered - forcing loading overlay to close');
         setIsGeneratingNetwork(false);
+        
+        // If we still don't have nodes, try one last forced refresh
+        if (currentNetworkId === id) {
+          console.log('Network generation timeout - trying one final data refresh');
+          window.dispatchEvent(new CustomEvent('force-network-data-refresh', {
+            detail: { 
+              networkId: id,
+              refreshNodes: true,
+              refreshEdges: true,
+              timestamp: Date.now(),
+              finalRefresh: true
+            }
+          }));
+        }
       }, 60000); // 60 seconds max
       
       // Clean up the timeout if generation completes normally
@@ -304,7 +355,7 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
     
     // Force an immediate refresh of network data
     setRefreshCounter(prev => prev + 1);
-  }, [setCurrentNetworkId, setIsGeneratingNetwork, setRefreshCounter, setNodes, setEdges]);
+  }, [setCurrentNetworkId, setIsGeneratingNetwork, setRefreshCounter, setNodes, setEdges, currentNetworkId]);
 
   // Handle node added events
   useEffect(() => {

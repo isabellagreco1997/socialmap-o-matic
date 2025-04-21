@@ -481,6 +481,15 @@ export function CommunityNetworksPage({
         throw new Error("Failed to create network");
       }
 
+      // Immediately dispatch network-created event to update network list
+      window.dispatchEvent(new CustomEvent('network-created', {
+        detail: {
+          networkId: createdNetwork.id,
+          isAI: true,
+          source: 'community-networks'
+        }
+      }));
+
       toast({
         title: "Adding network",
         description: `Adding "${network.title}" to your networks...`
