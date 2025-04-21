@@ -7,13 +7,28 @@ import { getActionLabel, generateDefaultNetworkData, generateFallbackNetworkFrom
 export const generateNetworkFromPrompt = async (networkId: string, prompt: string, industry: string) => {
   try {
     console.log('NetworkGenerator: Starting generateNetworkFromPrompt for network', networkId);
+    console.log('NetworkGenerator: Prompt:', prompt);
+    console.log('NetworkGenerator: Industry:', industry);
+    
+    // Validate network ID
+    if (!networkId || typeof networkId !== 'string' || networkId.trim() === '') {
+      console.error('NetworkGenerator: Invalid network ID provided:', networkId);
+      throw new Error('Invalid network ID');
+    }
+    
     const networkData = await generateNetworkDataFromAI(prompt, industry);
     console.log("Network data from AI:", networkData);
+
+    if (!networkData || !networkData.nodes || networkData.nodes.length === 0) {
+      console.error("NetworkGenerator: No valid network data received from AI");
+      throw new Error("Failed to generate network data");
+    }
 
     // Create a map to store node names to IDs for relationship mapping
     const nodeNameToId = new Map();
 
     // Create the central node (You)
+    console.log('NetworkGenerator: Creating central node for network:', networkId);
     const { data: centralNode, error: centralNodeError } = await supabase
       .from('nodes')
       .insert({
@@ -27,7 +42,12 @@ export const generateNetworkFromPrompt = async (networkId: string, prompt: strin
       .select()
       .single();
 
-    if (centralNodeError) throw centralNodeError;
+    if (centralNodeError) {
+      console.error("NetworkGenerator: Error creating central node:", centralNodeError);
+      throw centralNodeError;
+    }
+
+    console.log('NetworkGenerator: Central node created:', centralNode);
 
     // Organize nodes into a cleaner tree-like structure
     // First level: directly connected to "You" in a circle
@@ -313,49 +333,50 @@ export const generateNetworkFromPrompt = async (networkId: string, prompt: strin
     await Promise.all(edgePromises);
     
     // Ensure the loading state is cleared and notify completion
-    setTimeout(() => {
+    try {
       // Clear any previous cache for this network to ensure fresh data load
-      try {
-        console.log('NetworkGenerator: Clearing cache for network before completion event', networkId);
-        
-        // Clear all localStorage cache for this network
-        localStorage.removeItem(`socialmap-nodes-${networkId}`);
-        localStorage.removeItem(`socialmap-edges-${networkId}`);
-        
-        // Dispatch an internal event to clear the nodes and edges from state first
-        window.dispatchEvent(new CustomEvent('pre-network-generation-complete', {
-          detail: { 
-            networkId,
-            action: 'clear-state'
-          }
-        }));
-        
-        // Give a short delay for the clear state event to be processed
-        setTimeout(() => {
-          // Dispatch event to notify the network generation is complete
-          console.log('NetworkGenerator: Dispatching network-generation-complete event for network', networkId);
-          window.dispatchEvent(new CustomEvent('network-generation-complete', {
-            detail: { 
-              networkId,
-              timestamp: Date.now(),
-              forceServerRefresh: true
-            }
-          }));
-          console.log('Network generation complete event dispatched');
-        }, 200);
-      } catch (error) {
-        console.error('Error clearing cache before completion event:', error);
-        // Still dispatch the event even if cache clearing fails
-        window.dispatchEvent(new CustomEvent('network-generation-complete', {
-          detail: { 
-            networkId,
-            timestamp: Date.now(),
-            forceServerRefresh: true,
-            error: 'cache-clear-failed'
-          }
-        }));
-      }
-    }, 1000); // Increased timeout to ensure DB operations complete
+      console.log('NetworkGenerator: Clearing cache for network before completion event', networkId);
+      
+      // Clear all localStorage cache for this network
+      localStorage.removeItem(`socialmap-nodes-${networkId}`);
+      localStorage.removeItem(`socialmap-edges-${networkId}`);
+      
+      // Dispatch an internal event to clear the nodes and edges from state first
+      const clearStateEvent = new CustomEvent('pre-network-generation-complete', {
+        detail: { 
+          networkId,
+          action: 'clear-state'
+        }
+      });
+      window.dispatchEvent(clearStateEvent);
+      
+      // Give a short delay for the clear state event to be processed
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Dispatch event to notify the network generation is complete
+      console.log('NetworkGenerator: Dispatching network-generation-complete event for network', networkId);
+      const completionEvent = new CustomEvent('network-generation-complete', {
+        detail: { 
+          networkId,
+          timestamp: Date.now(),
+          forceServerRefresh: true
+        }
+      });
+      window.dispatchEvent(completionEvent);
+      console.log('Network generation complete event dispatched');
+    } catch (error) {
+      console.error('Error clearing cache before completion event:', error);
+      // Still dispatch the event even if cache clearing fails
+      const errorEvent = new CustomEvent('network-generation-complete', {
+        detail: { 
+          networkId,
+          timestamp: Date.now(),
+          forceServerRefresh: true,
+          error: 'cache-clear-failed'
+        }
+      });
+      window.dispatchEvent(errorEvent);
+    }
   } catch (error) {
     console.error("Error generating network from prompt:", error);
     
@@ -443,6 +464,7 @@ Return a STRICT, VALID JSON object with these exact fields:
   ]
 }`;
 
+    console.log('NetworkGenerator: Sending request to OpenAI API');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -459,6 +481,8 @@ Return a STRICT, VALID JSON object with these exact fields:
         max_tokens: 4000
       })
     });
+    
+    console.log('NetworkGenerator: Received response from OpenAI API');
     
     if (!response.ok) {
       const errorData = await response.json();

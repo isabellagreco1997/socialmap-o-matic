@@ -28,7 +28,8 @@ export const NetworkSidebar = memo(({
   onOpenTemplates,
   onNetworksReorder,
   onImportCsv,
-  onNetworkCreated
+  onNetworkCreated,
+  onShowCommunityNetworks
 }: NetworkSidebarProps) => {
   // Current network state
   const [currentNetwork, setCurrentNetwork] = useState<Network | null>(null);
@@ -38,8 +39,13 @@ export const NetworkSidebar = memo(({
     // Debounce network selection to avoid rapid state changes
     setTimeout(() => {
       onNetworkSelect(id);
+      // This will ensure we return to the network view if we're on the community networks page
+      if (onShowCommunityNetworks) {
+        // Dispatch an event to notify that we want to go back to network view
+        window.dispatchEvent(new CustomEvent('return-to-network-view'));
+      }
     }, 0);
-  }, [onNetworkSelect]);
+  }, [onNetworkSelect, onShowCommunityNetworks]);
   
   // Memoized networks reordering handler
   const handleNetworksReorder = useCallback((updatedNetworks: Network[]) => {
@@ -171,9 +177,12 @@ export const NetworkSidebar = memo(({
       {/* Bottom section with account links - fixed */}
       <div className="flex-none">
         <SidebarFooter
-          onOpenPricing={() => setIsPricingModalOpen(true)}
           onOpenAccount={() => setIsAccountModalOpen(true)}
-          onLogout={handleLogout}
+          onOpenResources={() => {
+            // For now, we'll open a basic URL to a resources page
+            window.open('https://docs.relmaps.com', '_blank');
+          }}
+          onOpenCommunity={onShowCommunityNetworks}
         />
       </div>
 

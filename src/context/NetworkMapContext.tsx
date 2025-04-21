@@ -54,6 +54,8 @@ interface NetworkMapContextProps {
   lastFetchTimestamp: number | null;
   setLastFetchTimestamp: React.Dispatch<React.SetStateAction<number | null>>;
   refreshNetworks: () => Promise<void>;
+  isAccountModalOpen: boolean;
+  setIsAccountModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const NetworkMapContext = createContext<NetworkMapContextProps | undefined>(undefined);
@@ -103,6 +105,7 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
     const saved = localStorage.getItem('socialmap-last-fetch');
     return saved ? Number(saved) : null;
   });
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   // Initialize nodes and edges using the react-flow hooks with cached data if available
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -707,7 +710,9 @@ export const NetworkMapProvider: React.FC<{ children: ReactNode }> = ({ children
       setShouldRefetchData,
       lastFetchTimestamp,
       setLastFetchTimestamp,
-      refreshNetworks
+      refreshNetworks,
+      isAccountModalOpen,
+      setIsAccountModalOpen
     }}>
       {children}
     </NetworkMapContext.Provider>

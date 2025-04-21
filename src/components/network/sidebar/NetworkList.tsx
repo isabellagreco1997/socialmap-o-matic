@@ -388,7 +388,7 @@ export function NetworkList({
   }
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full overflow-y-auto">
       <div className="px-2">
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="networks">

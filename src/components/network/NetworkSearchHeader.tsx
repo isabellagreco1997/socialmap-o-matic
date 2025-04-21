@@ -1,17 +1,27 @@
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from 'lucide-react';
+import { Search, User } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface NetworkSearchHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  onOpenAccount: () => void;
 }
 
-const NetworkSearchHeader = ({ searchQuery, onSearchChange }: NetworkSearchHeaderProps) => {
+const NetworkSearchHeader = ({ searchQuery, onSearchChange, onOpenAccount }: NetworkSearchHeaderProps) => {
   return (
     <div className="p-4 flex flex-col gap-3 border-b">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8"
+            onClick={onOpenAccount}
+          >
+            <User className="h-4 w-4" />
+          </Button>
           <img 
             src="/favicon.svg" 
             alt="RelMaps Logo" 

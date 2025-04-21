@@ -11,6 +11,7 @@ export interface NetworkSidebarProps {
   onNetworksReorder: (networks: Network[]) => void;
   onImportCsv?: (file: File) => void;
   onNetworkCreated?: (id: string, isAI: boolean) => void;
+  onShowCommunityNetworks?: () => void;
 }
 
 export interface TodoItem {

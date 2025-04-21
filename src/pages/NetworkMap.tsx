@@ -1,6 +1,6 @@
 import { ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useRef, useEffect, useLayoutEffect } from 'react';
+import { useCallback, useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import NetworkSidebar from '@/components/network/NetworkSidebar';
 import NetworkSearchHeader from '@/components/network/NetworkSearchHeader';
@@ -20,6 +20,8 @@ import { useNetworkEvents } from '@/hooks/useNetworkEvents';
 import { useNetworkDataFetcher } from '@/hooks/useNetworkDataFetcher';
 import { useNetworkConnections } from '@/hooks/useNetworkConnections';
 import { Loader2 } from 'lucide-react';
+import { AccountModal } from '@/components/network/AccountModal';
+import { CommunityNetworksPage } from '@/components/network/CommunityNetworksPage';
 
 // Create a global variable to track if we've loaded networks before
 const hasLoadedNetworks = {
@@ -114,7 +116,9 @@ const NetworkMapContent = () => {
     networkDescription,
     setNetworkDescription,
     filteredNetworks,
-    setRefreshCounter
+    setRefreshCounter,
+    isAccountModalOpen,
+    setIsAccountModalOpen
   } = useNetworkMap();
 
   // Import custom hooks
@@ -197,63 +201,103 @@ const NetworkMapContent = () => {
     };
   }, [currentNetworkId, setIsLoading, networks, nodes.length]);
 
+  const [contentMode, setContentMode] = useState<'network' | 'community'>('network');
+  
+  // Handle showing community networks page
+  const handleShowCommunityNetworks = useCallback(() => {
+    setContentMode('community');
+  }, []);
+  
+  // Handle network added from community networks page
+  const handleCommunityNetworkAdded = useCallback((id: string) => {
+    // Select the newly added network and go back to network view
+    handleNetworkSelect(id);
+    setContentMode('network');
+  }, [handleNetworkSelect]);
+
+  // Listen for events to return to network view
+  useEffect(() => {
+    const handleReturnToNetworkView = () => {
+      setContentMode('network');
+    };
+    
+    window.addEventListener('return-to-network-view', handleReturnToNetworkView);
+    
+    return () => {
+      window.removeEventListener('return-to-network-view', handleReturnToNetworkView);
+    };
+  }, []);
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
         <Sidebar>
           <SidebarContent className="w-[300px] border-r bg-white flex flex-col h-screen overflow-hidden">
-            <NetworkSearchHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-            <NetworkSidebar 
-              networks={filteredNetworks} 
-              currentNetworkId={currentNetworkId} 
+            <NetworkSearchHeader 
               searchQuery={searchQuery} 
               onSearchChange={setSearchQuery} 
-              onNetworkSelect={handleNetworkSelect} 
-              onEditNetwork={setEditingNetwork} 
-              onOpenTemplates={() => setIsTemplatesDialogOpen(true)} 
-              onNetworksReorder={handleNetworksReorder}
-              onImportCsv={handleImportCsvFromDialog}
-              onNetworkCreated={handleNetworkCreated}
+              onOpenAccount={() => setIsAccountModalOpen(true)}
             />
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <NetworkSidebar 
+                networks={filteredNetworks} 
+                currentNetworkId={currentNetworkId} 
+                searchQuery={searchQuery} 
+                onSearchChange={setSearchQuery} 
+                onNetworkSelect={handleNetworkSelect} 
+                onEditNetwork={setEditingNetwork} 
+                onOpenTemplates={() => setIsTemplatesDialogOpen(true)} 
+                onNetworksReorder={handleNetworksReorder}
+                onImportCsv={handleImportCsvFromDialog}
+                onNetworkCreated={handleNetworkCreated}
+                onShowCommunityNetworks={handleShowCommunityNetworks}
+              />
+            </div>
           </SidebarContent>
         </Sidebar>
 
         <div className="flex-1 relative">
-          {/* Empty state when there are no networks */}
-          {networks.length === 0 && !isLoading ? (
-            <NetworkEmptyState 
-              createDialogTriggerRef={createDialogTriggerRef}
-              onNetworkCreated={handleNetworkCreated}
-              onImportCsv={handleImportCsvFromDialog}
-            />
-          ) : (
-            <ReactFlowProvider>
-              <div className="relative h-full w-full overflow-hidden">
-                {/* Hide the network flow completely when loading */}
-                {isLoading || isGeneratingNetwork ? (
-                  <div className="absolute inset-0 w-full h-full bg-white flex items-center justify-center">
-                    <div className="bg-white shadow-sm p-5 rounded-lg flex flex-col items-center">
-                      <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-2" />
-                      <p className="text-base font-medium">
-                        {isGeneratingNetwork ? "Generating Network..." : "Loading Network..."}
-                      </p>
-                    </div>
+          {contentMode === 'network' ? (
+            <>
+              {/* Empty state when there are no networks */}
+              {networks.length === 0 && !isLoading ? (
+                <NetworkEmptyState 
+                  createDialogTriggerRef={createDialogTriggerRef}
+                  onNetworkCreated={handleNetworkCreated}
+                  onImportCsv={handleImportCsvFromDialog}
+                />
+              ) : (
+                <ReactFlowProvider>
+                  <div className="relative h-full w-full overflow-hidden">
+                    {/* Hide the network flow completely when loading */}
+                    {isLoading || isGeneratingNetwork ? (
+                      <div className="absolute inset-0 w-full h-full bg-white flex items-center justify-center">
+                        <div className="bg-white shadow-sm p-5 rounded-lg flex flex-col items-center">
+                          <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-2" />
+                          <p className="text-base font-medium">
+                            {isGeneratingNetwork ? "Generating Network..." : "Loading Network..."}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <NetworkFlow 
+                        nodes={nodes} 
+                        edges={edges} 
+                        networks={networks} 
+                        currentNetworkId={currentNetworkId} 
+                        onNodesChange={handleNodeChanges} 
+                        onEdgesChange={handleEdgeChangesWrapper} 
+                        onConnect={onConnect} 
+                        onAddNode={() => setIsDialogOpen(true)} 
+                        onImportCsv={() => setIsCsvDialogOpen(true)} 
+                      />
+                    )}
                   </div>
-                ) : (
-                  <NetworkFlow 
-                    nodes={nodes} 
-                    edges={edges} 
-                    networks={networks} 
-                    currentNetworkId={currentNetworkId} 
-                    onNodesChange={handleNodeChanges} 
-                    onEdgesChange={handleEdgeChangesWrapper} 
-                    onConnect={onConnect} 
-                    onAddNode={() => setIsDialogOpen(true)} 
-                    onImportCsv={() => setIsCsvDialogOpen(true)} 
-                  />
-                )}
-              </div>
-            </ReactFlowProvider>
+                </ReactFlowProvider>
+              )}
+            </>
+          ) : (
+            <CommunityNetworksPage onNetworkAdded={handleCommunityNetworkAdded} />
           )}
 
           <AddNodeDialog 
@@ -303,6 +347,11 @@ const NetworkMapContent = () => {
           />
           
           <NetworkFileHandlers />
+
+          <AccountModal
+            open={isAccountModalOpen}
+            onOpenChange={setIsAccountModalOpen}
+          />
         </div>
       </div>
     </SidebarProvider>

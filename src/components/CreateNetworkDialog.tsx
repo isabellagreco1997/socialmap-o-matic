@@ -283,62 +283,63 @@ export const CreateNetworkDialog = ({
   const handleCreateAiNetwork = async (networkName: string, prompt: string, industry: string) => {
     console.log('CreateNetworkDialog: handleCreateAiNetwork called');
     setShowAIDialog(false);
-    // Create a network with isBlank=false to indicate this is an AI-generated network
-    createNetwork(false); 
-
+    
     try {
-      // Get the most recently created network
+      // Create a network with isBlank=false to indicate this is an AI-generated network
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      const { data: networks } = await supabase
+      // Create the network first
+      const network = await NetworkDataService.createNetwork(user.id, networkName, true);
+      console.log('Created network for AI generation:', network);
+
+      if (!network || !network.id) {
+        throw new Error('Failed to create network');
+      }
+
+      // Notify parent component about the network creation
+      if (onNetworkCreated) {
+        console.log('Notifying parent about network creation:', network.id);
+        onNetworkCreated(network.id, true);
+      }
+
+      // Check if we need to generate a name
+      let finalNetworkName = networkName;
+      
+      // If the name is empty or the default template, generate a name with AI
+      if (!finalNetworkName || finalNetworkName.trim() === "" || 
+          finalNetworkName === `${industry} Network`) {
+        console.log('Generating AI name for network');
+        toast({
+          title: "Generating network name",
+          description: "Creating a name based on your prompt..."
+        });
+        
+        finalNetworkName = await generateNetworkNameFromPrompt(prompt, industry);
+      }
+
+      // Update the network name
+      await supabase
         .from('networks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .update({ name: finalNetworkName })
+        .eq('id', network.id);
 
-      if (networks && networks.length > 0) {
-        const network = networks[0];
+      // Generate the network with AI based on user's prompt
+      console.log(`Generating network nodes and edges for "${finalNetworkName}" with prompt: "${prompt}"`);
+      try {
+        await generateNetworkFromPrompt(network.id, prompt, industry);
         
-        // Check if we need to generate a name
-        let finalNetworkName = networkName;
-        
-        // If the name is empty or the default template, generate a name with AI
-        if (!finalNetworkName || finalNetworkName.trim() === "" || 
-            finalNetworkName === `${industry} Network`) {
-          console.log('Generating AI name for network');
-          toast({
-            title: "Generating network name",
-            description: "Creating a name based on your prompt..."
-          });
-          
-          finalNetworkName = await generateNetworkNameFromPrompt(prompt, industry);
-        }
-
-        // Update the network name
-        await supabase
-          .from('networks')
-          .update({ name: finalNetworkName })
-          .eq('id', network.id);
-
-        // Generate the network with AI based on user's prompt
-        console.log(`Generating network nodes and edges for "${finalNetworkName}" with prompt: "${prompt}"`);
-        try {
-          await generateNetworkFromPrompt(network.id, prompt, industry);
-          
-          toast({
-            title: "Network generated",
-            description: `Created "${finalNetworkName}" based on your prompt`
-          });
-        } catch (generateError) {
-          console.error('Error generating network content:', generateError);
-          toast({
-            variant: "destructive",
-            title: "Generation Error",
-            description: "Error creating network content. Please try again with a different prompt."
-          });
-        }
+        toast({
+          title: "Network generated",
+          description: `Created "${finalNetworkName}" based on your prompt`
+        });
+      } catch (generateError) {
+        console.error('Error generating network content:', generateError);
+        toast({
+          variant: "destructive",
+          title: "Generation Error",
+          description: "Error creating network content. Please try again with a different prompt."
+        });
       }
     } catch (error) {
       console.error('Error in AI network generation:', error);

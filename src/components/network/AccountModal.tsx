@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -12,6 +12,7 @@ import { SubscriptionModal } from "./SubscriptionModal";
 import { useSubscription } from "@/hooks/use-subscription";
 import { format } from "date-fns";
 import { redirectToCustomerPortal } from "@/utils/stripe";
+import { LogOut } from "lucide-react";
 
 interface AccountModalProps {
   open: boolean;
@@ -161,6 +162,20 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
     setUsername(e.target.value);
     if (usernameError) {
       setUsernameError("");
+    }
+  };
+
+  const onLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+      });
     }
   };
 
@@ -318,6 +333,17 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
               </TabsContent>
             </Tabs>
           )}
+          
+          <DialogFooter className="mt-6">
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={onLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       
