@@ -524,160 +524,162 @@ export function CommunityNetworksPage({
   };
 
   return (
-    <div className="flex-1 p-6 pl-16 pr-8 min-h-0 overflow-auto bg-gray-50 dark:bg-gray-900">
-      <div className="mb-8 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">Community Networks</h1>
-        <p className="text-muted-foreground text-base mb-6">
-          Example networks you can add to your collection with one click. Each network is generated with AI based on the description.
-        </p>
-        
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="flex items-center">
-            <div className="mr-2 text-sm text-muted-foreground">Sort by:</div>
-            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-              <SelectTrigger className="w-32 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="industry">Industry</SelectItem>
-                <SelectItem value="location">Location</SelectItem>
-                <SelectItem value="alphabetical">A-Z</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="flex-1 p-6 min-h-0 overflow-auto bg-gray-50 dark:bg-gray-900 flex justify-center">
+      <div className="w-full max-w-4xl">
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Community Networks</h1>
+          <p className="text-muted-foreground text-base mb-8 max-w-2xl mx-auto">
+            Example networks you can add to your collection with one click. Each network is generated with AI based on the description.
+          </p>
           
-          <div className="flex items-center">
-            <div className="mr-2 text-sm text-muted-foreground">Industry:</div>
-            <Select value={industryFilter} onValueChange={setIndustryFilter}>
-              <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {industries.map(industry => (
-                  <SelectItem key={industry} value={industry}>
-                    {industry === "all" ? "All Industries" : industry}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap gap-4 mb-8 justify-center">
+            <div className="flex items-center">
+              <div className="mr-2 text-sm text-muted-foreground">Sort by:</div>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                <SelectTrigger className="w-32 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="industry">Industry</SelectItem>
+                  <SelectItem value="location">Location</SelectItem>
+                  <SelectItem value="alphabetical">A-Z</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center">
+              <div className="mr-2 text-sm text-muted-foreground">Industry:</div>
+              <Select value={industryFilter} onValueChange={setIndustryFilter}>
+                <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map(industry => (
+                    <SelectItem key={industry} value={industry}>
+                      {industry === "all" ? "All Industries" : industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="max-w-[1200px] divide-y divide-gray-200 dark:divide-gray-700 border rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-        {sortedNetworks.map((network) => {
-          const colorScheme = getIndustryColor(network.industry);
-          return (
-            <div 
-              key={network.id} 
-              className="p-5 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors"
-            >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      className={cn(
-                        "text-xs font-medium py-1 px-2 rounded-md border", 
-                        colorScheme.bg, 
-                        colorScheme.text,
-                        colorScheme.border
-                      )}
-                    >
-                      {network.industry}
-                    </Badge>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <MapPinIcon className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{network.location}</span>
+        
+        <div className="space-y-4">
+          {sortedNetworks.map((network) => {
+            const colorScheme = getIndustryColor(network.industry);
+            return (
+              <div 
+                key={network.id} 
+                className="p-6 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        className={cn(
+                          "text-xs font-medium py-1 px-2 rounded-md border", 
+                          colorScheme.bg, 
+                          colorScheme.text,
+                          colorScheme.border
+                        )}
+                      >
+                        {network.industry}
+                      </Badge>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <MapPinIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                        <span>{network.location}</span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "flex-shrink-0 whitespace-nowrap border font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                      "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700",
-                      "border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700",
-                      "text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                    )}
-                    onClick={() => handleAddNetwork(network)}
-                    disabled={isAdding === network.id}
-                  >
-                    {isAdding === network.id ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Adding...
-                      </span>
-                    ) : (
-                      <>
-                        <PlusIcon className="h-4 w-4 mr-1" />
-                        Add Network
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{network.title}</h3>
-                
-                <p className="text-sm text-muted-foreground">
-                  {network.description}
-                </p>
-                
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Prompt:</div>
+                    
                     <Button 
-                      variant="ghost" 
+                      variant="outline"
                       size="sm"
                       className={cn(
-                        "h-6 px-2 text-xs",
-                        "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300",
-                        "hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                        "flex-shrink-0 whitespace-nowrap border font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                        "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700",
+                        "border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700",
+                        "text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                       )}
-                      onClick={() => copyToClipboard(network.prompt, network.id)}
+                      onClick={() => handleAddNetwork(network)}
+                      disabled={isAdding === network.id}
                     >
-                      {copiedId === network.id ? (
-                        <><CheckIcon className="h-3 w-3 mr-1" /> Copied</>
+                      {isAdding === network.id ? (
+                        <span className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Adding...
+                        </span>
                       ) : (
-                        <><ClipboardCopyIcon className="h-3 w-3 mr-1" /> Copy</>
+                        <>
+                          <PlusIcon className="h-4 w-4 mr-1" />
+                          Add Network
+                        </>
                       )}
                     </Button>
                   </div>
-                  <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-200 dark:border-gray-600">
-                    <div className="text-sm">
-                      {isPromptExpanded(network.id) 
-                        ? network.prompt 
-                        : getTruncatedPrompt(network.prompt)
-                      }
-                      
-                      <div className="mt-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "h-6 px-2 text-xs",
-                            "text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300",
-                            "hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                          )}
-                          onClick={() => togglePromptExpansion(network.id)}
-                        >
-                          {isPromptExpanded(network.id) ? (
-                            <><ChevronUpIcon className="h-3 w-3 mr-1" /> See less</>
-                          ) : (
-                            <><ChevronDownIcon className="h-3 w-3 mr-1" /> See more</>
-                          )}
-                        </Button>
+                  
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{network.title}</h3>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    {network.description}
+                  </p>
+                  
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Prompt:</div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className={cn(
+                          "h-6 px-2 text-xs",
+                          "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300",
+                          "hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                        )}
+                        onClick={() => copyToClipboard(network.prompt, network.id)}
+                      >
+                        {copiedId === network.id ? (
+                          <><CheckIcon className="h-3 w-3 mr-1" /> Copied</>
+                        ) : (
+                          <><ClipboardCopyIcon className="h-3 w-3 mr-1" /> Copy</>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-600">
+                      <div className="text-sm">
+                        {isPromptExpanded(network.id) 
+                          ? network.prompt 
+                          : getTruncatedPrompt(network.prompt)
+                        }
+                        
+                        <div className="mt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "h-6 px-2 text-xs",
+                              "text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300",
+                              "hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                            )}
+                            onClick={() => togglePromptExpansion(network.id)}
+                          >
+                            {isPromptExpanded(network.id) ? (
+                              <><ChevronUpIcon className="h-3 w-3 mr-1" /> See less</>
+                            ) : (
+                              <><ChevronDownIcon className="h-3 w-3 mr-1" /> See more</>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

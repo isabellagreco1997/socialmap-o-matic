@@ -1,7 +1,7 @@
 import { Panel } from '@xyflow/react';
 import { Button } from "@/components/ui/button";
 import { Network } from "@/types/network";
-import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronLeft, MessageSquare } from 'lucide-react';
+import { PlusIcon, FileText, LayoutPanelTop, MoreHorizontal, ChevronLeft, MessageSquare, Settings, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect, useRef, memo, useLayoutEffect, useMemo } from 'react';
@@ -21,6 +21,9 @@ interface NetworkTopBarProps {
   onNameCancel: () => void;
   isEditingName: boolean;
   onEditNameStart: () => void;
+  onEditNetwork?: () => void;
+  onAIChat?: () => void;
+  onAccountClick?: () => void;
 }
 
 // Global cache names by network ID to ensure consistency across the app
@@ -36,6 +39,9 @@ const NetworkTopBar = memo(({
   onNameCancel,
   isEditingName,
   onEditNameStart,
+  onEditNetwork = () => {}, // Default empty functions in case they're not provided
+  onAIChat = () => {}, 
+  onAccountClick = () => {},
 }: NetworkTopBarProps) => {
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('tasks');
@@ -150,6 +156,9 @@ const NetworkTopBar = memo(({
       setActiveTab('ai-chat');
       setIsOverviewOpen(true);
     }
+    
+    // Call the parent's onAIChat if provided
+    onAIChat();
   };
 
   // Make handleAIChatClick available globally
@@ -334,11 +343,18 @@ const NetworkTopBar = memo(({
           <FileText className="h-4 w-4 mr-2" />
           Import CSV
         </Button>
-        {/* disabled for now */}
-        {/* <Button variant="outline" className="bg-white shadow-lg" onClick={() => toggleOverview()}>
-          <LayoutPanelTop className="h-4 w-4 mr-2" />
-          Overview
-        </Button> */}
+        <Button variant="outline" className="bg-white shadow-lg" onClick={onEditNetwork}>
+          <Settings className="h-4 w-4 mr-2" />
+          Edit Network
+        </Button>
+        <Button variant="outline" className="bg-white shadow-lg" onClick={handleAIChatClick}>
+          <MessageSquare className="h-4 w-4 mr-2" />
+          AI Chat
+        </Button>
+        <Button variant="outline" className="bg-white shadow-lg" onClick={onAccountClick}>
+          <User className="h-4 w-4 mr-2" />
+          Account
+        </Button>
       </Panel>
 
       <Sheet open={isOverviewOpen} modal={false}>

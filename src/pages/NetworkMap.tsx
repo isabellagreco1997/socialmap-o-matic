@@ -24,6 +24,13 @@ import { AccountModal } from '@/components/network/AccountModal';
 import { CommunityNetworksPage } from '@/components/network/CommunityNetworksPage';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import PromptGenerator from '@/pages/PromptGenerator';
+import { NetworkDataService } from "@/components/network/NetworkDataService";
+import { generateNetworkFromPrompt } from '@/components/network/NetworkGenerator';
+import { cachedNetworkNames } from '@/components/network/NetworkTopBar';
+import { NetworkHealthPage } from '@/components/network/NetworkHealthPage';
+import { useToast } from "@/components/ui/use-toast";
+import { NodeData } from '@/types/network';
 
 // Create a global variable to track if we've loaded networks before
 const hasLoadedNetworks = {
@@ -86,6 +93,7 @@ const NetworkMapContent = () => {
     networks,
     setNetworks,
     currentNetworkId,
+    setCurrentNetworkId,
     nodes,
     setNodes,
     edges,
@@ -107,6 +115,7 @@ const NetworkMapContent = () => {
     showChat,
     setShowChat,
     isGeneratingNetwork,
+    setIsGeneratingNetwork,
     isLoading,
     setIsLoading,
     isTemplatesDialogOpen,
@@ -120,7 +129,7 @@ const NetworkMapContent = () => {
     filteredNetworks,
     setRefreshCounter,
     isAccountModalOpen,
-    setIsAccountModalOpen
+    setIsAccountModalOpen,
   } = useNetworkMap();
 
   // Import custom hooks
@@ -203,13 +212,152 @@ const NetworkMapContent = () => {
     };
   }, [currentNetworkId, setIsLoading, networks, nodes.length]);
 
-  const [contentMode, setContentMode] = useState<'network' | 'community'>('network');
+  const [contentMode, setContentMode] = useState<'network' | 'community' | 'prompt-generator' | 'network-health'>('network');
   
+  // --- DEBUG LOG ---
+  console.log('[NetworkMapContent Render] Current contentMode:', contentMode);
+
   // Handle showing community networks page
   const handleShowCommunityNetworks = useCallback(() => {
     setContentMode('community');
   }, []);
   
+  // Handle showing prompt generator
+  const handleShowPromptGenerator = useCallback(() => {
+    // --- DEBUG LOG ---
+    console.log('[handleShowPromptGenerator] Setting contentMode to prompt-generator');
+    setContentMode('prompt-generator');
+  }, []);
+  
+  // Handle showing network health dashboard
+  const handleShowNetworkHealth = useCallback(() => {
+    setContentMode('network-health');
+  }, []);
+  
+  // Handle search submission to create a network
+  const handleSearchSubmit = useCallback((query: string) => {
+    // --- DEBUG LOG ---
+    console.log('[handleSearchSubmit] Called. Initial contentMode:', contentMode, 'Query:', query);
+    if (!query.trim()) return;
+    
+    // Set the network content mode
+    setContentMode('network');
+    // --- DEBUG LOG ---
+    console.log('[handleSearchSubmit] Set contentMode to network');
+    
+    // Show loading state immediately
+    setIsLoading(true);
+    setIsGeneratingNetwork(true);
+    
+    // Create a network with a placeholder name based on the query
+    const createNetwork = async () => {
+      try {
+        // Get the current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.error('No authenticated user found');
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Please sign in to create networks"
+          });
+          setIsLoading(false);
+          setIsGeneratingNetwork(false);
+          return null;
+        }
+        
+        // Create a new network with the query as the name
+        const networkName = `${query.slice(0, 30)}${query.length > 30 ? '...' : ''}`;
+        
+        // Create the network first (with isAI=true)
+        const network = await NetworkDataService.createNetwork(user.id, networkName, true);
+        console.log('Created network for query generation:', network);
+
+        if (!network || !network.id) {
+          throw new Error('Failed to create network');
+        }
+        
+        // Move the network to the top of the list by setting order to -1
+        await supabase
+          .from('networks')
+          .update({ order: -1 })
+          .eq('id', network.id);
+          
+        // Refresh networks list to show the new network at the top
+        const { data: networksData, error: networksError } = await supabase
+          .from('networks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('order', { ascending: true })
+          .order('created_at', { ascending: false });
+          
+        if (!networksError && networksData) {
+          setNetworks(networksData);
+          localStorage.setItem('socialmap-networks', JSON.stringify(networksData));
+        }
+        
+        // Select the new network
+        setCurrentNetworkId(network.id);
+        
+        // Set temporary name in cache to show loading state
+        cachedNetworkNames.set(network.id, "Generating network...");
+        
+        // Dispatch network-created event to update UI
+        window.dispatchEvent(new CustomEvent('network-created', {
+          detail: {
+            networkId: network.id,
+            isAI: true,
+            source: 'search'
+          }
+        }));
+        
+        // Generate the network with AI based on user's query
+        try {
+          await generateNetworkFromPrompt(network.id, query, "General");
+          
+          // Mark network as completed
+          setIsLoading(false);
+          setIsGeneratingNetwork(false);
+          
+          toast({
+            title: "Network generated",
+            description: `Created "${networkName}" based on your search`
+          });
+        } catch (generateError) {
+          console.error('Error generating network content:', generateError);
+          
+          setIsLoading(false);
+          setIsGeneratingNetwork(false);
+          
+          toast({
+            variant: "destructive",
+            title: "Generation Error",
+            description: "Error creating network content. Please try again with a different query."
+          });
+        }
+        
+        return network.id;
+      } catch (error) {
+        console.error('Error creating network from search:', error);
+        
+        setIsLoading(false);
+        setIsGeneratingNetwork(false);
+        
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create network. Please try again."
+        });
+        
+        return null;
+      }
+    };
+    
+    // Create the network
+    createNetwork();
+  }, [setIsLoading, setIsGeneratingNetwork, setCurrentNetworkId, setNetworks, toast, contentMode]);
+
   // Handle network added from community networks page
   const handleCommunityNetworkAdded = useCallback((id: string) => {
     console.log('NetworkMap: Community network added, id:', id);
@@ -306,6 +454,102 @@ const NetworkMapContent = () => {
     });
   }, [handleNetworkSelect, setIsLoading, setNetworks, setContentMode, toast]);
 
+  // Handle network creation from prompt generator
+  const handlePromptNetworkCreated = useCallback((title: string, description: string): Promise<void> => {
+    // Hide the prompt generator
+    setContentMode('network');
+    
+    // Show loading state immediately
+    setIsLoading(true);
+    
+    // Return a Promise that resolves when the network is created
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Create a new network with the prompt data
+        const newNetworkId = await (async () => {
+          try {
+            // Get the current user
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (!user) {
+              console.error('No authenticated user found');
+              return null;
+            }
+            
+            // Create a new network
+            const newNetwork = {
+              id: crypto.randomUUID(),
+              name: title,
+              description: description,
+              user_id: user.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              order: networks.length
+            };
+            
+            // Insert the network in the database
+            const { error } = await supabase.from('networks').insert(newNetwork);
+            
+            if (error) {
+              console.error('Error creating network:', error);
+              return null;
+            }
+            
+            return newNetwork.id;
+          } catch (error) {
+            console.error('Error creating network:', error);
+            return null;
+          }
+        })();
+        
+        if (newNetworkId) {
+          // Refresh network list
+          const { data } = await supabase.auth.getUser();
+          const userId = data.user?.id;
+          
+          if (userId) {
+            const { data: networksData, error: networksError } = await supabase
+              .from('networks')
+              .select('*')
+              .eq('user_id', userId)
+              .order('order', { ascending: true })
+              .order('created_at', { ascending: false });
+            
+            if (!networksError && networksData) {
+              setNetworks(networksData);
+            }
+            
+            // Select the new network
+            handleNetworkSelect(newNetworkId);
+            setIsLoading(false);
+            
+            toast({
+              title: "Network Created",
+              description: "Your new network has been created successfully."
+            });
+
+            resolve(); // Resolve the promise
+          } else {
+            setIsLoading(false);
+            reject(new Error("No user ID found")); // Reject the promise
+          }
+        } else {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to create the network. Please try again."
+          });
+          reject(new Error("Failed to create network")); // Reject the promise
+        }
+      } catch (err) {
+        setIsLoading(false);
+        console.error("Error in network creation:", err);
+        reject(err); // Reject the promise on error
+      }
+    });
+  }, [handleNetworkSelect, networks.length, setIsLoading, setNetworks, toast]);
+
   // Listen for events to return to network view
   useEffect(() => {
     const handleReturnToNetworkView = () => {
@@ -319,6 +563,17 @@ const NetworkMapContent = () => {
     };
   }, []);
 
+  // Add sidebar footer click handler
+  const handleSidebarAction = useCallback((action: string) => {
+    if (action === 'community') {
+      handleShowCommunityNetworks();
+    } else if (action === 'prompt-generator') {
+      handleShowPromptGenerator();
+    } else if (action === 'network-health') {
+      handleShowNetworkHealth();
+    }
+  }, [handleShowCommunityNetworks, handleShowPromptGenerator, handleShowNetworkHealth]);
+
   return (
     <SidebarProvider defaultOpen>
       <div className="h-screen w-full bg-background flex">
@@ -328,6 +583,7 @@ const NetworkMapContent = () => {
               searchQuery={searchQuery} 
               onSearchChange={setSearchQuery} 
               onOpenAccount={() => setIsAccountModalOpen(true)}
+              onSearchSubmit={handleSearchSubmit}
             />
             <div className="flex-1 min-h-0 overflow-hidden">
               <NetworkSidebar 
@@ -342,12 +598,18 @@ const NetworkMapContent = () => {
                 onImportCsv={handleImportCsvFromDialog}
                 onNetworkCreated={handleNetworkCreated}
                 onShowCommunityNetworks={handleShowCommunityNetworks}
+                onSidebarAction={handleSidebarAction}
+                onHealthClick={handleShowNetworkHealth}
               />
             </div>
           </SidebarContent>
         </Sidebar>
 
         <div className="flex-1 relative">
+          {/* --- DEBUG LOG --- */}
+          {console.log('[Render Logic Check] Rendering based on contentMode:', contentMode)}
+          {null}
+
           {contentMode === 'network' ? (
             <>
               {/* Empty state when there are no networks */}
@@ -380,21 +642,109 @@ const NetworkMapContent = () => {
                         onEdgesChange={handleEdgeChangesWrapper} 
                         onConnect={onConnect} 
                         onAddNode={() => setIsDialogOpen(true)} 
-                        onImportCsv={() => setIsCsvDialogOpen(true)} 
+                        onImportCsv={() => setIsCsvDialogOpen(true)}
+                        onEditNetwork={() => setEditingNetwork(networks.find(n => n.id === currentNetworkId) || null)}
+                        onAIChat={() => setShowChat(true)}
+                        onAccountClick={() => setIsAccountModalOpen(true)}
                       />
                     )}
                   </div>
                 </ReactFlowProvider>
               )}
             </>
-          ) : (
+          ) : contentMode === 'community' ? (
             <CommunityNetworksPage onNetworkAdded={handleCommunityNetworkAdded} />
+          ) : contentMode === 'network-health' ? (
+            <NetworkHealthPage 
+              onReturn={() => setContentMode('network')}
+              networks={networks}
+            />
+          ) : (
+            <PromptGenerator 
+              onAddNetwork={handlePromptNetworkCreated} 
+              onCreateBlankNetwork={() => {
+                // Switch to network view first
+                setContentMode('network');
+                setIsLoading(true); // Show loading indicator
+                
+                // Create blank network (passing isAI=false)
+                supabase.auth.getUser().then(({ data: { user } }) => {
+                  if (user) {
+                    // Create a regular blank network (not AI generated)
+                    NetworkDataService.createNetwork(user.id, "New Network", false)
+                      .then(network => {
+                        if (network && network.id) {
+                          // Ensure any cached nodes/edges are cleared
+                          localStorage.removeItem(`network-nodes-${network.id}`);
+                          localStorage.removeItem(`network-edges-${network.id}`);
+                          
+                          // Clear nodes/edges in UI
+                          setNodes([]);
+                          
+                          // Dispatch network created event
+                          window.dispatchEvent(new CustomEvent('network-created', { 
+                            detail: { networkId: network.id, isAI: false }
+                          }));
+                          
+                          // Call network created handler which will handle selection
+                          handleNetworkCreated(network.id, false);
+                          
+                          // Show success toast
+                          toast({
+                            title: "Network created",
+                            description: "Created a blank network"
+                          });
+                        }
+                        
+                        // Hide loading indicator
+                        setIsLoading(false);
+                      })
+                      .catch(error => {
+                        console.error('Error creating blank network:', error);
+                        toast({
+                          variant: "destructive",
+                          title: "Error",
+                          description: "Failed to create network"
+                        });
+                        setIsLoading(false);
+                      });
+                  } else {
+                    setIsLoading(false);
+                  }
+                });
+              }}
+              onImportCSV={() => {
+                // Create a file input and trigger a click on it
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.csv,.tsv,.txt';
+                input.onchange = (e: any) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    // Switch to network view 
+                    setContentMode('network');
+                    // Process the CSV file using the existing handler
+                    handleImportCsvFromDialog(file);
+                  }
+                };
+                input.click();
+              }}
+            />
           )}
 
           <AddNodeDialog 
             open={isDialogOpen} 
             onOpenChange={setIsDialogOpen} 
-            onSave={handleAddNode} 
+            onSave={(nodeData) => {
+              handleAddNode(nodeData).catch(error => {
+                console.error("Error saving node:", error);
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Failed to add node.",
+                });
+              });
+            }}
           />
           
           <CsvPreviewDialog 

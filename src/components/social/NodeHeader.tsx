@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Building2, User, Edit, Trash2, ExternalLink, Palette, Tag } from 'lucide-react';
+import { Calendar, MapPin, Building2, User, Edit, Trash2, ExternalLink, Palette, Tag, CircleDashed, FileText } from 'lucide-react';
 import { NodeData } from '@/types/network';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,9 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
       person: { icon: User, color: 'blue' },
       organization: { icon: Building2, color: 'emerald' },
       event: { icon: Calendar, color: 'purple' },
-      venue: { icon: MapPin, color: 'rose' }
+      venue: { icon: MapPin, color: 'rose' },
+      uncategorized: { icon: CircleDashed, color: 'slate' },
+      text: { icon: FileText, color: 'amber' }
     };
     return configs[data.type] || configs.person;
   };
@@ -41,7 +43,9 @@ const NodeHeader = ({ data, onEdit, onDelete, onColorChange, onTagsEdit }: NodeH
     person: 'bg-blue-50/50',
     organization: 'bg-emerald-50/50',
     event: 'bg-purple-50/50',
-    venue: 'bg-rose-50/50'
+    venue: 'bg-rose-50/50',
+    uncategorized: 'bg-slate-50/50',
+    text: 'bg-amber-50/50'
   };
 
   // Get the avatar style for custom colors

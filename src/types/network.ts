@@ -2,7 +2,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type Network = Database['public']['Tables']['networks']['Row'];
 
-export type NodeType = "person" | "organization" | "event" | "venue";
+export type NodeType = "person" | "organization" | "event" | "venue" | "uncategorized" | "text";
 
 export interface TodoItem {
   id: string;

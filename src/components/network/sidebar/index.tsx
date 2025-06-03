@@ -29,7 +29,8 @@ export const NetworkSidebar = memo(({
   onNetworksReorder,
   onImportCsv,
   onNetworkCreated,
-  onShowCommunityNetworks
+  onShowCommunityNetworks,
+  onSidebarAction
 }: NetworkSidebarProps) => {
   // Current network state
   const [currentNetwork, setCurrentNetwork] = useState<Network | null>(null);
@@ -156,10 +157,10 @@ export const NetworkSidebar = memo(({
       {/* Top section with buttons - fixed */}
       <div className="flex-none">
         <SidebarHeader
-          onCreateNetwork={handleNetworkCreatedWrapper}
           onAIChatClick={handleAIChatClick}
           onHealthClick={handleMyTasksClick}
-          onImportCsv={onImportCsv}
+          onHealthDashboardClick={() => onSidebarAction && onSidebarAction('network-health')}
+          onSidebarAction={onSidebarAction}
         />
       </div>
 
@@ -180,9 +181,12 @@ export const NetworkSidebar = memo(({
           onOpenAccount={() => setIsAccountModalOpen(true)}
           onOpenResources={() => {
             // For now, we'll open a basic URL to a resources page
-            window.open('https://docs.relmaps.com', '_blank');
+            window.open('https://docs.mapnetics.com', '_blank');
           }}
           onOpenCommunity={onShowCommunityNetworks}
+          onSidebarAction={onSidebarAction}
+          onCreateNetwork={handleNetworkCreatedWrapper}
+          onImportCsv={onImportCsv}
         />
       </div>
 

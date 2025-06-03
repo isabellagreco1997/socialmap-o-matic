@@ -12,6 +12,8 @@ export interface NetworkSidebarProps {
   onImportCsv?: (file: File) => void;
   onNetworkCreated?: (id: string, isAI: boolean) => void;
   onShowCommunityNetworks?: () => void;
+  onSidebarAction?: (action: string) => void;
+  onHealthClick?: () => void;
 }
 
 export interface TodoItem {
@@ -58,6 +60,8 @@ export interface NetworkStats {
     organization: number;
     event: number;
     venue: number;
+    uncategorized: number;
+    text: number;
   };
 }
 

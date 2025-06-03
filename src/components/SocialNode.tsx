@@ -3,7 +3,7 @@ import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Settings, MapPin, Calendar, ExternalLink, Briefcase, Building, GraduationCap, Mail, Phone } from 'lucide-react';
+import { Settings, MapPin, Calendar, ExternalLink, Briefcase, Building, GraduationCap, Mail, Phone, FileText } from 'lucide-react';
 import NodeEditDialog from '@/components/social/NodeEditDialog';
 import NodeColorPicker from '@/components/social/NodeColorPicker';
 import NodeTagEditor from '@/components/social/NodeTagEditor';
@@ -43,7 +43,9 @@ const getTypeColor = (data: NodeData) => {
     person: '#0a66c2',      // LinkedIn Blue
     organization: '#057642', // Professional Green
     event: '#bc1f27',       // Professional Red
-    venue: '#5c3fc5'        // Professional Purple
+    venue: '#5c3fc5',       // Professional Purple
+    uncategorized: '#6b7280', // Gray for uncategorized
+    text: '#f59e0b'         // Amber for text notes
   };
   
   const defaultColor = typeColors[data.type] || '#0a66c2';
@@ -62,6 +64,10 @@ const getTypeIcon = (nodeType: string) => {
       return <Calendar className="h-5 w-5" />;
     case 'venue':
       return <MapPin className="h-5 w-5" />;
+    case 'uncategorized':
+      return <Briefcase className="h-5 w-5" />;
+    case 'text':
+      return <FileText className="h-5 w-5" />;
     default:
       return <Briefcase className="h-5 w-5" />;
   }
@@ -79,12 +85,16 @@ const getTitle = (data: NodeData) => {
     return 'Event';
   } else if (nodeType === 'venue') {
     return 'Location';
+  } else if (nodeType === 'uncategorized') {
+    return 'Uncategorized';
+  } else if (nodeType === 'text') {
+    return 'Note';
   }
   return '';
 };
 
 const SocialNode = memo(({ id, data }: SocialNodeProps) => {
-  const [contactDetails, setContactDetails] = useState<{ notes?: string }>({ notes: data?.contactDetails?.notes });
+  const [contactDetails, setContactDetails] = useState<{ notes?: string }>({ notes: data?.notes || data?.contactDetails?.notes });
   const [todos, setTodos] = useState(data?.todos || []);
   const [tags, setTags] = useState<Tag[]>(data?.tags || []);
   const [showEditSidebar, setShowEditSidebar] = useState(false);
@@ -157,8 +167,13 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
   
   // Memoize handle styles for better performance
   const handleStyle = useMemo(() => ({
-    backgroundColor: typeColor,
-    boxShadow: `0 0 10px ${typeColor}80, 0 0 5px ${typeColor}40`
+    backgroundColor: `${typeColor}90`, // Softer color with transparency
+    boxShadow: `0 0 6px ${typeColor}50, 0 0 3px ${typeColor}30`,
+    width: '16px',
+    height: '16px',
+    borderRadius: '8px',
+    border: '3px solid white',
+    zIndex: 1001
   }), [typeColor]);
 
   if (!data || !data.name) {
@@ -179,6 +194,15 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
         .eq('id', id);
 
       setContactDetails(prev => ({ ...prev, notes }));
+      
+      // Also update the notes field directly in the node data
+      setNodes(nodes => 
+        nodes.map(node => 
+          node.id === id 
+            ? { ...node, data: { ...node.data, notes } }
+            : node
+        )
+      );
     } catch (error) {
       console.error('Error updating contact details:', error);
       toast({
@@ -224,7 +248,7 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
               style: validColor ? {
                 backgroundColor: `${validColor}15`,
                 borderColor: validColor,
-                borderWidth: 2,
+                borderWidth: 4
               } : undefined
             };
             console.log('Updated node in React Flow:', updatedNode);
@@ -358,7 +382,7 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
                 style: 'color' in frontendUpdates && frontendUpdates.color ? {
                   backgroundColor: `${frontendUpdates.color}15`,
                   borderColor: frontendUpdates.color,
-                  borderWidth: 2,
+                  borderWidth: 4
                 } : node.style
               }
             : node
@@ -383,16 +407,206 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
   // Number of pending todos
   const pendingTodosCount = todos.filter(todo => !todo.completed).length;
 
+  // Special render for a text node
+  if (data.type === 'text') {
+    return (
+      <>
+        <Card 
+          className="overflow-visible rounded-xl border-4 min-w-[300px] bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm"
+          style={{
+            transform: 'translate3d(0, 0, 0)', // Force hardware acceleration
+            backfaceVisibility: 'hidden', // Prevent flickering during transitions
+            perspective: '1000px', // Add depth perception
+            willChange: 'transform, box-shadow', // Optimize for animations
+            borderColor: typeColor,
+            position: 'relative'
+          }}
+        >
+          {/* Add handles */}
+          <Handle
+            type="source"
+            position={Position.Top}
+            id="top-source"
+            style={{
+              ...handleStyle,
+              backgroundColor: typeColor
+            }}
+          />
+          <Handle
+            type="target"
+            position={Position.Top}
+            id="top-target"
+            style={{
+              ...handleStyle,
+              backgroundColor: typeColor
+            }}
+          />
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="bottom-source"
+            style={{
+              ...handleStyle,
+              backgroundColor: typeColor
+            }}
+          />
+          <Handle
+            type="target"
+            position={Position.Bottom}
+            id="bottom-target"
+            style={{
+              ...handleStyle,
+              backgroundColor: typeColor
+            }}
+          />
+          
+          {/* Color accent bar at top with gradient */}
+          <div 
+            className="h-3 w-full" 
+            style={{ 
+              background: `linear-gradient(90deg, ${typeColor} 0%, ${typeColor}80 100%)`,
+              boxShadow: `0 2px 10px ${typeColor}40`
+            }}
+          />
+          
+          {/* Title and edit button */}
+          <div className="p-4 pb-2 flex justify-between items-center">
+            <h3 className="text-lg font-bold text-gray-900">{data.name}</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full hover:bg-gray-100 hover:scale-110 transition-all duration-200" 
+                    onClick={() => setShowEditSidebar(true)}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit Note</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          {/* Note content */}
+          <div className="px-4 pb-4">
+            <div className="whitespace-pre-wrap text-gray-600 min-h-[80px]">
+              {data.notes || contactDetails.notes || <span className="text-gray-400 italic">Click to add notes...</span>}
+            </div>
+          </div>
+        </Card>
+
+        {/* Same edit dialogs as standard nodes */}
+        <Sheet open={showEditSidebar} onOpenChange={setShowEditSidebar}>
+          <SheetContent className="sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>Edit {data.name}</SheetTitle>
+            </SheetHeader>
+            
+            <div className="py-6">
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid grid-cols-3 mb-4">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="notes">Notes</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="details">
+                  <div className="space-y-4">
+                    <NodeEditDialog
+                      open={true}
+                      onOpenChange={() => {}} 
+                      node={data}
+                      onSave={updateNodeData}
+                      onDelete={handleDelete}
+                      embedded={true}
+                    />
+                    
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => setShowColorPicker(true)} 
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Change Color
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => setShowTagEditor(true)} 
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Edit Tags
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="notes">
+                  <div className="space-y-4">
+                    <Textarea
+                      value={data.notes || contactDetails.notes || ''}
+                      onChange={(e) => handleContactDetailsChange(e.target.value)}
+                      placeholder="Add notes about this node..."
+                      className="min-h-[250px] text-sm resize-none"
+                      style={{ borderColor: `${typeColor}30` }}
+                    />
+                    
+                    <Button 
+                      onClick={() => toast({
+                        title: "Notes Saved",
+                        description: "Your notes have been saved successfully"
+                      })}
+                      style={{ backgroundColor: typeColor }}
+                    >
+                      Save Notes
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="tasks">
+                  <div className="space-y-4">
+                    <NodeTodoList
+                      nodeId={id}
+                      todos={todos}
+                      onTodosChange={setTodos}
+                      color={typeColor}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <NodeColorPicker
+          isOpen={showColorPicker}
+          onClose={() => setShowColorPicker(false)}
+          currentColor={data.color || ''}
+          onColorChange={handleColorChange}
+        />
+
+        <NodeTagEditor
+          isOpen={showTagEditor}
+          onClose={() => setShowTagEditor(false)}
+          tags={tags}
+          onTagsChange={handleTagsChange}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Card 
-        className="overflow-visible rounded-lg border min-w-[300px] bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm"
+        className="overflow-visible rounded-xl border-4 min-w-[300px] bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm"
         style={{
           transform: 'translate3d(0, 0, 0)', // Force hardware acceleration
           backfaceVisibility: 'hidden', // Prevent flickering during transitions
           perspective: '1000px', // Add depth perception
           willChange: 'transform, box-shadow', // Optimize for animations
-          borderColor: `${typeColor}50`,
+          borderColor: typeColor,
           position: 'relative'
         }}
       >
@@ -401,14 +615,20 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
           type="source"
           position={Position.Top}
           id="top-source"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         <Handle
           type="target"
           position={Position.Top}
           id="top-target"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         {/* Right Handle */}
@@ -416,14 +636,20 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
           type="source"
           position={Position.Right}
           id="right-source"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         <Handle
           type="target"
           position={Position.Right}
           id="right-target"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         {/* Bottom Handle */}
@@ -431,14 +657,20 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
           type="source"
           position={Position.Bottom}
           id="bottom-source"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         <Handle
           type="target"
           position={Position.Bottom}
           id="bottom-target"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         {/* Left Handle */}
@@ -446,14 +678,20 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
           type="source"
           position={Position.Left}
           id="left-source"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         <Handle
           type="target"
           position={Position.Left}
           id="left-target"
-          style={handleStyle}
+          style={{
+            ...handleStyle,
+            backgroundColor: typeColor
+          }}
         />
         
         {/* Color accent bar at top with gradient */}
@@ -641,7 +879,7 @@ const SocialNode = memo(({ id, data }: SocialNodeProps) => {
               <TabsContent value="notes">
                 <div className="space-y-4">
                   <Textarea
-                    value={contactDetails.notes || ''}
+                    value={data.notes || contactDetails.notes || ''}
                     onChange={(e) => handleContactDetailsChange(e.target.value)}
                     placeholder="Add notes about this node..."
                     className="min-h-[250px] text-sm resize-none"

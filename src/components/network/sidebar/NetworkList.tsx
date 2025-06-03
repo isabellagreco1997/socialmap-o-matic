@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Network } from "@/types/network";
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
-import { Edit, LayoutGrid } from "lucide-react";
+import { Edit, LayoutGrid, Loader2, MoreHorizontal } from "lucide-react";
 import { memo, useEffect, useRef, useMemo, useCallback, useState, useLayoutEffect } from "react";
 import { cachedNetworkNames } from "../../network/NetworkTopBar";
 import { useToast } from "@/components/ui/use-toast";
 import { SidebarService } from "./SidebarService";
 import { supabase } from "@/integrations/supabase/client";
+import { useNetworkMap } from "@/context/NetworkMapContext";
 
 // Import cachedNetworkNames instead of redefining it
 // const cachedNetworkNames = new Map<string, string>();
@@ -34,9 +35,42 @@ const NetworkItem = memo(({
   onSelect: () => void;
   onEdit: (e: React.MouseEvent) => void;
 }) => {
+  const { isLoading, isGeneratingNetwork } = useNetworkMap();
+  
   // Use state for stable display name with the initial value from cache or network
   const initialName = cachedNetworkNames.get(network.id) || network.name;
   const [displayName, setDisplayName] = useState(initialName);
+  
+  // Track if this network is currently being generated/loaded
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Track network generation status
+  useEffect(() => {
+    // Check if this network is currently being generated
+    // We consider a network to be in "generating" state if:
+    // 1. It has order === -1 (special order for new networks)
+    // 2. Global isLoading or isGeneratingNetwork state is true
+    // 3. The displayName is empty or loading
+    const isNetworkGenerating = 
+      (network.order === -1 && (isLoading || isGeneratingNetwork)) || 
+      initialName === "Loading..." || 
+      displayName === "Loading...";
+      
+    setIsGenerating(isNetworkGenerating);
+    
+    const handleNetworkGenerationComplete = (event: CustomEvent) => {
+      const { networkId } = event.detail || {};
+      if (networkId === network.id) {
+        setIsGenerating(false);
+      }
+    };
+    
+    window.addEventListener('network-generation-complete' as any, handleNetworkGenerationComplete as any);
+    
+    return () => {
+      window.removeEventListener('network-generation-complete' as any, handleNetworkGenerationComplete as any);
+    };
+  }, [network.id, network.order, isLoading, isGeneratingNetwork, initialName, displayName]);
   
   // Simplified effect to handle name updates - only runs when needed
   useEffect(() => {
@@ -63,6 +97,8 @@ const NetworkItem = memo(({
         cachedNetworkNames.set(networkId, newName);
         // Then update component state
         setDisplayName(newName);
+        // Also clear generating state when name is updated
+        setIsGenerating(false);
       }
     };
     
@@ -91,9 +127,9 @@ const NetworkItem = memo(({
           {/* Drag handle on the left */}
           <div 
             {...provided.dragHandleProps}
-            className="flex-none w-6 flex items-center justify-center mr-1 cursor-grab text-gray-500 hover:text-gray-700"
+            className="flex-none w-6 flex items-center justify-center mr-1 cursor-grab text-gray-400 hover:text-gray-600"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="8" cy="8" r="1" />
               <circle cx="8" cy="16" r="1" />
               <circle cx="16" cy="8" r="1" />
@@ -106,17 +142,25 @@ const NetworkItem = memo(({
             className="flex-1 flex items-center relative"
             onClick={onSelect}
           >
-            <Button
-              variant={isSelected ? "secondary" : "ghost"}
-              className="w-full justify-start gap-3 h-9 text-sm font-medium rounded-lg pr-9"
+            <div
+              className={`w-full flex items-center justify-start gap-3 h-9 text-sm font-medium rounded-lg pr-9 px-3 py-2 cursor-pointer transition-colors
+                ${isSelected 
+                  ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200' 
+                  : 'hover:bg-gray-100 text-gray-700'
+                }`}
             >
-              <span className="truncate max-w-[160px] block overflow-hidden text-ellipsis whitespace-nowrap">
-                {displayedName}
-              </span>
-            </Button>
+              <div className="flex items-center gap-2 max-w-full">
+                {isGenerating && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500 flex-shrink-0" />
+                )}
+                <span className={`truncate max-w-[160px] block overflow-hidden text-ellipsis whitespace-nowrap ${isSelected ? 'font-medium' : ''}`}>
+                  {isGenerating && !displayedName ? "Generating network..." : displayedName}
+                </span>
+              </div>
+            </div>
             
             {/* Edit button on the right - hide during loading */}
-            {displayedName && (
+            {displayedName && !isGenerating && (
               <div 
                 className="absolute right-1 top-1/2 -translate-y-1/2"
                 onClick={onEdit}
@@ -127,7 +171,7 @@ const NetworkItem = memo(({
                   variant="ghost"
                   className="h-7 w-7 hover:bg-blue-50"
                 >
-                  <Edit className="h-3.5 w-3.5 text-blue-600" />
+                  <MoreHorizontal className="h-3.5 w-3.5 text-blue-600" />
                 </Button>
               </div>
             )}
@@ -389,40 +433,48 @@ export function NetworkList({
 
   return (
     <ScrollArea className="h-full overflow-y-auto">
-      <div className="px-2">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="networks">
-            {(provided, snapshot) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className={`space-y-1 py-2 ${snapshot.isDraggingOver ? 'bg-gray-50 dark:bg-gray-800/30 rounded-lg' : ''}`}
-              >
-                {/* Filter out any duplicate networks by ID before rendering */}
-                {stableNetworks
-                  .filter((network, index, self) => 
-                    // Only keep the first occurrence of each network ID
-                    index === self.findIndex(n => n.id === network.id)
-                  )
-                  .map((network, index) => (
-                    <div key={network.id} className="transition-opacity duration-150 ease-in-out">
-                      <NetworkItem 
-                        network={network}
-                        index={index}
-                        isSelected={currentNetworkId === network.id}
-                        onSelect={() => selectNetwork(network.id)}
-                        onEdit={(e) => {
-                          e.stopPropagation();
-                          onEditNetwork(network);
-                        }}
-                      />
-                    </div>
-                  ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+      <div className="px-2 py-1">
+        {/* Top separator */}
+        <div className="h-[1px] bg-gray-100 dark:bg-gray-800 w-full my-1"></div>
+        
+        <div className="rounded-lg bg-gray-50/50 dark:bg-gray-900/20 p-1">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="networks">
+              {(provided, snapshot) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className={`space-y-1 py-1 ${snapshot.isDraggingOver ? 'bg-gray-100 dark:bg-gray-800/40 rounded-lg' : ''}`}
+                >
+                  {/* Filter out any duplicate networks by ID before rendering */}
+                  {stableNetworks
+                    .filter((network, index, self) => 
+                      // Only keep the first occurrence of each network ID
+                      index === self.findIndex(n => n.id === network.id)
+                    )
+                    .map((network, index) => (
+                      <div key={network.id} className="transition-opacity duration-150 ease-in-out">
+                        <NetworkItem 
+                          network={network}
+                          index={index}
+                          isSelected={currentNetworkId === network.id}
+                          onSelect={() => selectNetwork(network.id)}
+                          onEdit={(e) => {
+                            e.stopPropagation();
+                            onEditNetwork(network);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
+        
+        {/* Bottom separator */}
+        <div className="h-[1px] bg-gray-100 dark:bg-gray-800 w-full my-1"></div>
       </div>
     </ScrollArea>
   );

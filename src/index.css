@@ -120,6 +120,15 @@
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   transform-origin: center center;
+  border-radius: 1rem !important;
+  border-width: 4px !important;
+  border-style: solid !important;
+  box-sizing: border-box !important;
+}
+
+/* Fix for the inner content to not protrude through borders */
+.react-flow__node > div {
+  border-radius: 1rem !important; /* Match the outer radius */
 }
 
 .react-flow__node:not(.react-flow__node-dragging) {
@@ -181,6 +190,20 @@
 
 .react-flow__node[data-type="venue"] {
   filter: drop-shadow(0 0 8px rgba(92, 63, 197, 0.3));
+}
+
+.react-flow__node[data-type="uncategorized"] {
+  filter: drop-shadow(0 0 8px rgba(107, 114, 128, 0.3));
+}
+
+.react-flow__node[data-type="text"] {
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));
+}
+
+/* Special styling for text nodes */
+.react-flow__node[data-type="text"] .whitespace-pre-wrap {
+  font-family: 'Georgia', serif;
+  line-height: 1.6;
 }
 
 /* Enhanced edge styling with glow effects */
@@ -251,17 +274,17 @@
   pointer-events: all;
 }
 
-/* Make handles extremely visible and ensure they work with connections */
+/* Make handles smaller, with softer colors and ensure they work with connections */
 .react-flow__handle {
   width: 16px !important;
   height: 16px !important;
-  background-color: #3b82f6 !important;
+  background-color: rgba(var(--color-rgb, 59, 130, 246), 0.6) !important; /* Softer, semi-transparent color */
   border: 3px solid white !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 2px 3px rgba(0, 0, 0, 0.2) !important;
   transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease !important;
-  z-index: 1000 !important;
-  animation: handlePulse 1.5s infinite !important;
-  opacity: 1 !important;
+  z-index: 1001 !important;
+  animation: handlePulse 2s infinite !important;
+  opacity: 0.9 !important; /* Slightly transparent */
   visibility: visible !important;
   position: absolute !important;
   border-radius: 50% !important;
@@ -269,64 +292,71 @@
   cursor: crosshair !important;
 }
 
-/* Ensure handles are positioned correctly */
+/* Position handles closer to the node */
 .react-flow__handle-top {
-  top: -8px !important;
+  top: -10px !important;
   left: 50% !important;
   transform: translate(-50%, 0) !important;
 }
 
 .react-flow__handle-right {
-  right: -8px !important;
+  right: -10px !important;
   top: 50% !important;
   transform: translate(0, -50%) !important;
 }
 
 .react-flow__handle-bottom {
-  bottom: -8px !important;
+  bottom: -10px !important;
   left: 50% !important;
   transform: translate(-50%, 0) !important;
 }
 
 .react-flow__handle-left {
-  left: -8px !important;
+  left: -10px !important;
   top: 50% !important;
   transform: translate(0, -50%) !important;
 }
 
 .react-flow__handle:hover {
-  background: #2563eb !important;
-  transform: scale(1.4) !important;
+  background-color: rgba(var(--color-rgb, 59, 130, 246), 0.8) !important; /* Slightly more visible on hover */
+  transform: scale(1.2) !important;
   z-index: 2000 !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.6), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  opacity: 1 !important;
 }
 
 .react-flow__handle-top:hover {
-  transform: translate(-50%, 0) scale(1.4) !important;
+  transform: translate(-50%, 0) scale(1.2) !important;
 }
 
 .react-flow__handle-right:hover {
-  transform: translate(0, -50%) scale(1.4) !important;
+  transform: translate(0, -50%) scale(1.2) !important;
 }
 
 .react-flow__handle-bottom:hover {
-  transform: translate(-50%, 0) scale(1.4) !important;
+  transform: translate(-50%, 0) scale(1.2) !important;
 }
 
 .react-flow__handle-left:hover {
-  transform: translate(0, -50%) scale(1.4) !important;
+  transform: translate(0, -50%) scale(1.2) !important;
 }
 
-/* Pulsing animation for handles - more noticeable */
+/* Softer pulsing animation for handles */
 @keyframes handlePulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.8), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 0 0 0 rgba(var(--color-rgb, 59, 130, 246), 0.4), 0 2px 3px rgba(0, 0, 0, 0.2) !important;
+    transform: scale(1);
+    opacity: 0.8;
   }
-  70% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  50% {
+    box-shadow: 0 0 0 4px rgba(var(--color-rgb, 59, 130, 246), 0), 0 2px 3px rgba(0, 0, 0, 0.2) !important;
+    transform: scale(1.1);
+    opacity: 1;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 0 0 0 rgba(var(--color-rgb, 59, 130, 246), 0), 0 2px 3px rgba(0, 0, 0, 0.2) !important;
+    transform: scale(1);
+    opacity: 0.8;
   }
 }
 
@@ -452,4 +482,26 @@
 
 .animate-network-pulse {
   animation: network-pulse 3s infinite ease-in-out;
+}
+
+/* Fix for Card component with border radius and overflow hidden */
+.react-flow__node .rounded-xl {
+  border-radius: 1rem !important;
+  position: relative !important;
+}
+
+/* Make sure the accent bar at the top has proper corners */
+.react-flow__node .rounded-xl > div:first-child {
+  border-top-left-radius: calc(1rem - 4px) !important;
+  border-top-right-radius: calc(1rem - 4px) !important;
+}
+
+/* Make the node content contained but allow handles to extend outward */
+.react-flow__node > div > div:not(.react-flow__handle) {
+  overflow: hidden !important;
+}
+
+/* Ensure content inside the card respects the border */
+.react-flow__node .rounded-xl > * {
+  overflow: hidden !important;
 }

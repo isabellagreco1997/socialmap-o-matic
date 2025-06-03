@@ -18,6 +18,9 @@ interface NetworkFlowProps {
   onConnect: (connection: Connection) => void;
   onAddNode: () => void;
   onImportCsv: () => void;
+  onEditNetwork?: () => void;
+  onAIChat?: () => void;
+  onAccountClick?: () => void;
 }
 
 // Add custom styles to the ReactFlow container
@@ -35,7 +38,10 @@ const FlowWithAutoFit = ({
   onEdgesChange,
   onConnect,
   onAddNode,
-  onImportCsv
+  onImportCsv,
+  onEditNetwork,
+  onAIChat,
+  onAccountClick
 }: NetworkFlowProps) => {
   const reactFlowInstance = useReactFlow();
   const prevNetworkIdRef = useRef<string | null>(null);
@@ -117,6 +123,9 @@ const FlowWithAutoFit = ({
         onNameCancel={() => {}}
         isEditingName={false}
         onEditNameStart={() => {}}
+        onEditNetwork={onEditNetwork}
+        onAIChat={onAIChat}
+        onAccountClick={onAccountClick}
       />
       <NetworkFlowControls />
     </>

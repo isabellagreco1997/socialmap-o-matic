@@ -242,6 +242,8 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
   }, [setNodes, setEdges]);
 
   const handleNetworkSelect = useCallback((id: string, forceFetch: boolean = false) => {
+    console.log(`[handleNetworkSelect] Called with id: ${id}, forceFetch: ${forceFetch}. Current ID: ${currentNetworkId}`);
+
     // Skip if already selected and we're not forcing a fetch
     if (id === currentNetworkId && !forceFetch) {
       console.log(`Network ${id} is already selected, skipping selection`);
@@ -399,6 +401,27 @@ export function useNetworkEvents(createDialogTriggerRef: RefObject<HTMLButtonEle
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [currentNetworkId, nodes, edges, saveToCache, saveNetworkToDB]);
+
+  // Function to clear node/edge cache for a network
+  const clearNetworkNodesEdgesCache = useCallback((networkId: string) => {
+    console.log(`Clearing cache for network ${networkId}`);
+    
+    // Remove from localStorage
+    localStorage.removeItem(`network-nodes-${networkId}`);
+    localStorage.removeItem(`network-edges-${networkId}`);
+    
+    // Also try to clear from database
+    try {
+      // Get empty initial state
+      const emptyNodes: any[] = [];
+      const emptyEdges: any[] = [];
+      
+      // Save empty state to database
+      saveNetworkToDB(networkId, emptyNodes, emptyEdges);
+    } catch (error) {
+      console.error('Error clearing network data:', error);
+    }
+  }, [saveNetworkToDB]);
 
   return {
     handleNetworkSelect,
